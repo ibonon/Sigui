@@ -1,0 +1,242 @@
+"""
+ArcWarden v3.0 — Treasury Manager
+Circle DCW integration · P&L tracking · Autonomous mode management
+"""
+
+import asyncio
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Optional
+
+from loguru import logger
+
+from agent.loop import (
+    BALANCE_DEGRADED_THRESHOLD,
+    BALANCE_EMERGENCY_THRESHOLD,
+    BALANCE_NORMAL_THRESHOLD,
+    AgentMode,
+    determine_mode,
+    is_self_protection,
+    should_escalate,
+)
+from clients.integrations import circle_client
+from config import settings
+
+
+class TreasuryEmptyError(Exception):
+    pass
+
+
+@dataclass
+class TreasuryState:
+    balance: float = 0.0
+    total_earned: float = 0.0
+    total_spent: float = 0.0
+    mode: AgentMode = AgentMode.NORMAL
+    last_updated: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+
+    @property
+    def net_profit(self) -> float:
+        return self.total_earned - self.total_spent
+
+
+class TreasuryManager:
+    """
+    Autonomous treasury management for ArcWarden.
+    Handles USDC revenues, Claude payments, Arc fees, and mode switching.
+    """
+
+    def __init__(self):
+        self._state = TreasuryState(balance=settings.initial_balance_usdc)
+        self._lock = asyncio.Lock()
+        self._db = None  # Set after memory init
+        self._mode_change_callbacks = []
+        self._last_mode = None
+        try:
+            self._last_mode = self.operating_mode
+        except TreasuryEmptyError:
+            self._last_mode = AgentMode.EMERGENCY
+
+    def set_db(self, db):
+        """Inject memory reference for treasury logging."""
+        self._db = db
+
+    async def recover_from_db(self):
+        """
+        Reconstruit l'état de la treasury depuis treasury_log au redémarrage.
+        Préserve le P&L historique et recalcule le solde réel.
+        """
+        if not self._db:
+            logger.warning(
+                "[TREASURY] recover_from_db: no DB available, using initial state"
+            )
+            return
+        try:
+            # Use MemoClaw lock to prevent 'database is locked' during recovery
+            async with self._db._lock:
+                async with self._db._db.execute(
+                    """
+                    SELECT type, COALESCE(SUM(amount_usdc), 0.0) AS total
+                    FROM treasury_log
+                    GROUP BY type
+                    """
+                ) as cursor:
+                    rows = await cursor.fetchall()
+
+            earned = 0.0
+            spent = 0.0
+            for row in rows:
+                tx_type, total = row[0], float(row[1])
+                if tx_type == "revenue":
+                    earned = total
+                elif tx_type == "expense":
+                    spent = total
+
+            reconstructed_balance = max(
+                0.0, settings.initial_balance_usdc + earned - spent
+            )
+
+            async with self._lock:
+                self._state.total_earned = earned
+                self._state.total_spent = spent
+                self._state.balance = reconstructed_balance
+                self._state.last_updated = datetime.utcnow().isoformat()
+
+            # Sync also the circle client simulated balance
+            from clients.integrations import circle_client
+
+            if circle_client.demo_mode:
+                circle_client._simulated_balances[circle_client.wallet_id] = (
+                    reconstructed_balance
+                )
+
+            await self._check_mode_change()
+            logger.success(
+                f"[TREASURY] ✅ Recovered from DB — "
+                f"earned=${earned:.4f} spent=${spent:.4f} "
+                f"balance=${reconstructed_balance:.4f} "
+                f"mode={self.operating_mode.value if reconstructed_balance > 0.01 else 'EMERGENCY'}"
+            )
+        except Exception as e:
+            logger.warning(
+                f"[TREASURY] DB recovery failed ({e}) — keeping initial state"
+            )
+
+    def on_mode_change(self, callback):
+        self._mode_change_callbacks.append(callback)
+
+    async def _check_mode_change(self):
+        try:
+            new_mode = self.operating_mode
+        except TreasuryEmptyError:
+            new_mode = AgentMode.EMERGENCY
+
+        if self._last_mode is not None and self._last_mode != new_mode:
+            for cb in self._mode_change_callbacks:
+                await cb(self._last_mode.value, new_mode.value)
+        self._last_mode = new_mode
+
+    @property
+    def balance(self) -> float:
+        return self._state.balance
+
+    @property
+    def net_profit(self) -> float:
+        return self._state.net_profit
+
+    @property
+    def operating_mode(self) -> AgentMode:
+        if is_self_protection(self._state.balance):
+            raise TreasuryEmptyError("ArcWarden treasury empty — refusing new requests")
+        return determine_mode(self._state.balance)
+
+    def get_state(self) -> dict:
+        return {
+            "balance": round(self._state.balance, 6),
+            "total_earned": round(self._state.total_earned, 6),
+            "total_spent": round(self._state.total_spent, 6),
+            "net_profit": round(self._state.net_profit, 6),
+            "mode": self.operating_mode.value
+            if self._state.balance > 0.01
+            else "EMERGENCY",
+            "last_updated": datetime.utcnow().isoformat(),
+        }
+
+    async def sync_from_circle(self):
+        """Sync balance from Circle API (or demo simulation)."""
+        live_balance = await circle_client.get_wallet_balance()
+        async with self._lock:
+            # In demo mode, merge simulated revenue into the balance
+            self._state.balance = live_balance
+            self._state.last_updated = datetime.utcnow().isoformat()
+        await self._check_mode_change()
+        logger.debug(
+            f"[TREASURY] Sync: balance=${self._state.balance:.6f} mode={self._state.mode}"
+        )
+
+    async def record_revenue(self, amount_usdc: float, description: str = "eval_fee"):
+        """Record incoming payment from client agent."""
+        async with self._lock:
+            self._state.balance += amount_usdc
+            self._state.total_earned += amount_usdc
+            circle_client.add_revenue(amount_usdc)
+        if self._db:
+            await self._db.log_treasury("revenue", amount_usdc, description)
+        await self._check_mode_change()
+        logger.debug(
+            f"[TREASURY] +${amount_usdc:.6f} ({description}) → balance=${self._state.balance:.6f}"
+        )
+
+    async def pay_for_escalation(self) -> bool:
+        """
+        ArcWarden pays Claude from its own treasury.
+        Returns False if insufficient funds → fallback rule-based activated.
+        """
+        cost = settings.claude_cost_per_escalation
+        async with self._lock:
+            if self._state.balance < cost:
+                logger.warning(
+                    f"[TREASURY] Insufficient funds for escalation "
+                    f"(balance=${self._state.balance:.6f} < ${cost}) — fallback activated"
+                )
+                return False
+            self._state.balance -= cost
+            self._state.total_spent += cost
+            circle_client.spend(cost)
+
+        if self._db:
+            await self._db._db.execute(
+                "INSERT INTO treasury_log (type, amount_usdc, description) VALUES (?, ?, ?)",
+                ("expense", cost, "claude_escalation_api"),
+            )
+            await self._db._db.commit()
+        await self._check_mode_change()
+        logger.info(
+            f"[TREASURY] -${cost:.6f} (claude_escalation) → balance=${self._state.balance:.6f}"
+        )
+        return True
+
+    async def pay_arc_fee(self, amount: float = 0.000003):
+        """Pay Arc transaction logging fee."""
+        async with self._lock:
+            self._state.balance = max(0.0, self._state.balance - amount)
+            self._state.total_spent += amount
+            circle_client.spend(amount)
+        if self._db:
+            await self._db._db.execute(
+                "INSERT INTO treasury_log (type, amount_usdc, description) VALUES (?, ?, ?)",
+                ("expense", amount, "arc_tx_fee"),
+            )
+            await self._db._db.commit()
+        await self._check_mode_change()
+
+    def should_escalate(self, risk_score: float) -> bool:
+        """Check if escalation is economically viable given current mode."""
+        try:
+            mode = self.operating_mode
+        except TreasuryEmptyError:
+            mode = AgentMode.EMERGENCY
+        return should_escalate(risk_score, mode)
+
+
+treasury = TreasuryManager()

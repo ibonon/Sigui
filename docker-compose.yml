@@ -1,0 +1,97 @@
+# ── ArcWarden v3.0 — Docker Compose ───────────────────────────────────────────
+# One-command deployment: docker compose up --build
+#
+# Services:
+#   arcwarden  — FastAPI backend (port 8000)
+#   demo-ui    — Next.js command center (port 3001)
+#
+# Volumes:
+#   arcwarden_db   — SQLite persistence (survives restarts)
+#   arcwarden_logs — Rotating log files
+
+services:
+
+  # ── ArcWarden Backend ───────────────────────────────────────────────────────
+  arcwarden:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: arcwarden:3.0.0
+    container_name: arcwarden-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # Override DB and log paths to use Docker volumes
+      - DB_PATH=/app/db/arcwarden.db
+      - ECOSYSTEM_METRICS_PATH=/app/ecosystem/metrics.json
+      - DEMO_REPORT_PATH=/app/ecosystem/demo_report.json
+    volumes:
+      - arcwarden_db:/app/db
+      - arcwarden_logs:/app/logs
+      - arcwarden_ecosystem:/app/ecosystem
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 20s
+      retries: 3
+    networks:
+      - arcwarden_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ── Demo UI (Next.js Command Center) ────────────────────────────────────────
+  demo-ui:
+    build:
+      context: ./demo-ui
+      dockerfile: Dockerfile
+    image: arcwarden-ui:3.0.0
+    container_name: arcwarden-ui
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      # Allow the browser to reach the API directly (adjust if behind a proxy)
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      arcwarden:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - arcwarden_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+
+# ── Named volumes ────────────────────────────────────────────────────────────
+volumes:
+  arcwarden_db:
+    driver: local
+    labels:
+      com.arcwarden.description: "SQLite database — MemoClaw persistent memory"
+  arcwarden_logs:
+    driver: local
+    labels:
+      com.arcwarden.description: "Rotating log files"
+  arcwarden_ecosystem:
+    driver: local
+    labels:
+      com.arcwarden.description: "Ecosystem metrics and demo report JSON"
+
+
+# ── Network ───────────────────────────────────────────────────────────────────
+networks:
+  arcwarden_net:
+    driver: bridge
+    labels:
+      com.arcwarden.description: "Internal network — arcwarden ↔ demo-ui"

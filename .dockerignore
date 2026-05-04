@@ -1,0 +1,65 @@
+# ── ArcWarden v3.0 — .dockerignore ───────────────────────────────────────────
+# Keeps the Docker build context lean by excluding dev artifacts,
+# secrets, and generated files that are not needed inside the image.
+
+# ── Python ────────────────────────────────────────────────────────────────────
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+dist/
+build/
+.Python
+pip-log.txt
+
+# ── Secrets & environment ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Database (use Docker volume instead) ─────────────────────────────────────
+db/arcwarden.db
+
+# ── Logs (use Docker volume instead) ─────────────────────────────────────────
+logs/
+
+# ── Node / Next.js ────────────────────────────────────────────────────────────
+demo-ui/node_modules/
+demo-ui/.next/
+demo-ui/.env.local
+demo-ui/.env.*.local
+
+# ── Git ───────────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
+
+# ── IDE & OS ──────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Tests & CI ────────────────────────────────────────────────────────────────
+tests/
+.github/
+.pytest_cache/
+.coverage
+htmlcov/
+*.coveragerc
+
+# ── Docker files (not needed inside the image) ────────────────────────────────
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+demo-ui/Dockerfile
+
+# ── Ecosystem runtime outputs (use Docker volume instead) ─────────────────────
+ecosystem/metrics.json
+ecosystem/demo_report.json

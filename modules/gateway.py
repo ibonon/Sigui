@@ -1,0 +1,975 @@
+"""
+ArcWarden v3.0 — Service Gateway
+FastAPI + x402 middleware — all public endpoints
+"""
+
+import asyncio
+import json
+import time
+from collections import defaultdict as _defaultdict
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Optional
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse, StreamingResponse
+from loguru import logger
+
+from agent.loop import AgentMode
+from clients.integrations import arc_client
+from clients.threat_registry import (
+    LAYER_BEHAVIOR,
+    LAYER_CONTRACT,
+    LAYER_SERVICE,
+    LAYER_SPLITTING,
+    threat_registry,
+)
+from config import settings
+from ecosystem.orchestrator import ecosystem_orchestrator
+from modules.ai_engines import escalation_engine, policy_brain
+from modules.contract_inspector import contract_inspector
+from modules.memory import memory
+from modules.response_validator import ValidationVerdict, response_validator
+from modules.security_engine import ActionInput, Decision, decision_engine, risk_engine
+from modules.service_registry import service_registry
+from modules.treasury import TreasuryEmptyError, treasury
+
+# ────────────────────────────────────────────────────────────────────────────────
+# x402 Protected Paths
+# ────────────────────────────────────────────────────────────────────────────────
+
+PROTECTED_PATHS = {"/evaluate", "/escalate"}
+
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Rate Limiting
+# ────────────────────────────────────────────────────────────────────────────────
+
+_rate_store: dict[str, list[float]] = _defaultdict(list)
+_RATE_WINDOW_S: float = 60.0
+_RATE_MAX_CALLS: int = 120  # 120 req/min par IP
+
+
+def _check_rate_limit(key: str) -> bool:
+    """Retourne True si la requête est autorisée, False si rate-limitée."""
+    import time as _t
+
+    now = _t.time()
+    window = _rate_store[key]
+    # Nettoyer les entrées hors fenêtre
+    while window and now - window[0] > _RATE_WINDOW_S:
+        window.pop(0)
+    if len(window) >= _RATE_MAX_CALLS:
+        return False
+    window.append(now)
+    # Borner la taille du dict (max 50k IPs)
+    if len(_rate_store) > 50_000:
+        stale_keys = [
+            k
+            for k, v in list(_rate_store.items())
+            if not v or (now - v[-1]) > _RATE_WINDOW_S * 2
+        ]
+        for k in stale_keys[:10_000]:
+            del _rate_store[k]
+    return True
+
+
+def _classify_tx(tx_hash: str) -> str:
+    """Classify a transaction hash: 'simulated' | 'confirmed' | 'empty'"""
+    h = str(tx_hash or "")
+    if not h:
+        return "empty"
+    if h.startswith("0xSIM_"):
+        return "simulated"
+    if h.startswith("0xERROR_"):
+        return "empty"
+    return "confirmed"
+
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Route Registration
+# ────────────────────────────────────────────────────────────────────────────────
+
+
+def register_routes(app: FastAPI):
+    """Register all ArcWarden routes and middleware on the FastAPI app."""
+
+    # ── x402 Payment Middleware ────────────────────────────────────────────────
+    @app.middleware("http")
+    async def x402_payment_middleware(request: Request, call_next):
+        """
+        Implements x402 Payment Required protocol.
+        Protected endpoints require X-Payment header with Arc tx hash.
+        """
+        path = request.url.path
+
+        if path in PROTECTED_PATHS:
+            # ── Rate limiting (avant tout autre check) ────────────────────────────
+            client_ip = request.client.host if request.client else "unknown"
+            if not _check_rate_limit(client_ip):
+                return JSONResponse(
+                    status_code=429,
+                    content={
+                        "error": "Rate limit exceeded",
+                        "limit": f"{_RATE_MAX_CALLS} requests per {int(_RATE_WINDOW_S)}s",
+                        "retry_after_s": 60,
+                    },
+                    headers={"Retry-After": "60"},
+                )
+
+            payment_header = request.headers.get("X-Payment")
+
+            if not payment_header:
+                # Return HTTP 402 with payment instructions
+                wallet = settings.arcwarden_wallet_address
+                price = (
+                    settings.arcwarden_eval_price_usdc
+                    if path == "/evaluate"
+                    else settings.arcwarden_escalate_price_usdc
+                )
+                # Arc USDC is native with 18 decimals (isNative=True, confirmed by Circle API).
+                # maxAmountRequired must be in the token's smallest unit.
+                price_units = int(price * 10**settings.arc_usdc_decimals)
+
+                return JSONResponse(
+                    status_code=402,
+                    content={
+                        "x402Version": 1,
+                        "error": "Payment required",
+                        "accepts": [
+                            {
+                                "scheme": "exact",
+                                "network": "arc-testnet",
+                                "maxAmountRequired": str(price_units),
+                                "resource": path,
+                                "description": f"ArcWarden security evaluation — ${price} USDC",
+                                "mimeType": "application/json",
+                                "payTo": wallet,
+                                "asset": "USDC",
+                                "decimals": settings.arc_usdc_decimals,
+                                "isNative": True,
+                            }
+                        ],
+                    },
+                )
+
+            # Validate payment tx if not in demo mode
+            if not settings.demo_mode:
+                expected_amount = (
+                    settings.arcwarden_eval_price_usdc
+                    if path == "/evaluate"
+                    else settings.arcwarden_escalate_price_usdc
+                )
+                valid = await arc_client.verify_payment(
+                    payment_header,
+                    expected_amount,
+                    settings.arcwarden_wallet_address,
+                )
+                if not valid:
+                    return JSONResponse(
+                        status_code=402,
+                        content={
+                            "error": "Invalid or unconfirmed payment",
+                            "tx_hash": payment_header,
+                        },
+                    )
+
+        return await call_next(request)
+
+    # ── Agent Card ─────────────────────────────────────────────────────────────
+    @app.get("/.well-known/agent-card", tags=["Infrastructure"])
+    async def agent_card():
+        """Agent Card — discoverability endpoint for agent ecosystem."""
+        try:
+            mode = treasury.operating_mode.value
+        except Exception:
+            mode = "EMERGENCY"
+
+        return {
+            "name": "ArcWarden Security Oracle",
+            "version": "3.0",
+            "type": "security_agent",
+            "description": "ArcWarden is not a firewall. It's an agent that gets paid to protect other agents.",
+            "capabilities": [
+                "risk_assessment",
+                "fraud_detection",
+                "escalation",
+                "pattern_learning",
+            ],
+            "pricing": {
+                "evaluate": {
+                    "amount": str(settings.arcwarden_eval_price_usdc),
+                    "currency": "USDC",
+                },
+                "escalate": {
+                    "amount": str(settings.arcwarden_escalate_price_usdc),
+                    "currency": "USDC",
+                    "additional": True,
+                },
+            },
+            "wallet": settings.arcwarden_wallet_address,
+            "network": "arc-testnet",
+            "payment_protocol": "x402",
+            "operating_mode": mode,
+            "sla": {
+                "latency_p99_ms": 100,
+                "finality_seconds": 1,
+                "uptime_percent": 99.9,
+            },
+        }
+
+    # ── Health ─────────────────────────────────────────────────────────────────
+    @app.get("/health", tags=["Infrastructure"])
+    async def health():
+        """Health check — status, mode, uptime, DB connectivity."""
+        try:
+            mode = treasury.operating_mode.value
+        except Exception:
+            mode = "EMERGENCY"
+
+        # Vérification DB légère
+        db_ok = False
+        try:
+            if hasattr(memory, "_db") and memory._db is not None:
+                await memory._db.execute("SELECT 1")
+                db_ok = True
+        except Exception:
+            db_ok = False
+
+        return {
+            "status": "ok" if db_ok else "degraded",
+            "version": "3.0.0",
+            "mode": mode,
+            "demo_mode": settings.demo_mode,
+            "arc_runtime_mode": "demo" if arc_client.demo_mode else "real",
+            "arc_connected": bool(arc_client._w3 is not None)
+            if hasattr(arc_client, "_w3")
+            else False,
+            "db_connected": db_ok,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+    # ── Treasury ───────────────────────────────────────────────────────────────
+    @app.get("/treasury", tags=["Treasury"])
+    async def get_treasury():
+        """Real-time P&L and economic state of ArcWarden."""
+        return treasury.get_state()
+
+    # ── Stats ──────────────────────────────────────────────────────────────────
+    @app.get("/stats", tags=["Statistics"])
+    async def get_stats():
+        """Decision statistics and MemoClaw pattern summary."""
+        stats = await memory.get_stats()
+        patterns = await memory.get_top_patterns(5)
+        agents = await memory.get_all_agents()
+        allow_threshold, block_threshold = await policy_brain.get_thresholds()
+        latest_policy = await memory.get_latest_policy_update()
+        val_global = await response_validator.get_global_stats()
+        registry_stats = await threat_registry.get_stats()
+        return {
+            "decisions": stats,
+            "top_patterns": patterns,
+            "agents_tracked": len(agents),
+            "treasury": treasury.get_state(),
+            "policy": {
+                "allow_threshold": allow_threshold,
+                "block_threshold": block_threshold,
+                "latest_update": latest_policy,
+            },
+            "response_validation": val_global,
+            "threat_registry": registry_stats,
+        }
+
+    @app.get("/ecosystem/status", tags=["Simulation"])
+    async def ecosystem_status():
+        """Return runtime status for all autonomous ecosystem agents."""
+        return ecosystem_orchestrator.get_status()
+
+    # ── Evaluate (main pipeline) ──────────────────────────────────────────────
+    @app.post("/evaluate", tags=["Security"])
+    async def evaluate(request: Request):
+        """
+        Main security evaluation pipeline.
+        Requires X-Payment header (x402) with Arc tx hash → $0.001 USDC.
+        """
+        t_start = time.perf_counter()
+
+        # Parse body
+        body = await request.json()
+        action = ActionInput(**body)
+
+        # Check ArcWarden treasury health
+        try:
+            mode = treasury.operating_mode
+        except TreasuryEmptyError:
+            raise HTTPException(
+                status_code=503,
+                detail="ArcWarden treasury empty — service temporarily unavailable",
+            )
+
+        # Ensure agent exists in memory
+        await memory.ensure_agent(action.agent_id)
+
+        # Get agent profile from MemoClaw
+        agent_profile = await memory.get_agent(action.agent_id)
+
+        # Record revenue with Dynamic Risk Pricing
+        # If agent is risky or global threats are high, price increases (Surge Pricing)
+        base_price = settings.arcwarden_eval_price_usdc
+        risk_surge = 1.0
+        if agent_profile and agent_profile.get("trust_score", 1.0) < 0.3:
+            risk_surge = 5.0  # 5x price for untrusted agents
+        elif agent_profile and agent_profile.get("trust_score", 1.0) < 0.6:
+            risk_surge = 2.0
+
+        final_price = base_price * risk_surge
+        await treasury.record_revenue(final_price, f"eval_fee_surge_{risk_surge}x")
+
+        # MemoClaw freeze gate — instant BLOCK for known bad actors (survives restarts)
+        if await memory.is_agent_frozen(action.agent_id):
+            logger.warning(
+                f"[GATEWAY] ❄️  Agent {action.agent_id} is frozen — instant BLOCK"
+            )
+            return {
+                "decision": "BLOCK",
+                "risk_score": 1.0,
+                "confidence": 0.99,
+                "reason": "Agent frozen by MemoClaw — repeated suspicious activity detected.",
+                "action_hash": "memoclaw_frozen",
+                "arc_tx_log": "",
+                "arcwarden_mode": mode.value,
+                "escalation_available": False,
+                "escalation_cost_usdc": settings.arcwarden_escalate_price_usdc,
+                "policy_source": "memoclaw_freeze",
+                "processing_time_ms": 1,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+
+        # Check known attack patterns (fuzzy multi-level matching)
+        pattern_extra = await memory.check_pattern_fuzzy(
+            action.action_type, action.destination, action.amount_usdc
+        )
+
+        # ── Anti-splitting: record flow & inject cumulative context ────────────
+        await memory.record_flow(
+            action.agent_id,
+            action.destination,
+            action.amount_usdc,
+        )
+        cumulative = await memory.get_cumulative_flow(
+            action.agent_id, action.destination, window_minutes=10
+        )
+        global_flow = await memory.get_global_flow(action.agent_id, window_minutes=10)
+        action.context["cumulative_flow"] = cumulative
+        action.context["global_flow"] = global_flow
+
+        # ── Service reputation: evaluate destination ────────────────────────
+        svc_eval = await service_registry.evaluate_service(action.destination)
+        action.context["service_eval"] = svc_eval
+
+        # ── Couche 4 : Contract Inspector ─────────────────────────────────
+        contract_eval = await contract_inspector.analyze(action.destination)
+        action.context["contract_eval"] = {
+            "is_contract": contract_eval.is_contract,
+            "risk_delta": contract_eval.risk_delta,
+            "flags": contract_eval.flags,
+            "reason": contract_eval.reason,
+            "bytecode_size": contract_eval.bytecode_size,
+        }
+        if contract_eval.is_contract:
+            logger.debug(
+                f"[GATEWAY] Contract detected: {action.destination[:14]}… "
+                f"delta={contract_eval.risk_delta:.2f} flags={contract_eval.flags[:2]}"
+            )
+
+        # Compute risk score
+        risk = await risk_engine.score(action, agent_profile, pattern_extra)
+
+        # Determine if escalation is available
+        escalation_available = treasury.should_escalate(risk.risk_score)
+
+        # Compute decision
+        decision_out = await decision_engine.decide(
+            agent_id=action.agent_id,
+            action_type=action.action_type,
+            amount_usdc=action.amount_usdc,
+            destination=action.destination,
+            risk=risk,
+            arcwarden_mode=mode,
+            escalation_available=escalation_available,
+            agent_profile=agent_profile,
+        )
+
+        # Pay Arc fee for onchain log
+        await treasury.pay_arc_fee()
+
+        # Update MemoClaw
+        dec = decision_out.decision
+        if dec == "ALLOW":
+            await memory.update_agent_allow(action.agent_id, action.amount_usdc)
+            if risk.risk_score >= 0.65:
+                await memory.penalize_risky_allow(action.agent_id, action.amount_usdc)
+        elif dec == "BLOCK":
+            await memory.update_agent_block(action.agent_id)
+            await memory.record_attack_pattern(
+                action.action_type, action.destination, action.amount_usdc
+            )
+            dest_pfx = action.destination[:8] if action.destination else "0x000000"
+            amt_range = "high" if action.amount_usdc > 1.0 else "low"
+            pattern_id = memory._make_pattern_id(
+                action.action_type, dest_pfx, amt_range
+            )
+            await memory.log_attack(pattern_id, action.agent_id, action.amount_usdc)
+            # MemoClaw auto-freeze: 3 BLOCKs in 5 min → frozen for 10 min
+            await memory.auto_freeze_check(action.agent_id)
+
+            # ── ThreatRegistry: record blocked attack onchain (fire-and-forget) ──
+            # Determine which security layer triggered the block
+            _triggered = risk.rules_triggered
+            _layer = LAYER_BEHAVIOR  # default: behavioural anomaly
+            if any(
+                "splitting" in r
+                or "cumulative_flow" in r
+                or "multi_dest" in r
+                or "uniform_micro" in r
+                for r in _triggered
+            ):
+                _layer = LAYER_SPLITTING
+            elif any("service" in r.lower() for r in _triggered):
+                _layer = LAYER_SERVICE
+            elif any("contract" in r.lower() for r in _triggered):
+                _layer = LAYER_CONTRACT
+
+            # Agent wallet: use arcwarden_wallet_address as a fallback (agent_id is a string ID)
+            _agent_wallet = (
+                action.context.get("agent_wallet") or settings.arcwarden_wallet_address
+            )
+            logger.info(
+                f"[GATEWAY] 🛡️ Triggering onchain recording for blocked attack (layer={_layer})"
+            )
+            asyncio.create_task(
+                threat_registry.record_attack(
+                    agent_id=action.agent_id,
+                    agent_wallet_address=_agent_wallet,
+                    action_type=action.action_type,
+                    destination=action.destination,
+                    amount_usdc=action.amount_usdc,
+                    risk_score=risk.risk_score,
+                    layer=_layer,
+                )
+            )
+
+        # ── Record service interaction outcome ─────────────────────────────────
+        svc_outcome = "paid" if dec == "ALLOW" else "blocked"
+        await service_registry.record_interaction(
+            action.agent_id,
+            action.destination,
+            action.amount_usdc,
+            svc_outcome,
+        )
+
+        # Episodic memory — enriched outcome labeling for self_critique
+        outcome_label = "expected"
+        if dec == "ALLOW":
+            if risk.risk_score >= 0.55:
+                outcome_label = "risky_allow"  # ALLOW dans la zone grise
+            elif pattern_extra >= 0.25:
+                outcome_label = "risky_allow"  # ALLOW sur pattern d'attaque connu
+            elif agent_profile["tx_count"] == 0 and action.amount_usdc > 0.5:
+                outcome_label = "risky_allow"  # Premier tx avec montant élevé
+        elif dec == "BLOCK":
+            if risk.risk_score < 0.35:
+                outcome_label = "safe_block"  # Bloqué alors que faible risque
+            elif agent_profile["trust_score"] > 0.70:
+                outcome_label = "contested_block"  # Agent établi bloqué
+
+        # Déclencher self_critique immédiatement si comportement risqué détecté
+        if outcome_label == "risky_allow":
+            from agent.loop import agent as arc_agent
+
+            arc_agent.request_critique()
+
+        await memory.log_episode(
+            agent_id=action.agent_id,
+            action_type=action.action_type,
+            decision=dec,
+            risk_score=risk.risk_score,
+            policy_source=decision_out.policy_source,
+            outcome_label=outcome_label,
+            notes=decision_out.reason[:180],
+        )
+
+        # Log decision in MemoClaw
+        await memory.log_decision(
+            agent_id=action.agent_id,
+            action_type=action.action_type,
+            amount_usdc=action.amount_usdc,
+            destination=action.destination,
+            action_hash=decision_out.action_hash,
+            decision=dec,
+            risk_score=risk.risk_score,
+            confidence=risk.confidence,
+            rules_triggered=risk.rules_triggered,
+            arc_tx_hash=decision_out.arc_tx_log,
+            arcwarden_mode=mode.value,
+            processing_time_ms=decision_out.processing_time_ms,
+        )
+
+        return decision_out.model_dump()
+
+    # ── Escalate (Claude deep analysis) ───────────────────────────────────────
+    @app.post("/escalate", tags=["Security"])
+    async def escalate_endpoint(request: Request):
+        """
+        Deep analysis endpoint — Claude API.
+        Requires additional $0.003 USDC payment. ArcWarden pays Claude from its treasury.
+        """
+        body = await request.json()
+        action = ActionInput(**body)
+
+        await treasury.record_revenue(
+            settings.arcwarden_escalate_price_usdc, "escalation_fee"
+        )
+        await memory.ensure_agent(action.agent_id)
+        agent_profile = await memory.get_agent(action.agent_id)
+        pattern_extra = await memory.check_pattern(
+            action.action_type, action.destination, action.amount_usdc
+        )
+        risk = await risk_engine.score(action, agent_profile, pattern_extra)
+
+        # Treasury authorizes Claude payment
+        treasury_ok = await treasury.pay_for_escalation()
+
+        result = await escalation_engine.escalate(
+            action=body,
+            risk_score=risk.risk_score,
+            rules_triggered=risk.rules_triggered,
+            agent_profile=agent_profile,
+            treasury_authorized=treasury_ok,
+        )
+
+        # Log as ESCALATE decision
+        arc_tx = await arc_client.log_decision_onchain(
+            action.agent_id[:8], "ESCALATE", risk.risk_score
+        )
+        result.arc_tx_log = arc_tx
+
+        try:
+            esc_mode = treasury.operating_mode.value
+        except Exception:
+            esc_mode = "EMERGENCY"
+
+        await memory.log_decision(
+            agent_id=action.agent_id,
+            action_type=action.action_type,
+            amount_usdc=action.amount_usdc,
+            destination=action.destination,
+            action_hash=action.agent_id[:16],
+            decision="ESCALATE",
+            risk_score=risk.risk_score,
+            confidence=risk.confidence,
+            rules_triggered=risk.rules_triggered,
+            arc_tx_hash=arc_tx,
+            arcwarden_mode=esc_mode,
+            processing_time_ms=0,
+        )
+
+        return result.model_dump()
+
+    # ── Response Validator ────────────────────────────────────────────────────
+    @app.post("/validate-response", tags=["Security"])
+    async def validate_response_endpoint(request: Request):
+        """
+        **Post-service response validation** — call this AFTER receiving a service
+        response and BEFORE acting on the data.
+
+        ArcWarden runs 5 detection layers:
+        1. **Prompt injection / jailbreak** — 16 regex patterns
+        2. **Statistical anomaly** — Z-score vs. history + caller bounds
+        3. **Schema anomaly** — suspicious keys, oversized payload, deep nesting
+        4. **Historical consistency** — vs. past validated responses from same service
+        5. **Known poisoning signatures** — oracle zeroing, overflow, NaN, embedded addresses
+
+        **Free endpoint** — no x402 payment required.
+        A `POISONED` verdict auto-reports the service to the Service Registry.
+        """
+        body = await request.json()
+
+        agent_id = str(body.get("agent_id", "unknown"))[:128]
+        service_address = str(body.get("service_address", ""))[:256]
+        request_type = str(body.get("request_type", "generic"))[:64]
+        response_data = body.get("response_received")
+        context = body.get("context") or {}
+
+        if response_data is None:
+            raise HTTPException(
+                status_code=422,
+                detail="'response_received' is required — pass the raw service response body",
+            )
+
+        if not isinstance(context, dict):
+            context = {}
+
+        result = await response_validator.validate(
+            agent_id=agent_id,
+            service_address=service_address,
+            request_type=request_type,
+            response_data=response_data,
+            context=context,
+        )
+
+        # Auto-report to Service Registry when POISONED
+        auto_reported = False
+        if result.verdict == ValidationVerdict.POISONED and service_address:
+            try:
+                await service_registry.record_interaction(
+                    agent_id, service_address, 0.0, "complained"
+                )
+                auto_reported = True
+                logger.warning(
+                    f"[GATEWAY] 🧪 POISONED response from {service_address[:20]}… "
+                    f"— auto-reported to Service Registry"
+                )
+            except Exception:
+                pass
+
+        return {
+            "verdict": result.verdict.value,
+            "risk_score": result.risk_score,
+            "confidence": result.confidence,
+            "findings": [
+                {
+                    "category": f.category,
+                    "severity": f.severity,
+                    "detail": f.detail,
+                    "risk_delta": f.risk_delta,
+                }
+                for f in result.findings
+            ],
+            "recommendations": result.recommendations,
+            "service_address": result.service_address,
+            "request_type": result.request_type,
+            "processing_time_ms": result.processing_time_ms,
+            "timestamp": result.timestamp,
+            "auto_reported": auto_reported,
+        }
+
+    # ── Simulate ──────────────────────────────────────────────────────────────
+    @app.post("/simulate", tags=["Simulation"])
+    async def simulate():
+        """Ensure autonomous ecosystem is running."""
+        await ecosystem_orchestrator.start()
+        return {
+            "status": "ecosystem_running",
+            "agents": 5,
+            "agent_ids": [
+                "agent_payer",
+                "agent_attacker",
+                "agent_monitor",
+                "agent_learner",
+                "agent_grayzone",
+            ],
+            "message": "5 autonomous agents deployed (Payer, Attacker, Monitor, Learner, GrayZone)",
+        }
+
+    # ── Service Registry ──────────────────────────────────────────────────────
+    @app.post("/services/complain", tags=["Services"])
+    async def complain_about_service(
+        agent_id: str,
+        service_address: str,
+        reason: str = "service_did_not_deliver",
+    ):
+        """
+        Un agent signale qu'un service l'a arnaqué après paiement.
+        2 plaintes → SUSPICIOUS. 5 plaintes → MALICIOUS automatiquement.
+        """
+        await service_registry.record_interaction(
+            agent_id, service_address, 0.0, "complained"
+        )
+        profile = await service_registry.get_service_profile(service_address)
+        return {
+            "status": "complaint_recorded",
+            "service": service_address,
+            "new_trust_level": profile.trust if profile else "NEUTRAL",
+            "message": (
+                "Thank you. If this service accumulates complaints, "
+                "it will be flagged as suspicious or malicious."
+            ),
+        }
+
+    @app.get("/services/{address}", tags=["Services"])
+    async def get_service_profile(address: str):
+        """Consulter le profil de confiance d'un service destinataire."""
+        profile = await service_registry.get_service_profile(address)
+        if not profile:
+            return {"address": address, "trust": "UNKNOWN", "known": False}
+        # Enrich with response validation history
+        val_stats = await response_validator.get_service_validation_stats(
+            profile.address
+        )
+
+        return {
+            "address": profile.address,
+            "name": profile.name,
+            "trust": profile.trust,
+            "category": profile.category,
+            "total_received_usdc": profile.total_payments_received,
+            "unique_payers": profile.unique_payers,
+            "complaints": profile.complaints,
+            "tags": profile.tags,
+            "known": True,
+            "response_validation": val_stats,
+        }
+
+    # ── Flow Monitor (anti-splitting dashboard) ───────────────────────────────
+    @app.get("/flows/active", tags=["Services"])
+    async def flows_active():
+        """
+        Returns aggregated flow windows for the last 10 minutes, enriched
+        with ratio vs. agent average — used by the Splitting Detector panel.
+        """
+        if not memory._db:
+            return []
+
+        rows = []
+        # Reuse existing connection to avoid 'database is locked' on Windows
+        async with memory._lock:
+            cur = await memory._db.execute(
+                """
+                SELECT
+                    fw.agent_id,
+                    fw.destination,
+                    COUNT(*)         AS tx_count,
+                    SUM(fw.amount_usdc) AS total_amount,
+                    MAX(fw.amount_usdc) AS max_single,
+                    MIN(fw.amount_usdc) AS min_single,
+                    COALESCE(a.avg_amount_usdc, 0.01) AS agent_avg
+                FROM flow_windows fw
+                LEFT JOIN agents a ON a.agent_id = fw.agent_id
+                WHERE fw.timestamp > datetime('now', '-10 minutes')
+                GROUP BY fw.agent_id, fw.destination
+                HAVING COUNT(*) > 1
+                ORDER BY total_amount DESC
+                LIMIT 20
+                """
+            )
+            for r in await cur.fetchall():
+                agent_avg = r["agent_avg"] or 0.01
+                ratio = round(r["total_amount"] / agent_avg, 1)
+                rows.append(
+                    {
+                        "agent_id": r["agent_id"],
+                        "destination": r["destination"],
+                        "tx_count": r["tx_count"],
+                        "total_amount": round(r["total_amount"], 6),
+                        "max_single": round(r["max_single"], 6),
+                        "min_single": round(r["min_single"], 6),
+                        "ratio_vs_avg": ratio,
+                    }
+                )
+        return rows
+
+    # ── Service Top (service registry dashboard) ──────────────────────────────
+    @app.get("/services/top", tags=["Services"])
+    async def services_top(limit: int = 10):
+        """
+        Returns the top services by total volume received — used by the
+        Service Registry panel in the dashboard.
+        """
+        if not memory._db:
+            return []
+
+        rows = []
+        async with memory._lock:
+            cur = await memory._db.execute(
+                """
+                SELECT address, name, trust_level, category,
+                       total_received, unique_payers, complaints,
+                       first_seen, last_seen, tags
+                FROM service_registry
+                ORDER BY total_received DESC, unique_payers DESC
+                LIMIT ?
+                """,
+                (limit,),
+            )
+            for r in await cur.fetchall():
+                rows.append(
+                    {
+                        "address": r["address"],
+                        "name": r["name"],
+                        "trust": r["trust_level"],
+                        "category": r["category"],
+                        "total_received_usdc": round(r["total_received"] or 0.0, 6),
+                        "unique_payers": r["unique_payers"] or 0,
+                        "complaints": r["complaints"] or 0,
+                        "first_seen": r["first_seen"],
+                        "last_seen": r["last_seen"],
+                        "tags": json.loads(r["tags"] or "[]"),
+                    }
+                )
+        return rows
+
+    @app.get("/demo/report", tags=["Demo"])
+    async def demo_report():
+        """Generate submission-grade demo report JSON and persist it to disk."""
+        # Use efficient SQL counters instead of loading thousands of rows
+        onchain_counts = await memory.get_onchain_counts()
+        simulated_tx_count = onchain_counts["simulated_tx_count"]
+        confirmed_onchain_count = onchain_counts["confirmed_onchain_tx_count"]
+        decision_total = onchain_counts["total_tx_count"]
+
+        # Fetch only the last 50 confirmed hashes for the proof payload
+        recent_confirmed_hashes: list[str] = []
+        try:
+            if memory._db:
+                async with memory._lock:
+                    cur = await memory._db.execute(
+                        """
+                        SELECT arc_tx_hash FROM decisions
+                        WHERE arc_tx_hash != ''
+                          AND arc_tx_hash NOT LIKE '0xSIM_%'
+                          AND arc_tx_hash NOT LIKE '0xERROR_%'
+                        ORDER BY timestamp DESC
+                        LIMIT 50
+                        """
+                    )
+                    recent_confirmed_hashes = [row[0] for row in await cur.fetchall()]
+        except Exception:
+            pass
+
+        treasury_state = treasury.get_state()
+        stats = await memory.get_stats()
+        protected_usdc = float(stats.get("usdc_saved", 0.0))
+        security_cost = float(treasury_state.get("total_spent", 0.0))
+        roi = (protected_usdc / security_cost) if security_cost > 0 else 0.0
+
+        report = {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "demo_mode": settings.demo_mode,
+            "track_alignment": [
+                "agent-to-agent-payment-loop",
+                "per-api-monetization-engine",
+            ],
+            "pricing": {
+                "evaluate_usdc": settings.arcwarden_eval_price_usdc,
+                "escalate_usdc": settings.arcwarden_escalate_price_usdc,
+                "price_constraint_ok": settings.arcwarden_eval_price_usdc <= 0.01,
+            },
+            "onchain_proof": {
+                "decision_total": decision_total,
+                "simulated_tx_count": simulated_tx_count,
+                "confirmed_onchain_tx_count": confirmed_onchain_count,
+                "valid_tx_count": confirmed_onchain_count,
+                "target_50_met": confirmed_onchain_count >= 50,
+                "recent_tx_hashes": recent_confirmed_hashes,
+                "explorer_links": [
+                    f"{settings.arc_explorer_url}/tx/{h}"
+                    for h in recent_confirmed_hashes[:10]
+                ],
+                "signer_explorer": (
+                    f"{settings.arc_explorer_url}/address/{settings.arc_signer_address}"
+                    if settings.arc_signer_address
+                    else None
+                ),
+                "arc_explorer": settings.arc_explorer_url,
+                "arc_chain_id": settings.arc_chain_id,
+                "arc_rpc": settings.arc_rpc_url,
+                "note": (
+                    "simulated = 0xSIM_* hashes (DEMO_MODE=true). "
+                    "confirmed = real Arc L1 hashes (DEMO_MODE=false). "
+                    "Verify any hash independently at testnet.arcscan.app."
+                ),
+            },
+            "economics": {
+                "treasury": treasury_state,
+                "protected_usdc": protected_usdc,
+                "security_cost_usdc": security_cost,
+                "roi_protected_over_cost": round(roi, 4),
+            },
+            "decisions_summary": {
+                "allow": stats.get("allow", 0),
+                "block": stats.get("block", 0),
+                "escalate": stats.get("escalate", 0),
+                "patterns_learned": stats.get("patterns_learned", 0),
+            },
+            "threat_registry": await threat_registry.get_stats(),
+            "contract_inspector": {
+                "enabled": True,
+                "detection_layers": [
+                    "eoa_vs_contract",
+                    "service_registry_crosscheck",
+                    "memoclaw_drain_history",
+                    "dangerous_selectors_4bytes",
+                    "delegatecall_proxy_opcode_0xF4",
+                    "selfdestruct_opcode_0xFF",
+                    "eip1167_minimal_proxy",
+                ],
+                "note": "Bytecode analysis uses correct EVM opcodes (0xF4=DELEGATECALL, 0xFF=SELFDESTRUCT) and keccak256 function selectors — not heuristic patterns.",
+            },
+            "ecosystem": ecosystem_orchestrator.get_status(),
+            "margin_story": {
+                "arc_fee_assumption_usdc": 0.000003,
+                "ethereum_fee_example_usdc": 0.5,
+                "polygon_fee_example_usdc": 0.01,
+                "why_arc": (
+                    "Sub-cent pricing breaks on traditional gas. "
+                    "Arc L1 fee ($0.000003) = 0.3% of service price ($0.001). "
+                    "On Ethereum mainnet the same tx costs $0.50–$5.00 = 500–5000× the service price."
+                ),
+            },
+        }
+
+        out_path = Path(settings.demo_report_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+        return report
+
+    @app.get("/demo/live", tags=["Demo"])
+    async def demo_live():
+        """Server-sent events stream for premium demo UI."""
+
+        async def event_generator():
+            while True:
+                stats = await memory.get_stats()
+                patterns = await memory.get_top_patterns(5)
+                agents = await memory.get_all_agents()
+                # Comptage onchain via méthode dédiée (requête SQL unique, connexion partagée)
+                onchain_counts = await memory.get_onchain_counts()
+                simulated_tx_count = onchain_counts["simulated_tx_count"]
+                confirmed_onchain_tx_count = onchain_counts[
+                    "confirmed_onchain_tx_count"
+                ]
+                recent_logs = await memory.get_recent_decisions(20)
+                allow_threshold, block_threshold = await policy_brain.get_thresholds()
+                latest_policy = await memory.get_latest_policy_update()
+                payload = {
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "treasury": treasury.get_state(),
+                    "decisions": stats,
+                    "onchain_proof": {
+                        "simulated_tx_count": simulated_tx_count,
+                        "confirmed_onchain_tx_count": confirmed_onchain_tx_count,
+                        "target_50_met": confirmed_onchain_tx_count >= 50,
+                    },
+                    "threat_registry": await threat_registry.get_stats(),
+                    "top_patterns": patterns,
+                    "agents_tracked": len(agents),
+                    "ecosystem": ecosystem_orchestrator.get_status(),
+                    "policy": {
+                        "allow_threshold": allow_threshold,
+                        "block_threshold": block_threshold,
+                        "latest_update": latest_policy,
+                    },
+                    "recent_logs": recent_logs,
+                }
+                yield f"data: {json.dumps(payload)}\n\n"
+                await asyncio.sleep(2)
+
+        headers = {
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        }
+        return StreamingResponse(
+            event_generator(), media_type="text/event-stream", headers=headers
+        )
