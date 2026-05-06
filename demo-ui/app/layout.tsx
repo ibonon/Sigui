@@ -2,8 +2,9 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "ArcWarden — Autonomous Security Oracle",
-  description: "Real-time AI-powered threat detection, x402 payment loop, Circle DCW treasury. Hackathon: Agentic Economy on ARC.",
+  title: "Sigui Protocol — The Regeneration Oracle",
+  description:
+    "Omnichain visual security oracle with Imina Na, Kanaga, Hogonat DAO and multi-chain treasury dashboard.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

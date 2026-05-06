@@ -29,3 +29,8 @@ demo-ui/node_modules/
 # Logs and db journal
 logs/*.log
 db/*.db-*
+
+# Data and large files
+*.zip
+data/
+datasets/

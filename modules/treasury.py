@@ -29,11 +29,15 @@ class TreasuryEmptyError(Exception):
 
 @dataclass
 class TreasuryState:
-    balance: float = 0.0
+    balances_by_chain: dict[str, float] = field(default_factory=dict)
     total_earned: float = 0.0
     total_spent: float = 0.0
     mode: AgentMode = AgentMode.NORMAL
     last_updated: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+
+    @property
+    def balance(self) -> float:
+        return float(sum(self.balances_by_chain.values()))
 
     @property
     def net_profit(self) -> float:
@@ -47,7 +51,9 @@ class TreasuryManager:
     """
 
     def __init__(self):
-        self._state = TreasuryState(balance=settings.initial_balance_usdc)
+        self._state = TreasuryState(
+            balances_by_chain={settings.default_chain: settings.initial_balance_usdc}
+        )
         self._lock = asyncio.Lock()
         self._db = None  # Set after memory init
         self._mode_change_callbacks = []
@@ -76,30 +82,38 @@ class TreasuryManager:
             async with self._db._lock:
                 async with self._db._db.execute(
                     """
-                    SELECT type, COALESCE(SUM(amount_usdc), 0.0) AS total
+                    SELECT type, chain, COALESCE(SUM(amount_usdc), 0.0) AS total
                     FROM treasury_log
-                    GROUP BY type
+                    GROUP BY type, chain
                     """
                 ) as cursor:
                     rows = await cursor.fetchall()
 
             earned = 0.0
             spent = 0.0
+            balances_by_chain: dict[str, float] = {
+                settings.default_chain: settings.initial_balance_usdc
+            }
             for row in rows:
-                tx_type, total = row[0], float(row[1])
+                tx_type, chain, total = row[0], row[1] or settings.default_chain, float(
+                    row[2]
+                )
                 if tx_type == "revenue":
-                    earned = total
+                    earned += total
+                    balances_by_chain[chain] = balances_by_chain.get(chain, 0.0) + total
                 elif tx_type == "expense":
-                    spent = total
+                    spent += total
+                    balances_by_chain[chain] = balances_by_chain.get(chain, 0.0) - total
 
-            reconstructed_balance = max(
-                0.0, settings.initial_balance_usdc + earned - spent
-            )
+            balances_by_chain = {
+                k: round(max(0.0, v), 8) for k, v in balances_by_chain.items()
+            }
+            reconstructed_balance = float(sum(balances_by_chain.values()))
 
             async with self._lock:
                 self._state.total_earned = earned
                 self._state.total_spent = spent
-                self._state.balance = reconstructed_balance
+                self._state.balances_by_chain = balances_by_chain
                 self._state.last_updated = datetime.utcnow().isoformat()
 
             # Sync also the circle client simulated balance
@@ -107,7 +121,7 @@ class TreasuryManager:
 
             if circle_client.demo_mode:
                 circle_client._simulated_balances[circle_client.wallet_id] = (
-                    reconstructed_balance
+                    balances_by_chain.get(settings.default_chain, reconstructed_balance)
                 )
 
             await self._check_mode_change()
@@ -153,6 +167,10 @@ class TreasuryManager:
     def get_state(self) -> dict:
         return {
             "balance": round(self._state.balance, 6),
+            "balances_by_chain": {
+                chain: round(amount, 6)
+                for chain, amount in self._state.balances_by_chain.items()
+            },
             "total_earned": round(self._state.total_earned, 6),
             "total_spent": round(self._state.total_spent, 6),
             "net_profit": round(self._state.net_profit, 6),
@@ -166,26 +184,38 @@ class TreasuryManager:
         """Sync balance from Circle API (or demo simulation)."""
         live_balance = await circle_client.get_wallet_balance()
         async with self._lock:
-            # In demo mode, merge simulated revenue into the balance
-            self._state.balance = live_balance
+            # Arc wallet is treated as the default chain balance.
+            self._state.balances_by_chain[settings.default_chain] = live_balance
             self._state.last_updated = datetime.utcnow().isoformat()
         await self._check_mode_change()
         logger.debug(
             f"[TREASURY] Sync: balance=${self._state.balance:.6f} mode={self._state.mode}"
         )
 
-    async def record_revenue(self, amount_usdc: float, description: str = "eval_fee"):
+    async def record_revenue(
+        self, amount_usdc: float, description: str = "eval_fee", chain: str = "arc"
+    ):
         """Record incoming payment from client agent."""
         async with self._lock:
-            self._state.balance += amount_usdc
+            self._state.balances_by_chain[chain] = (
+                self._state.balances_by_chain.get(chain, 0.0) + amount_usdc
+            )
             self._state.total_earned += amount_usdc
             circle_client.add_revenue(amount_usdc)
         if self._db:
-            await self._db.log_treasury("revenue", amount_usdc, description)
+            await self._db.log_treasury("revenue", amount_usdc, description, chain=chain)
         await self._check_mode_change()
         logger.debug(
-            f"[TREASURY] +${amount_usdc:.6f} ({description}) → balance=${self._state.balance:.6f}"
+            f"[TREASURY] +${amount_usdc:.6f} ({description}, chain={chain}) "
+            f"→ balance=${self._state.balance:.6f}"
         )
+
+    def _pick_spend_chain(self, preferred_chain: str = "arc") -> str:
+        if preferred_chain in self._state.balances_by_chain:
+            return preferred_chain
+        if not self._state.balances_by_chain:
+            return settings.default_chain
+        return max(self._state.balances_by_chain, key=self._state.balances_by_chain.get)
 
     async def pay_for_escalation(self) -> bool:
         """
@@ -200,34 +230,37 @@ class TreasuryManager:
                     f"(balance=${self._state.balance:.6f} < ${cost}) — fallback activated"
                 )
                 return False
-            self._state.balance -= cost
+            spend_chain = self._pick_spend_chain(settings.default_chain)
+            self._state.balances_by_chain[spend_chain] = max(
+                0.0, self._state.balances_by_chain.get(spend_chain, 0.0) - cost
+            )
             self._state.total_spent += cost
             circle_client.spend(cost)
 
         if self._db:
-            await self._db._db.execute(
-                "INSERT INTO treasury_log (type, amount_usdc, description) VALUES (?, ?, ?)",
-                ("expense", cost, "claude_escalation_api"),
+            await self._db.log_treasury(
+                "expense",
+                cost,
+                "claude_escalation_api",
+                chain=settings.default_chain,
             )
-            await self._db._db.commit()
         await self._check_mode_change()
         logger.info(
             f"[TREASURY] -${cost:.6f} (claude_escalation) → balance=${self._state.balance:.6f}"
         )
         return True
 
-    async def pay_arc_fee(self, amount: float = 0.000003):
+    async def pay_arc_fee(self, amount: float = 0.000003, chain: str = "arc"):
         """Pay Arc transaction logging fee."""
         async with self._lock:
-            self._state.balance = max(0.0, self._state.balance - amount)
+            spend_chain = self._pick_spend_chain(chain)
+            self._state.balances_by_chain[spend_chain] = max(
+                0.0, self._state.balances_by_chain.get(spend_chain, 0.0) - amount
+            )
             self._state.total_spent += amount
             circle_client.spend(amount)
         if self._db:
-            await self._db._db.execute(
-                "INSERT INTO treasury_log (type, amount_usdc, description) VALUES (?, ?, ?)",
-                ("expense", amount, "arc_tx_fee"),
-            )
-            await self._db._db.commit()
+            await self._db.log_treasury("expense", amount, "arc_tx_fee", chain=chain)
         await self._check_mode_change()
 
     def should_escalate(self, risk_score: float) -> bool:

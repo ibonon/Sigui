@@ -81,6 +81,78 @@ class Settings(BaseSettings):
     )
     claude_cost_per_escalation: float = Field(default=0.0006)
 
+    # ─── Sigui P0 Pricing & Chains ────────────────────────────────────────────
+    # Pricing proportionnel PRD: max(min_eval_price, amount * eval_rate)
+    # Surcharge vision appliquée aux évaluations élevées.
+    min_eval_price_usdc: float = Field(default=0.001, env="MIN_EVAL_PRICE_USDC")
+    eval_price_rate: float = Field(default=0.0005, env="EVAL_PRICE_RATE")
+    vision_fee_usdc: float = Field(default=0.0002, env="VISION_FEE_USDC")
+    vision_fee_threshold_usdc: float = Field(
+        default=0.01, env="VISION_FEE_THRESHOLD_USDC"
+    )
+    default_chain: str = Field(default="arc", env="DEFAULT_CHAIN")
+    supported_chains_csv: str = Field(
+        default="arc,ethereum,solana", env="SUPPORTED_CHAINS_CSV"
+    )
+
+    # ─── Sigui P2 Lebe (Escalation Engine — Qwen2.5 AMD MI300X) ─────────────
+    # Qwen2.5-3B served via vLLM ROCm on AMD MI300X.
+    # Falls back to Claude if endpoint is unreachable and lebe_fallback_to_claude=True.
+    lebe_enabled: bool = Field(default=True, env="LEBE_ENABLED")
+    lebe_endpoint: str = Field(
+        default="http://134.199.201.220:8001/v1/chat/completions",
+        env="LEBE_ENDPOINT",
+    )
+    lebe_model_name: str = Field(default="lebe", env="LEBE_MODEL_NAME")
+    lebe_api_key: str = Field(default="sigui-key", env="LEBE_API_KEY")
+    lebe_timeout_s: float = Field(default=4.0, env="LEBE_TIMEOUT_S")
+    lebe_mock_mode: bool = Field(default=False, env="LEBE_MOCK_MODE")
+    # If True, Claude is used as fallback when Lebe is unreachable.
+    lebe_fallback_to_claude: bool = Field(default=True, env="LEBE_FALLBACK_TO_CLAUDE")
+
+    # ─── Sigui P3 Hogonat On-Chain ────────────────────────────────────────────
+    # Set HOGONAT_CONTRACT_ADDRESS to activate on-chain mode.
+    # Leave empty to keep mock_mode=True (safe default for demo).
+    hogonat_contract_address: str = Field(default="", env="HOGONAT_CONTRACT_ADDRESS")
+    # USDC token used for staking — defaults to Arc native USDC.
+    hogonat_usdc_token_address: str = Field(
+        default="0x3600000000000000000000000000000000000000",
+        env="HOGONAT_USDC_TOKEN_ADDRESS",
+    )
+    # USDC decimals for staking (6 for ERC-20 USDC, 18 for Arc native)
+    hogonat_usdc_decimals: int = Field(default=6, env="HOGONAT_USDC_DECIMALS")
+
+    # ─── Sigui P1 Vision + Kanaga ─────────────────────────────────────────────
+    vision_enabled: bool = Field(default=True, env="VISION_ENABLED")
+    vision_mock_mode: bool = Field(default=False, env="VISION_MOCK_MODE")
+    vision_timeout_s: float = Field(default=1.5, env="VISION_TIMEOUT_S")
+    vision_endpoint: str = Field(
+        default="http://134.199.201.220:8002/v1/chat/completions", env="VISION_ENDPOINT"
+    )
+    vision_model_name: str = Field(default="imina-na", env="VISION_MODEL_NAME")
+    vision_confidence_block_threshold: float = Field(
+        default=0.80, env="VISION_CONFIDENCE_BLOCK_THRESHOLD"
+    )
+
+    kanaga_enabled: bool = Field(default=True, env="KANAGA_ENABLED")
+    kanaga_prefer_gpu: bool = Field(default=True, env="KANAGA_PREFER_GPU")
+
+    # ─── Sigui P3 Hogonat Governance ──────────────────────────────────────────
+    hogonat_enabled: bool = Field(default=True, env="HOGONAT_ENABLED")
+    # mock_mode is auto-derived: True if hogonat_contract_address is empty.
+    hogonat_mock_mode: bool = Field(default=True, env="HOGONAT_MOCK_MODE")
+    hogonat_allow_threshold: float = Field(default=0.30, env="HOGONAT_ALLOW_THRESHOLD")
+    hogonat_block_threshold: float = Field(default=0.70, env="HOGONAT_BLOCK_THRESHOLD")
+    hogonat_initial_weights_csv: str = Field(
+        default="0.40,0.30,0.30", env="HOGONAT_INITIAL_WEIGHTS_CSV"
+    )
+    hogonat_min_stake_usdc: float = Field(default=0.01, env="HOGONAT_MIN_STAKE_USDC")
+
+    @property
+    def hogonat_is_onchain(self) -> bool:
+        """True when a real contract address is configured — activates on-chain mode."""
+        return bool(self.hogonat_contract_address.strip())
+
     # ─── Database ─────────────────────────────────────────────────────────────
     db_path: str = Field(default="./db/arcwarden.db", env="DB_PATH")
 

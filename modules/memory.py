@@ -48,11 +48,41 @@ class MemoClaw:
         with open("db/schema.sql", "r") as f:
             schema = f.read()
         await self._db.executescript(schema)
+        await self._apply_runtime_migrations()
         await self._db.commit()
         await self._refresh_pattern_cache()
         await self._load_persistent_blacklist()
         await self.unfreeze_expired()
         logger.info("[MEMOCLAW] Initialized — database ready (WAL mode enabled)")
+
+    async def _column_exists(self, table_name: str, column_name: str) -> bool:
+        async with self._db.execute(f"PRAGMA table_info({table_name})") as cursor:
+            rows = await cursor.fetchall()
+        return any(row["name"] == column_name for row in rows)
+
+    async def _apply_runtime_migrations(self):
+        """
+        Safe migrations for existing SQLite files.
+        Keeps backward compatibility when new columns are added after first run.
+        """
+        if not await self._column_exists("flow_windows", "chain"):
+            await self._db.execute(
+                "ALTER TABLE flow_windows ADD COLUMN chain TEXT NOT NULL DEFAULT 'arc'"
+            )
+        if not await self._column_exists("decisions", "chain"):
+            await self._db.execute(
+                "ALTER TABLE decisions ADD COLUMN chain TEXT DEFAULT 'arc'"
+            )
+        if not await self._column_exists("treasury_log", "chain"):
+            await self._db.execute(
+                "ALTER TABLE treasury_log ADD COLUMN chain TEXT DEFAULT 'arc'"
+            )
+        await self._db.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_flow_agent_chain_dest
+            ON flow_windows (agent_id, chain, destination, timestamp)
+            """
+        )
 
     async def close(self):
         if self._db:
@@ -296,20 +326,22 @@ class MemoClaw:
         arc_tx_hash: str,
         arcwarden_mode: str,
         processing_time_ms: int,
+        chain: str = "arc",
     ):
         async with self._lock:
             await self._db.execute(
                 """INSERT INTO decisions
-                   (agent_id, action_type, amount_usdc, destination, action_hash,
+                   (agent_id, action_type, amount_usdc, destination, action_hash, chain,
                     decision, risk_score, confidence, rules_triggered,
                     arc_tx_hash, arcwarden_mode, processing_time_ms)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     agent_id,
                     action_type,
                     amount_usdc,
                     destination,
                     action_hash,
+                    chain,
                     decision,
                     risk_score,
                     confidence,
@@ -509,6 +541,27 @@ class MemoClaw:
         return dict(row) if row else None
 
     # ────────────────────────────────────────────────────────────────────────────
+    # Hogonat History
+    # ────────────────────────────────────────────────────────────────────────────
+
+    async def log_hogonat_action(self, action_type: str, staker_id: str = "", amount_usdc: float = 0.0, details: str = ""):
+        async with self._lock:
+            await self._db.execute(
+                """INSERT INTO hogonat_history (action_type, staker_id, amount_usdc, details)
+                   VALUES (?, ?, ?, ?)""",
+                (action_type, staker_id, amount_usdc, details)
+            )
+            await self._db.commit()
+
+    async def get_hogonat_history(self, limit: int = 50) -> list[dict]:
+        async with self._lock:
+            async with self._db.execute(
+                "SELECT * FROM hogonat_history ORDER BY timestamp DESC LIMIT ?", (limit,)
+            ) as cursor:
+                rows = await cursor.fetchall()
+        return [dict(r) for r in rows]
+
+    # ────────────────────────────────────────────────────────────────────────────
     # MemoClaw Security — Agent Freeze & Persistent Blacklist
     # ────────────────────────────────────────────────────────────────────────────
 
@@ -666,13 +719,15 @@ class MemoClaw:
     # Flow Windows — Anti-Splitting / Sybil Detection
     # ────────────────────────────────────────────────────────────────────────────
 
-    async def record_flow(self, agent_id: str, destination: str, amount: float):
+    async def record_flow(
+        self, agent_id: str, destination: str, amount: float, chain: str = "arc"
+    ):
         """Enregistre chaque transaction dans la fenêtre glissante (10 min)."""
         async with self._lock:
             await self._db.execute(
-                "INSERT INTO flow_windows (agent_id, destination, amount_usdc)"
-                " VALUES (?, ?, ?)",
-                (agent_id, destination, amount),
+                "INSERT INTO flow_windows (agent_id, destination, chain, amount_usdc)"
+                " VALUES (?, ?, ?, ?)",
+                (agent_id, destination, chain, amount),
             )
             # Nettoyage automatique des entrées > 10 minutes
             await self._db.execute(
@@ -685,6 +740,7 @@ class MemoClaw:
         agent_id: str,
         destination: str,
         window_minutes: int = 10,
+        chain: str = "arc",
     ) -> dict:
         """
         Retourne le flux cumulé de cet agent vers cette destination
@@ -700,9 +756,10 @@ class MemoClaw:
                 FROM flow_windows
                 WHERE agent_id = ?
                     AND destination = ?
+                    AND chain = ?
                     AND timestamp > datetime('now', ? || ' minutes')
                 """,
-                (agent_id, destination, f"-{window_minutes}"),
+                (agent_id, destination, chain, f"-{window_minutes}"),
             ) as cur:
                 row = await cur.fetchone()
         return {
@@ -716,23 +773,36 @@ class MemoClaw:
         self,
         agent_id: str,
         window_minutes: int = 10,
+        chain: str | None = None,
+        all_chains: bool = True,
     ) -> dict:
         """
         Retourne le flux cumulé de cet agent vers TOUTES destinations
         dans les N dernières minutes — détecte le splitting multi-dest.
         """
         async with self._lock:
-            async with self._db.execute(
-                """SELECT
+            if all_chains:
+                sql = """SELECT
                     COUNT(*)                    AS tx_count,
                     COUNT(DISTINCT destination) AS dest_count,
                     SUM(amount_usdc)            AS total_amount
                 FROM flow_windows
                 WHERE agent_id = ?
                     AND timestamp > datetime('now', ? || ' minutes')
-                """,
-                (agent_id, f"-{window_minutes}"),
-            ) as cur:
+                """
+                params = (agent_id, f"-{window_minutes}")
+            else:
+                sql = """SELECT
+                    COUNT(*)                    AS tx_count,
+                    COUNT(DISTINCT destination) AS dest_count,
+                    SUM(amount_usdc)            AS total_amount
+                FROM flow_windows
+                WHERE agent_id = ?
+                    AND chain = ?
+                    AND timestamp > datetime('now', ? || ' minutes')
+                """
+                params = (agent_id, chain or "arc", f"-{window_minutes}")
+            async with self._db.execute(sql, params) as cur:
                 row = await cur.fetchone()
         return {
             "tx_count": row["tx_count"] or 0,
@@ -759,12 +829,14 @@ class MemoClaw:
         await self.unfreeze_expired()
         logger.debug("[MEMOCLAW] Pattern consolidation + freeze cleanup complete")
 
-    async def log_treasury(self, tx_type: str, amount_usdc: float, description: str):
+    async def log_treasury(
+        self, tx_type: str, amount_usdc: float, description: str, chain: str = "arc"
+    ):
         """Thread-safe logging of treasury events."""
         async with self._lock:
             await self._db.execute(
-                "INSERT INTO treasury_log (type, amount_usdc, description) VALUES (?, ?, ?)",
-                (tx_type, amount_usdc, description),
+                "INSERT INTO treasury_log (type, amount_usdc, chain, description) VALUES (?, ?, ?, ?)",
+                (tx_type, amount_usdc, chain, description),
             )
             await self._db.commit()
 

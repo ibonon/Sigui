@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS decisions (
     decision           TEXT NOT NULL,
     risk_score         REAL NOT NULL,
     confidence         REAL DEFAULT 0.0,
+    chain              TEXT DEFAULT 'arc',
     rules_triggered    TEXT DEFAULT '[]',
     arc_tx_hash        TEXT DEFAULT '',
     arcwarden_mode     TEXT DEFAULT 'NORMAL',
@@ -56,6 +57,7 @@ CREATE TABLE IF NOT EXISTS treasury_log (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     type        TEXT NOT NULL,
     amount_usdc REAL NOT NULL,
+    chain       TEXT DEFAULT 'arc',
     description TEXT DEFAULT '',
     timestamp   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -110,15 +112,28 @@ CREATE INDEX IF NOT EXISTS idx_policy_updates_ts  ON policy_updates(created_at);
 CREATE INDEX IF NOT EXISTS idx_freeze_until       ON agent_freeze(frozen_until);
 CREATE INDEX IF NOT EXISTS idx_blacklist_addr     ON blacklist(address);
 
+-- Historique des actions du DAO Hogonat
+CREATE TABLE IF NOT EXISTS hogonat_history (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    action_type     TEXT NOT NULL,
+    staker_id       TEXT,
+    amount_usdc     REAL DEFAULT 0.0,
+    details         TEXT DEFAULT '',
+    timestamp       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_hogonat_ts         ON hogonat_history(timestamp);
+
 -- ── Fenêtre glissante anti-splitting (transaction fragmentation detection) ────
 CREATE TABLE IF NOT EXISTS flow_windows (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     agent_id        TEXT NOT NULL,
     destination     TEXT NOT NULL,
+    chain           TEXT NOT NULL DEFAULT 'arc',
     amount_usdc     REAL NOT NULL,
     timestamp       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Index pour performance
 CREATE INDEX IF NOT EXISTS idx_flow_agent_dest
     ON flow_windows (agent_id, destination, timestamp);
 

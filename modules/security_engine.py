@@ -43,6 +43,7 @@ class ActionInput(BaseModel):
     action_type: str  # transfer | api_call | contract_interaction | swap
     amount_usdc: float = 0.0
     destination: str = ""
+    chain: str = "arc"
     context: dict = Field(default_factory=dict)
     payment_tx_hash: Optional[str] = None
 
@@ -92,6 +93,14 @@ class ActionInput(BaseModel):
         if len(v) > 256:
             raise ValueError("destination exceeds 256 characters")
         return v
+
+    @field_validator("chain")
+    @classmethod
+    def validate_chain(cls, v: str) -> str:
+        chain = (v or "arc").strip().lower()
+        if chain not in {"arc", "ethereum", "solana"}:
+            raise ValueError("chain must be one of: arc, ethereum, solana")
+        return chain
 
 
 class RiskOutput(BaseModel):
@@ -597,6 +606,7 @@ class DecisionEngine:
         arcwarden_mode: AgentMode,
         escalation_available: bool = False,
         agent_profile: dict | None = None,
+        skip_onchain_log: bool = False,
     ) -> DecisionOutput:
         t_start = time.perf_counter()
         R = risk.risk_score
@@ -657,7 +667,9 @@ class DecisionEngine:
             f"[DECISION] {decision.value} | agent={agent_id} | R={R:.3f} | source={policy_source} | {reason}"
         )
 
-        arc_tx = await arc_client.log_decision_onchain(action_hash, decision.value, R)
+        arc_tx = ""
+        if not skip_onchain_log:
+            arc_tx = await arc_client.log_decision_onchain(action_hash, decision.value, R)
         total_ms = int((time.perf_counter() - t_start) * 1000) + risk.processing_time_ms
 
         return DecisionOutput(

@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from agent.loop import AgentMode
 from config import settings
-from modules.llm_gateway import llm_gateway
+from modules.llm_gateway import LebeGateway, lebe_gateway, llm_gateway
 from modules.memory import memory
 
 # Optional dependencies
@@ -466,6 +466,9 @@ class EscalationResult(BaseModel):
     fallback_used: bool = False
     degraded_mode: bool = False
     reason: str = ""
+    # Provenance tracking (Feature 1 — Lebe integration)
+    inference_engine: str = "rule_based"  # "lebe_qwen25" | "claude_fallback" | "rule_based"
+    inference_device: str = "CPU"          # "AMD MI300X" | "REMOTE" | "CPU"
 
 
 class EscalationEngine:
@@ -516,17 +519,7 @@ class EscalationEngine:
             result = self._rule_based_fallback(action, agent_profile)
             if is_degraded:
                 result.degraded_mode = True
-                result.reason = "Treasury below threshold — Claude escalation skipped"
-            return result
-
-        if not llm_gateway.is_available():
-            logger.info("[ESCALATION] Claude not available — rule-based fallback")
-            result = self._rule_based_fallback(action, agent_profile)
-            result.paid_by_arcwarden = True
-            result.claude_cost_usdc = 0.0
-            if is_degraded:
-                result.degraded_mode = True
-                result.reason = "Claude unavailable and Treasury below threshold"
+                result.reason = "Treasury below threshold — escalation skipped"
             return result
 
         user_content = json.dumps(
@@ -544,40 +537,88 @@ class EscalationEngine:
             indent=2,
         )
 
-        logger.info(
-            f"[ESCALATION] Calling Claude for agent={action.get('agent_id')} R={risk_score:.3f}"
-        )
+        # ── Step 1: Try Lebe (Qwen2.5 on AMD MI300X) — primary engine ─────────
+        lebe_data: dict | None = None
+        lebe_status = "lebe_skipped"
 
-        data, status = await llm_gateway.call_json_model(
-            system_prompt=ESCALATION_PROMPT,
-            user_payload=user_content,
-            max_tokens=256,
-            required_keys={"decision", "analysis", "confidence"},
-            timeout=5.0,
-            context_id=f"escalation_agent_{action.get('agent_id')}",
-        )
-
-        if not data:
-            logger.warning(
-                f"[ESCALATION] Claude failed ({status}) — rule-based fallback"
+        if lebe_gateway.is_available() and settings.lebe_enabled:
+            logger.info(
+                f"[ESCALATION] 🧠 Calling Lebe (Qwen2.5 AMD) for "
+                f"agent={action.get('agent_id')} R={risk_score:.3f}"
             )
-            result = self._rule_based_fallback(action, agent_profile)
-            result.paid_by_arcwarden = True
-            return result
+            lebe_data, lebe_status = await lebe_gateway.call_json_model(
+                system_prompt=ESCALATION_PROMPT,
+                user_payload=user_content,
+                max_tokens=256,
+                required_keys={"decision", "analysis", "confidence"},
+                timeout=settings.lebe_timeout_s,
+                context_id=f"lebe_escalation_{action.get('agent_id', 'unknown')}",
+            )
 
-        logger.info(
-            f"[ESCALATION] Claude → {data.get('decision')} (conf={data.get('confidence')})"
-        )
-        return EscalationResult(
-            escalation_result=data.get("decision", "BLOCK"),
-            cap_amount_usdc=float(data.get("cap_amount_usdc", 0.0)),
-            analysis=data.get("analysis", "No analysis provided."),
-            confidence=float(data.get("confidence", 0.75)),
-            paid_by_arcwarden=True,
-            claude_cost_usdc=settings.claude_cost_per_escalation,
-            degraded_mode=is_degraded,
-            reason="Operating in DEGRADED mode" if is_degraded else "",
-        )
+        if lebe_data:
+            logger.info(
+                f"[ESCALATION] ✅ Lebe → {lebe_data.get('decision')} "
+                f"(conf={lebe_data.get('confidence')}) device=AMD_MI300X"
+            )
+            return EscalationResult(
+                escalation_result=lebe_data.get("decision", "BLOCK"),
+                cap_amount_usdc=float(lebe_data.get("cap_amount_usdc", 0.0)),
+                analysis=lebe_data.get("analysis", "No analysis provided."),
+                confidence=float(lebe_data.get("confidence", 0.75)),
+                paid_by_arcwarden=True,
+                claude_cost_usdc=0.0,  # Lebe runs locally — no API cost
+                degraded_mode=is_degraded,
+                reason="Operating in DEGRADED mode" if is_degraded else "",
+                inference_engine="lebe_qwen25",
+                inference_device="AMD MI300X",
+            )
+
+        # ── Step 2: Fallback to Claude (Anthropic API) ─────────────────────────
+        if lebe_status not in ("lebe_skipped",):
+            logger.warning(
+                f"[ESCALATION] Lebe failed ({lebe_status}) — "
+                f"{'falling back to Claude' if settings.lebe_fallback_to_claude and llm_gateway.is_available() else 'rule-based fallback'}"
+            )
+
+        if settings.lebe_fallback_to_claude and llm_gateway.is_available():
+            logger.info(
+                f"[ESCALATION] 🔁 Calling Claude for "
+                f"agent={action.get('agent_id')} R={risk_score:.3f}"
+            )
+            claude_data, claude_status = await llm_gateway.call_json_model(
+                system_prompt=ESCALATION_PROMPT,
+                user_payload=user_content,
+                max_tokens=256,
+                required_keys={"decision", "analysis", "confidence"},
+                timeout=5.0,
+                context_id=f"claude_escalation_{action.get('agent_id', 'unknown')}",
+            )
+            if claude_data:
+                logger.info(
+                    f"[ESCALATION] ✅ Claude → {claude_data.get('decision')} "
+                    f"(conf={claude_data.get('confidence')})"
+                )
+                return EscalationResult(
+                    escalation_result=claude_data.get("decision", "BLOCK"),
+                    cap_amount_usdc=float(claude_data.get("cap_amount_usdc", 0.0)),
+                    analysis=claude_data.get("analysis", "No analysis provided."),
+                    confidence=float(claude_data.get("confidence", 0.75)),
+                    paid_by_arcwarden=True,
+                    claude_cost_usdc=settings.claude_cost_per_escalation,
+                    degraded_mode=is_degraded,
+                    reason="Operating in DEGRADED mode" if is_degraded else "",
+                    inference_engine="claude_fallback",
+                    inference_device="REMOTE",
+                )
+
+        # ── Step 3: Rule-based fallback (always available) ─────────────────────
+        logger.warning("[ESCALATION] All LLM engines unavailable — rule-based fallback")
+        result = self._rule_based_fallback(action, agent_profile)
+        result.paid_by_arcwarden = treasury_authorized
+        result.degraded_mode = is_degraded
+        result.inference_engine = "rule_based"
+        result.inference_device = "CPU"
+        return result
 
 
 # Instances

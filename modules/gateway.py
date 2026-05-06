@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from loguru import logger
 
 from agent.loop import AgentMode
+from blockchain import get_adapter
 from clients.integrations import arc_client
 from clients.threat_registry import (
     LAYER_BEHAVIOR,
@@ -26,19 +27,47 @@ from clients.threat_registry import (
 )
 from config import settings
 from ecosystem.orchestrator import ecosystem_orchestrator
+from governance import hogonat_client
 from modules.ai_engines import escalation_engine, policy_brain
+from modules.benchmark import benchmark_service
 from modules.contract_inspector import contract_inspector
+from modules.dataset_stats import dataset_stats_service
+from modules.graph_builder import graph_builder_service
+from modules.imina_na_vision import imina_na_vision
+from modules.kanaga_engine import kanaga_engine
 from modules.memory import memory
 from modules.response_validator import ValidationVerdict, response_validator
 from modules.security_engine import ActionInput, Decision, decision_engine, risk_engine
 from modules.service_registry import service_registry
 from modules.treasury import TreasuryEmptyError, treasury
+from modules.vision_graph import vision_graph_service
 
 # ────────────────────────────────────────────────────────────────────────────────
 # x402 Protected Paths
 # ────────────────────────────────────────────────────────────────────────────────
 
 PROTECTED_PATHS = {"/evaluate", "/escalate"}
+SUPPORTED_CHAINS = {"arc", "ethereum", "solana"}
+
+
+def _parse_chain(raw: str | None) -> str:
+    chain = (raw or settings.default_chain).strip().lower()
+    return chain if chain in SUPPORTED_CHAINS else ""
+
+
+def _parse_amount(raw: str | None) -> float:
+    if not raw:
+        return 0.0
+    try:
+        return max(0.0, float(raw))
+    except Exception:
+        return 0.0
+
+
+from modules.pricing import compute_fee
+
+async def compute_evaluation_price(amount_usdc: float, chain: str) -> float:
+    return compute_fee(amount_usdc, tier="payg")
 
 
 # ────────────────────────────────────────────────────────────────────────────────
@@ -118,15 +147,24 @@ def register_routes(app: FastAPI):
                 )
 
             payment_header = request.headers.get("X-Payment")
+            chain = _parse_chain(request.headers.get("X-Chain"))
+            if not chain:
+                return JSONResponse(
+                    status_code=422,
+                    content={
+                        "error": "Invalid X-Chain header",
+                        "supported_chains": sorted(list(SUPPORTED_CHAINS)),
+                    },
+                )
+            amount_hint = _parse_amount(request.headers.get("X-Amount"))
 
             if not payment_header:
                 # Return HTTP 402 with payment instructions
                 wallet = settings.arcwarden_wallet_address
-                price = (
-                    settings.arcwarden_eval_price_usdc
-                    if path == "/evaluate"
-                    else settings.arcwarden_escalate_price_usdc
-                )
+                if path == "/evaluate":
+                    price = await compute_evaluation_price(amount_hint, chain)
+                else:
+                    price = settings.arcwarden_escalate_price_usdc
                 # Arc USDC is native with 18 decimals (isNative=True, confirmed by Circle API).
                 # maxAmountRequired must be in the token's smallest unit.
                 price_units = int(price * 10**settings.arc_usdc_decimals)
@@ -142,7 +180,7 @@ def register_routes(app: FastAPI):
                                 "network": "arc-testnet",
                                 "maxAmountRequired": str(price_units),
                                 "resource": path,
-                                "description": f"ArcWarden security evaluation — ${price} USDC",
+                                "description": f"Sigui security evaluation ({chain}) — ${price} USDC",
                                 "mimeType": "application/json",
                                 "payTo": wallet,
                                 "asset": "USDC",
@@ -155,15 +193,14 @@ def register_routes(app: FastAPI):
 
             # Validate payment tx if not in demo mode
             if not settings.demo_mode:
-                expected_amount = (
-                    settings.arcwarden_eval_price_usdc
-                    if path == "/evaluate"
-                    else settings.arcwarden_escalate_price_usdc
-                )
-                valid = await arc_client.verify_payment(
-                    payment_header,
-                    expected_amount,
-                    settings.arcwarden_wallet_address,
+                if path == "/evaluate":
+                    expected_amount = await compute_evaluation_price(amount_hint, chain)
+                else:
+                    expected_amount = settings.arcwarden_escalate_price_usdc
+
+                adapter = get_adapter(chain)
+                valid = await adapter.verify_payment(
+                    payment_header, expected_amount, settings.arcwarden_wallet_address
                 )
                 if not valid:
                     return JSONResponse(
@@ -280,6 +317,23 @@ def register_routes(app: FastAPI):
             "threat_registry": registry_stats,
         }
 
+    @app.get("/benchmark", tags=["Statistics"])
+    async def benchmark():
+        """Runtime benchmark summary for dashboard."""
+        data = await benchmark_service.get_metrics()
+        data["mode"] = treasury.get_state().get("mode", "UNKNOWN")
+        return data
+
+    @app.get("/dataset/stats", tags=["Statistics"])
+    async def dataset_stats():
+        """Dataset availability and class distribution."""
+        return dataset_stats_service.get_stats()
+
+    @app.get("/vision/graph/{agent_id}", tags=["Statistics"])
+    async def vision_graph(agent_id: str):
+        """Lightweight graph payload used by vision dashboard panels."""
+        return await vision_graph_service.get_agent_graph(agent_id)
+
     @app.get("/ecosystem/status", tags=["Simulation"])
     async def ecosystem_status():
         """Return runtime status for all autonomous ecosystem agents."""
@@ -296,7 +350,12 @@ def register_routes(app: FastAPI):
 
         # Parse body
         body = await request.json()
+        chain = _parse_chain(request.headers.get("X-Chain")) or settings.default_chain
+        if "chain" not in body:
+            body["chain"] = chain
         action = ActionInput(**body)
+        action.chain = chain
+        action.context["chain"] = chain
 
         # Check ArcWarden treasury health
         try:
@@ -315,15 +374,19 @@ def register_routes(app: FastAPI):
 
         # Record revenue with Dynamic Risk Pricing
         # If agent is risky or global threats are high, price increases (Surge Pricing)
-        base_price = settings.arcwarden_eval_price_usdc
+        base_price = await compute_evaluation_price(action.amount_usdc, chain)
         risk_surge = 1.0
         if agent_profile and agent_profile.get("trust_score", 1.0) < 0.3:
             risk_surge = 5.0  # 5x price for untrusted agents
         elif agent_profile and agent_profile.get("trust_score", 1.0) < 0.6:
             risk_surge = 2.0
 
-        final_price = base_price * risk_surge
-        await treasury.record_revenue(final_price, f"eval_fee_surge_{risk_surge}x")
+        final_price = round(base_price * risk_surge, 6)
+        await treasury.record_revenue(
+            final_price, f"eval_fee_surge_{risk_surge}x", chain=chain
+        )
+        # 20% des revenus d'évaluation alimentent le pool Hogonat.
+        await hogonat_client.add_fee(final_price * 0.20)
 
         # MemoClaw freeze gate — instant BLOCK for known bad actors (survives restarts)
         if await memory.is_agent_frozen(action.agent_id):
@@ -355,11 +418,14 @@ def register_routes(app: FastAPI):
             action.agent_id,
             action.destination,
             action.amount_usdc,
+            chain=chain,
         )
         cumulative = await memory.get_cumulative_flow(
-            action.agent_id, action.destination, window_minutes=10
+            action.agent_id, action.destination, window_minutes=10, chain=chain
         )
-        global_flow = await memory.get_global_flow(action.agent_id, window_minutes=10)
+        global_flow = await memory.get_global_flow(
+            action.agent_id, window_minutes=10, all_chains=True
+        )
         action.context["cumulative_flow"] = cumulative
         action.context["global_flow"] = global_flow
 
@@ -385,6 +451,43 @@ def register_routes(app: FastAPI):
         # Compute risk score
         risk = await risk_engine.score(action, agent_profile, pattern_extra)
 
+        # ── Couche Vision (Imina Na) + agrégation Kanaga ──────────────────────
+        vision_input = {
+            "agent_id": action.agent_id,
+            "action_type": action.action_type,
+            "amount_usdc": action.amount_usdc,
+            "destination": action.destination,
+            "chain": chain,
+            "context": action.context,
+        }
+        graph_payload = await graph_builder_service.build_for_action(
+            agent_id=action.agent_id,
+            destination=action.destination,
+            chain=chain,
+            amount_usdc=action.amount_usdc,
+        )
+        action.context["vision_graph_summary"] = graph_payload.get("summary", {})
+        vision_eval = await imina_na_vision.analyze(vision_input, graph=graph_payload)
+        action.context["vision_eval"] = {
+            "pattern": vision_eval.pattern,
+            "confidence": vision_eval.confidence,
+            "risk_delta": vision_eval.risk_delta,
+            "model": vision_eval.model,
+            "inference_device": vision_eval.inference_device,
+            "inference_time_ms": vision_eval.inference_time_ms,
+            "visual_evidence": vision_eval.visual_evidence,
+        }
+
+        kanaga_out = kanaga_engine.compute(
+            components=risk.components,
+            deltas={"vision": vision_eval.risk_delta},
+        )
+        risk.risk_score = kanaga_out.risk_score
+        if vision_eval.risk_delta > 0:
+            risk.rules_triggered.append(
+                f"vision_{vision_eval.pattern.lower()}_delta_{vision_eval.risk_delta:.2f}"
+            )
+
         # Determine if escalation is available
         escalation_available = treasury.should_escalate(risk.risk_score)
 
@@ -398,10 +501,35 @@ def register_routes(app: FastAPI):
             arcwarden_mode=mode,
             escalation_available=escalation_available,
             agent_profile=agent_profile,
+            skip_onchain_log=True,
         )
 
+        # Log decision via selected chain adapter
+        chain_adapter = get_adapter(chain)
+        decision_out.arc_tx_log = await chain_adapter.log_decision(
+            decision_out.action_hash, decision_out.decision, decision_out.risk_score
+        )
+
+        # Vision override non-configurable (alignement PRD)
+        if (
+            vision_eval.risk_delta >= 0.40
+            and vision_eval.confidence >= settings.vision_confidence_block_threshold
+            and decision_out.decision != Decision.BLOCK.value
+        ):
+            decision_out.decision = Decision.BLOCK.value
+            decision_out.reason = (
+                f"VISUAL ATTACK: {vision_eval.pattern} (conf={vision_eval.confidence:.2f})"
+            )
+            decision_out.policy_source = "vision_override"
+
+        # DAO blacklist override
+        if await hogonat_client.is_blacklisted(action.destination):
+            decision_out.decision = Decision.BLOCK.value
+            decision_out.reason = "DAO_GOVERNANCE_BLACKLIST"
+            decision_out.policy_source = "hogonat_override"
+
         # Pay Arc fee for onchain log
-        await treasury.pay_arc_fee()
+        await treasury.pay_arc_fee(chain=chain)
 
         # Update MemoClaw
         dec = decision_out.decision
@@ -505,6 +633,7 @@ def register_routes(app: FastAPI):
             action_type=action.action_type,
             amount_usdc=action.amount_usdc,
             destination=action.destination,
+            chain=chain,
             action_hash=decision_out.action_hash,
             decision=dec,
             risk_score=risk.risk_score,
@@ -515,7 +644,21 @@ def register_routes(app: FastAPI):
             processing_time_ms=decision_out.processing_time_ms,
         )
 
-        return decision_out.model_dump()
+        payload = decision_out.model_dump()
+        payload.update(
+            {
+                "vision_pattern": vision_eval.pattern,
+                "vision_confidence": round(vision_eval.confidence, 4),
+                "vision_model": vision_eval.model,
+                "visual_evidence": vision_eval.visual_evidence,
+                "vision_graph_summary": vision_eval.graph_summary or {},
+                "inference_device": kanaga_out.device,
+                "processing_vision_time_ms": vision_eval.inference_time_ms,
+                "evaluation_price_usdc": final_price,
+                "chain": chain,
+            }
+        )
+        return payload
 
     # ── Escalate (Claude deep analysis) ───────────────────────────────────────
     @app.post("/escalate", tags=["Security"])
@@ -526,9 +669,10 @@ def register_routes(app: FastAPI):
         """
         body = await request.json()
         action = ActionInput(**body)
+        chain = action.chain
 
         await treasury.record_revenue(
-            settings.arcwarden_escalate_price_usdc, "escalation_fee"
+            settings.arcwarden_escalate_price_usdc, "escalation_fee", chain=chain
         )
         await memory.ensure_agent(action.agent_id)
         agent_profile = await memory.get_agent(action.agent_id)
@@ -549,7 +693,8 @@ def register_routes(app: FastAPI):
         )
 
         # Log as ESCALATE decision
-        arc_tx = await arc_client.log_decision_onchain(
+        chain_adapter = get_adapter(chain)
+        arc_tx = await chain_adapter.log_decision(
             action.agent_id[:8], "ESCALATE", risk.risk_score
         )
         result.arc_tx_log = arc_tx
@@ -564,6 +709,7 @@ def register_routes(app: FastAPI):
             action_type=action.action_type,
             amount_usdc=action.amount_usdc,
             destination=action.destination,
+            chain=chain,
             action_hash=action.agent_id[:16],
             decision="ESCALATE",
             risk_score=risk.risk_score,
@@ -739,6 +885,7 @@ def register_routes(app: FastAPI):
                 SELECT
                     fw.agent_id,
                     fw.destination,
+                    fw.chain,
                     COUNT(*)         AS tx_count,
                     SUM(fw.amount_usdc) AS total_amount,
                     MAX(fw.amount_usdc) AS max_single,
@@ -747,7 +894,7 @@ def register_routes(app: FastAPI):
                 FROM flow_windows fw
                 LEFT JOIN agents a ON a.agent_id = fw.agent_id
                 WHERE fw.timestamp > datetime('now', '-10 minutes')
-                GROUP BY fw.agent_id, fw.destination
+                GROUP BY fw.agent_id, fw.destination, fw.chain
                 HAVING COUNT(*) > 1
                 ORDER BY total_amount DESC
                 LIMIT 20
@@ -760,6 +907,7 @@ def register_routes(app: FastAPI):
                     {
                         "agent_id": r["agent_id"],
                         "destination": r["destination"],
+                        "chain": r["chain"],
                         "tx_count": r["tx_count"],
                         "total_amount": round(r["total_amount"], 6),
                         "max_single": round(r["max_single"], 6),
@@ -808,6 +956,51 @@ def register_routes(app: FastAPI):
                     }
                 )
         return rows
+
+    # ── Hogonat Governance ─────────────────────────────────────────────────────
+    @app.get("/hogonat/state", tags=["Simulation"])
+    async def hogonat_state():
+        return await hogonat_client.get_state()
+        
+    @app.get("/hogonat/history", tags=["Simulation"])
+    async def hogonat_history(limit: int = 50):
+        from modules.memory import memory
+        return await memory.get_hogonat_history(limit)
+
+    @app.post("/hogonat/stake", tags=["Simulation"])
+    async def hogonat_stake(request: Request):
+        body = await request.json()
+        staker_id = str(body.get("staker_id") or body.get("agent_id") or "").strip()
+        amount_usdc = float(body.get("amount_usdc", 0.0) or 0.0)
+        if not staker_id:
+            raise HTTPException(status_code=422, detail="staker_id is required")
+        result = await hogonat_client.stake(staker_id, amount_usdc)
+        if not result.get("ok"):
+            raise HTTPException(status_code=422, detail=result.get("error", "stake failed"))
+        return result
+
+    @app.post("/hogonat/vote", tags=["Simulation"])
+    async def hogonat_vote(request: Request):
+        body = await request.json()
+        staker_id = str(body.get("staker_id") or body.get("agent_id") or "").strip()
+        weights = body.get("risk_weights") or [0.4, 0.3, 0.3]
+        allow_threshold = float(body.get("allow_threshold", 0.30) or 0.30)
+        block_threshold = float(body.get("block_threshold", 0.70) or 0.70)
+        if not staker_id:
+            raise HTTPException(status_code=422, detail="staker_id is required")
+        try:
+            weights = [float(x) for x in weights]
+        except Exception:
+            raise HTTPException(status_code=422, detail="risk_weights must be numeric list")
+        result = await hogonat_client.vote(
+            staker_id=staker_id,
+            risk_weights=weights,
+            allow_threshold=allow_threshold,
+            block_threshold=block_threshold,
+        )
+        if not result.get("ok"):
+            raise HTTPException(status_code=422, detail=result.get("error", "vote failed"))
+        return result
 
     @app.get("/demo/report", tags=["Demo"])
     async def demo_report():
@@ -942,6 +1135,7 @@ def register_routes(app: FastAPI):
                 recent_logs = await memory.get_recent_decisions(20)
                 allow_threshold, block_threshold = await policy_brain.get_thresholds()
                 latest_policy = await memory.get_latest_policy_update()
+                hogonat_history_list = await memory.get_hogonat_history(15)
                 payload = {
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                     "treasury": treasury.get_state(),
@@ -961,6 +1155,7 @@ def register_routes(app: FastAPI):
                         "latest_update": latest_policy,
                     },
                     "recent_logs": recent_logs,
+                    "hogonat_history": hogonat_history_list,
                 }
                 yield f"data: {json.dumps(payload)}\n\n"
                 await asyncio.sleep(2)
