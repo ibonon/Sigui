@@ -15,6 +15,7 @@ import httpx
 from loguru import logger
 
 from config import settings
+from ecosystem.address_pool import AddressPool
 
 
 @dataclass
@@ -72,7 +73,9 @@ class IminaNaVision:
                 )
             )[:220]
 
-        if peer_senders >= 4 or (focus_tx_count >= 8 and freq >= 8):
+        is_safe = action.get("destination", "").lower() in [addr.lower() for addr in AddressPool.KNOWN_SAFE]
+
+        if (peer_senders >= 4 or (focus_tx_count >= 8 and freq >= 8)) and not is_safe:
             pattern = "DRAIN_STAR"
             confidence = 0.92
             evidence = (

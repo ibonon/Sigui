@@ -254,8 +254,8 @@ class RiskEngine:
 
         unknown_destination = False
         if dest and dest not in _whitelist and tx_count < 3:
-            rules.append(RuleResult("unknown_destination", 0.25, True))
-            A += 0.25
+            rules.append(RuleResult("unknown_destination", 0.10, True))
+            A += 0.10
             unknown_destination = True
             if amount >= 1.0:
                 hard_block = True
@@ -313,8 +313,8 @@ class RiskEngine:
         # History Rules
         H = 0.0
         if tx_count == 0:
-            rules.append(RuleResult("no_transaction_history", 0.10, True))
-            H += 0.10
+            rules.append(RuleResult("no_transaction_history", 0.05, True))
+            H += 0.05
 
         if trust < 0.3:
             rules.append(RuleResult(f"low_trust_score_{trust:.2f}", 0.15, True))

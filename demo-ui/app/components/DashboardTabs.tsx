@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { TimeSeriesPanel, DecisionDonut, BarGauge, FunnelChart, SankeyFlow } from "./Charts";
 
 interface DashboardTabsProps {
@@ -198,38 +199,122 @@ export function DashboardTabs({
         )}
 
         {activeTab === "vision" && (
-          <div className="vision-grid">
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="vision-grid"
+          >
             <div className="panel vision-panel">
               <div className="panel-header">
                 <div className="panel-title">Vision Layer Analysis</div>
                 <div className="panel-caption">Graph-based threat detection for {AGENT_LABELS[focusAgentId]?.title || focusAgentId}</div>
               </div>
               <div className="vision-content">
-                <div className="vision-graph-container">
-                  {/* Vision graph visualization would go here */}
+                <div className="vision-graph-container relative overflow-hidden">
                   <div className="vision-placeholder">
-                    <div className="vision-node">Agent</div>
-                    <div className="vision-node">Chain</div>
-                    <div className="vision-node">Destination</div>
+                    {[
+                      { label: "Agent", icon: "🤖", color: "var(--primary)" },
+                      { label: "Chain", icon: "🔗", color: "var(--secondary)" },
+                      { label: "Destination", icon: "🏦", color: "var(--accent)" }
+                    ].map((node, i) => (
+                      <motion.div
+                        key={node.label}
+                        className="vision-node-animated"
+                        animate={{
+                          y: [0, -10, 0],
+                          boxShadow: [
+                            `0 0 10px ${node.color}40`,
+                            `0 0 25px ${node.color}80`,
+                            `0 0 10px ${node.color}40`
+                          ]
+                        }}
+                        transition={{
+                          duration: 3 + i,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                        style={{ borderColor: node.color }}
+                      >
+                        <span className="text-2xl mb-2">{node.icon}</span>
+                        <span>{node.label}</span>
+                        {i < 2 && (
+                          <motion.div 
+                            className="node-connector"
+                            animate={{ opacity: [0.2, 0.8, 0.2] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          />
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                  {/* Floating particles for energy effect */}
+                  <div className="absolute inset-0 pointer-events-none">
+                    {[...Array(6)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute w-1 h-1 bg-gold rounded-full"
+                        animate={{
+                          x: [Math.random() * 400, Math.random() * 400],
+                          y: [Math.random() * 200, Math.random() * 200],
+                          opacity: [0, 1, 0]
+                        }}
+                        transition={{
+                          duration: 4 + Math.random() * 4,
+                          repeat: Infinity,
+                          ease: "linear"
+                        }}
+                      />
+                    ))}
                   </div>
                 </div>
                 <div className="vision-summary">
-                  <div className="vision-stat">
+                  <motion.div 
+                    className="vision-stat"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
                     <span>Pattern Detected</span>
-                    <strong>{visionGraph?.summary?.heuristic_pattern || "NORMAL"}</strong>
-                  </div>
-                  <div className="vision-stat">
+                    <strong className={visionGraph?.summary?.heuristic_pattern !== "NORMAL" ? "text-danger" : "text-success"}>
+                      {visionGraph?.summary?.heuristic_pattern || "NORMAL"}
+                    </strong>
+                  </motion.div>
+                  <motion.div 
+                    className="vision-stat"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
                     <span>Confidence</span>
-                    <strong>{((visionGraph?.summary?.heuristic_confidence || 0) * 100).toFixed(1)}%</strong>
-                  </div>
-                  <div className="vision-stat">
+                    <div className="flex items-center gap-2">
+                      <strong style={{ color: "var(--gold)" }}>
+                        {((visionGraph?.summary?.heuristic_confidence || 0) * 100).toFixed(1)}%
+                      </strong>
+                      <div className="h-1.5 w-24 bg-gray-800 rounded-full overflow-hidden">
+                        <motion.div 
+                          className="h-full bg-gold"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(visionGraph?.summary?.heuristic_confidence || 0) * 100}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                  <motion.div 
+                    className="vision-stat"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
                     <span>Evidence</span>
-                    <p>{visionGraph?.summary?.heuristic_evidence || "No visual signals detected"}</p>
-                  </div>
+                    <p className="evidence-text">
+                      {visionGraph?.summary?.heuristic_evidence || "No visual signals detected"}
+                    </p>
+                  </motion.div>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {activeTab === "economics" && (
@@ -442,14 +527,36 @@ export function DashboardTabs({
           border: 1px solid var(--border);
         }
 
-        .vision-node {
-          padding: 16px;
+        .vision-node-animated {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          width: 120px;
+          height: 120px;
           background: var(--bg-2);
-          border: 1px solid var(--border-strong);
-          border-radius: 8px;
+          border: 2px solid var(--border-strong);
+          border-radius: 50%;
           color: var(--text);
           font-weight: 500;
+          font-size: 13px;
+          z-index: 2;
         }
+
+        .node-connector {
+          position: absolute;
+          left: 120px;
+          top: 50%;
+          width: 60px;
+          height: 2px;
+          background: linear-gradient(90deg, var(--gold), transparent);
+          z-index: 1;
+        }
+
+        .text-success { color: var(--success) !important; }
+        .text-danger { color: var(--danger) !important; }
+        .evidence-text { font-style: italic; opacity: 0.8; }
 
         .vision-summary {
           display: flex;

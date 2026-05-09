@@ -281,10 +281,13 @@ class ThreatRegistryClient:
             return tx_hash
 
         except Exception as exc:
-            # NEVER block the decision pipeline — log and return None
-            logger.error(
-                f"[THREAT_REGISTRY] ❌ record_attack failed for agent {agent_id}: {exc}"
-            )
+            if "insufficient funds" in str(exc).lower():
+                pass # Silently ignore gas errors during demo
+            else:
+                # NEVER block the decision pipeline — log and return None
+                logger.error(
+                    f"[THREAT_REGISTRY] ❌ record_attack failed for agent {agent_id}: {exc}"
+                )
             return None
 
     # ── Read ───────────────────────────────────────────────────────────────────

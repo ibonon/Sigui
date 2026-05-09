@@ -8,6 +8,7 @@ from collections import defaultdict
 from typing import Any
 
 from modules.memory import memory
+from ecosystem.address_pool import AddressPool
 
 
 class GraphBuilderService:
@@ -74,8 +75,10 @@ class GraphBuilderService:
         tx_count = int(summary.get("tx_count", 0) or 0)
         total_amount = float(summary.get("total_amount", 0.0) or 0.0)
         dominant_chain = str(summary.get("dominant_chain") or current_chain or "arc")
+        dest = str(summary.get("focus_destination", "")).lower()
+        is_safe = dest in [addr.lower() for addr in AddressPool.KNOWN_SAFE]
 
-        if focus_peer_senders >= 10 or focus_tx_count >= 30:
+        if (focus_peer_senders >= 10 or focus_tx_count >= 30) and not is_safe:
             return (
                 "DRAIN_STAR",
                 0.88,

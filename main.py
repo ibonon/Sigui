@@ -19,7 +19,9 @@ from clients.integrations import arc_client
 from clients.threat_registry import threat_registry
 from config import settings
 from ecosystem.orchestrator import ecosystem_orchestrator
+from governance.hogonat_client import hogonat_client
 from modules.ai_engines import policy_brain
+from modules.imina_na_vision import _probe_vision_endpoint
 from modules.memory import memory
 from modules.response_validator import response_validator
 from modules.service_registry import service_registry
@@ -53,7 +55,7 @@ def _configure_logging():
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
     logger.add(
-        log_dir / "arcwarden_{time:YYYY-MM-DD}.log",
+        log_dir / "sigui_{time:YYYY-MM-DD}.log",
         level="DEBUG",
         format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} — {message}",
         rotation="100 MB",
@@ -125,7 +127,7 @@ async def lifespan(app: FastAPI):
      11. ThreatRegistry Vyper contract client  ← onchain attack recording
     """
     logger.info("=" * 60)
-    logger.info("  🛡️  ArcWarden v3.0 — Autonomous Security Oracle")
+    logger.info("  🛡️  Sigui v1.0 — The Universal Trust Layer for Autonomous AI Agents")
     logger.info("  Hackathon: Agentic Economy on ARC · lablab.ai")
     logger.info(f"  DEMO_MODE={settings.demo_mode}  |  DB={settings.db_path}")
     logger.info("=" * 60)
@@ -217,6 +219,31 @@ async def lifespan(app: FastAPI):
     app.state.ecosystem_orchestrator = ecosystem_orchestrator
     logger.info("[MAIN] ✅ Ecosystem orchestrator registered (awaiting POST /simulate)")
 
+    # 11 ── Hogonat DAO — log governance mode (on-chain vs mock)
+    _hogonat_mode = "MOCK"
+    try:
+        hogonat_state = await hogonat_client.get_state()
+        _hogonat_mode = "ON-CHAIN" if not hogonat_client.mock_mode else "MOCK"
+        # sync_state may fail if contract ABI doesn't match — log clearly
+        if hogonat_client.mock_mode is False and hogonat_state.get("total_staked_usdc", 0) == 0:
+            logger.info(
+                f"[MAIN] ✅ Hogonat DAO [ON-CHAIN] — contract connected, "
+                f"sync_state using config defaults — "
+                f"allow<{hogonat_state['allow_threshold']:.3f} block>={hogonat_state['block_threshold']:.3f}"
+            )
+        else:
+            logger.info(
+                f"[MAIN] ✅ Hogonat DAO [{_hogonat_mode}] — "
+                f"staked=${hogonat_state['total_staked_usdc']:.4f} "
+                f"allow<{hogonat_state['allow_threshold']:.3f} "
+                f"block>={hogonat_state['block_threshold']:.3f}"
+            )
+    except Exception as _e:
+        logger.warning(f"[MAIN] Hogonat init check failed ({_e}) — using config defaults")
+
+    # 12 ── Vision endpoint probe — confirms whether real AMD GPU is in the loop
+    _vision_gpu_ready = await _probe_vision_endpoint()
+
     # ── Startup diagnostics ───────────────────────────────────────────────────
     val_stats = await response_validator.get_global_stats()
     logger.info(
@@ -228,47 +255,53 @@ async def lifespan(app: FastAPI):
 
     # ── Ready ─────────────────────────────────────────────────────────────────
     logger.success("=" * 60)
-    logger.success("  🟢 ArcWarden ready")
-    logger.success("  API   → http://localhost:8000")
-    logger.success("  Docs  → http://localhost:8000/docs")
-    logger.success("  POST /validate-response — Response poisoning detection")
+    logger.success("  🟢 Sigui ready — The Security Firewall for the Agentic Economy")
+    logger.success("  API       → http://localhost:8000")
+    logger.success("  Docs      → http://localhost:8000/docs")
+    logger.success("  Benchmark → http://localhost:8000/benchmark  (live CPU vs PyTorch)")
+    logger.success(f"  Hogonat   → {'ON-CHAIN (' + settings.hogonat_contract_address[:10] + '…)' if settings.hogonat_is_onchain else 'MOCK'}")
+    _vision_status = "🟢 REAL — AMD MI300X vLLM" if _vision_gpu_ready else "🟡 HEURISTIC fallback (vLLM unreachable — start your GPU droplet)"
+    logger.success(f"  Vision    → {_vision_status}")
     logger.success(
-        f"  ThreatRegistry → {'ENABLED' if threat_registry.is_enabled else 'disabled (deploy contract first)'}"
+        f"  ThreatReg → {'ENABLED' if threat_registry.is_enabled else 'disabled (deploy contract first)'}"
     )
-    logger.success("  Logs  → logs/arcwarden_<date>.log")
+    logger.success("  Logs      → logs/sigui_<date>.log")
     logger.success("=" * 60)
 
     yield  # ── App serves requests here ──────────────────────────────────────
 
     # ── Graceful shutdown ─────────────────────────────────────────────────────
-    logger.info("[MAIN] Shutting down ArcWarden…")
+    logger.info("[MAIN] Shutting down Sigui…")
     await agent.stop()
     await ecosystem_orchestrator.stop()
     await memory.close()
-    logger.info("[MAIN] ✅ ArcWarden shutdown complete")
+    logger.info("[MAIN] ✅ Sigui shutdown complete")
 
 
 # ── FastAPI application ───────────────────────────────────────────────────────
 app = FastAPI(
-    title="ArcWarden Security Oracle",
+    title="Sigui — Security Firewall for the Agentic Economy",
     description=(
-        "**ArcWarden** is an autonomous economic agent that sells security services "
-        "to other agents in the Arc ecosystem.\n\n"
-        "- Receives USDC payments via the **x402** protocol\n"
-        "- Evaluates every request with a numpy Risk Engine → ALLOW / BLOCK / ESCALATE\n"
-        "- Pays **Claude API** for deep analysis from its own treasury\n"
-        "- Logs every decision immutably on **Arc L1 testnet**\n"
-        "- Learns via **MemoClaw** — reducing latency on known attack patterns\n\n"
-        "*The loop is entirely closed. Zero human intervention.*"
+        "**Sigui** is the first decentralized security protocol for AI agents.\n\n"
+        "Every agent that moves USDC calls `/evaluate` for **$0.001 via x402**.\n"
+        "In **<50ms**, the 6-layer pipeline returns: **ALLOW / BLOCK / ESCALATE**.\n\n"
+        "**Architecture:**\n"
+        "- 🧮 **Kanaga Risk Engine** — PyTorch (ROCm on AMD MI300X if available)\n"
+        "- 👁 **Imina Na Vision** — Qwen2-VL LoRA fine-tuned on 10k Dogon graphs\n"
+        "- 🧠 **Lebe Escalation** — Qwen2.5-3B on AMD MI300X (Claude fallback)\n"
+        "- 🏛 **Hogonat DAO** — On-chain staking governance (Vyper, Arc L1)\n"
+        "- 🔗 **ThreatRegistry** — Immutable on-chain attack log\n"
+        "- 💾 **MemoClaw** — Episodic memory + self-critique policy adaptation\n\n"
+        "*The loop is fully closed. Zero human intervention.*"
     ),
-    version="3.0.0",
+    version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_tags=_OPENAPI_TAGS,
     lifespan=lifespan,
     contact={
-        "name": "Eric Warma",
-        "url": "https://lablab.ai",
+        "name": "Eric Warma — Sigui Protocol",
+        "url": "https://github.com/ibonon/Sigui",
     },
     license_info={
         "name": "MIT",

@@ -464,7 +464,7 @@ function BootOverlay({ onDone }: { onDone: () => void }) {
   return (
     <motion.div className="boot-overlay" exit={{ opacity: 0 }}>
       <div className="boot-logo-wrap">
-        <img src="/IMG.jpg" alt="Sigui" className="boot-logo" />
+        <img src="/logo.png" alt="Sigui" className="boot-logo rounded-full shadow-[0_0_15px_rgba(255,165,0,0.5)]" />
         <div className="boot-title">SIGUI</div>
         <div className="boot-subtitle">THE REGENERATION ORACLE</div>
       </div>
@@ -1056,13 +1056,13 @@ export default function Dashboard() {
 
   const handleSimulate = useCallback(async () => {
     setDeploying(true);
-    setSimLabel("Rituel...");
+    setSimLabel("Initializing...");
     try {
       const response = await fetch(`${API}/simulate`, { method: "POST" });
-      setSimLabel(response.ok ? "En cours" : "Actif");
+      setSimLabel(response.ok ? "Running..." : "Active");
     } catch (error) {
       console.warn("Simulate API call failed:", error);
-      setSimLabel("Erreur");
+      setSimLabel("Error");
     } finally {
       setTimeout(() => setSimLabel(""), 2600);
       setDeploying(false);
@@ -1209,7 +1209,7 @@ export default function Dashboard() {
         >
           <header className="topbar">
             <div className="brand-block">
-              <img src="/IMG.jpg" alt="Sigui" className="brand-logo" />
+              <img src="/logo.png" alt="Sigui" className="brand-logo rounded-full shadow-[0_0_15px_rgba(255,165,0,0.5)]" />
               <div>
                 <div className="brand-title">SIGUI DePIN NETWORK</div>
                 <div className="brand-subtitle">Synchronous Security Oracle powered by AMD MI300X</div>
@@ -1231,7 +1231,7 @@ export default function Dashboard() {
                 ))}
               </div>
               <button className="ritual-btn" onClick={handleSimulate} disabled={deploying}>
-                {simLabel || "Lancer le rituel"}
+                {simLabel || "Deploy Agents"}
               </button>
             </div>
           </header>

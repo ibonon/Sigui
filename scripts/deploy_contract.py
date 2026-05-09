@@ -169,7 +169,7 @@ def deploy(bytecode: str, abi: list, env: dict[str, str]) -> str:
         gas_limit = 1_500_000
 
     deploy_cost = float(w3.from_wei(gas_limit * gas_price, "ether"))
-    print(f"  Est. gas:  {gas_limit:,} × {gwei:.2f} Gwei ≈ {deploy_cost:.6f} USDC")
+    print(f"  Est. gas:  {gas_limit:,} @ {gwei:.2f} Gwei ~ {deploy_cost:.6f} USDC")
 
     print("\n[Deploying] ThreatRegistry...")
     nonce = w3.eth.get_transaction_count(account.address, "pending")

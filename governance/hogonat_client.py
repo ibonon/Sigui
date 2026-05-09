@@ -211,39 +211,50 @@ class HogonatOnChainAdapter:
         )
 
     async def sync_state(self) -> dict:
-        """Read current contract state (gas-free view calls). Returns raw onchain state."""
+        """Read current contract state (gas-free view calls). Returns raw onchain state.
+        Each getter is called independently — one failing call does not abort the sync.
+        """
         if not self._init_web3():
             return {}
 
         loop = asyncio.get_running_loop()
-        try:
-            total_staked_raw = await loop.run_in_executor(
-                None, self._contract.functions.total_staked().call
-            )
-            fee_pool_raw = await loop.run_in_executor(
-                None, self._contract.functions.fee_pool().call
-            )
-            risk_weights_raw = await loop.run_in_executor(
-                None, self._contract.functions.risk_weights().call
-            )
-            allow_milli = await loop.run_in_executor(
-                None, self._contract.functions.allow_threshold_milli().call
-            )
-            block_milli = await loop.run_in_executor(
-                None, self._contract.functions.block_threshold_milli().call
-            )
-            divisor = 10 ** self._usdc_decimals
+        result: dict = {}
+
+        # Helper: run a single view call safely
+        async def _call(fn_call, label: str):
+            try:
+                return await loop.run_in_executor(None, fn_call)
+            except Exception as exc:
+                logger.debug(f"[HOGONAT] sync_state/{label} failed: {exc}")
+                return None
+
+        total_staked_raw = await _call(self._contract.functions.total_staked().call, "total_staked")
+        fee_pool_raw     = await _call(self._contract.functions.fee_pool().call,     "fee_pool")
+        allow_milli      = await _call(self._contract.functions.allow_threshold_milli().call, "allow_threshold_milli")
+        block_milli      = await _call(self._contract.functions.block_threshold_milli().call, "block_threshold_milli")
+        risk_weights_raw = await _call(self._contract.functions.risk_weights().call, "risk_weights")
+
+        divisor = 10 ** self._usdc_decimals
+
+        if total_staked_raw is not None:
+            result["total_staked_usdc"] = total_staked_raw / divisor
+        if fee_pool_raw is not None:
+            result["fee_pool_usdc"] = fee_pool_raw / divisor
+        if allow_milli is not None:
+            result["allow_threshold"] = allow_milli / 1_000
+        if block_milli is not None:
+            result["block_threshold"] = block_milli / 1_000
+        if risk_weights_raw is not None:
             total_bp = sum(risk_weights_raw) or 10_000
-            return {
-                "total_staked_usdc": total_staked_raw / divisor,
-                "fee_pool_usdc": fee_pool_raw / divisor,
-                "risk_weights": [w / total_bp for w in risk_weights_raw],
-                "allow_threshold": allow_milli / 1_000,
-                "block_threshold": block_milli / 1_000,
-            }
-        except Exception as exc:
-            logger.warning(f"[HOGONAT] sync_state failed: {exc}")
-            return {}
+            result["risk_weights"] = [w / total_bp for w in risk_weights_raw]
+
+        if result:
+            logger.debug(f"[HOGONAT] sync_state OK — {result}")
+        else:
+            logger.warning("[HOGONAT] sync_state: all getters failed — contract may not be fully initialized or Arc L1 RPC issue")
+
+        return result
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────

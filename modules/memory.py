@@ -281,7 +281,7 @@ class MemoClaw:
                 else:
                     await self._db.execute(
                         """INSERT INTO patterns (pattern_id, signature, risk_weight, occurrences)
-                           VALUES (?, ?, 0.35, 1)""",
+                           VALUES (?, ?, 0.15, 1)""",
                         (pid, sig),
                     )
             await self._db.commit()

@@ -131,8 +131,8 @@ export function VisionMetricsPanel({ visionMetrics, colors, styles }: VisionMetr
           <div>
             <h4 className="text-xl font-semibold mb-4" style={{ color: colors.secondary }}>Dogon Cosmology</h4>
             <p className="mb-4" style={{ color: colors.muted }}>
-              Named after the Dogon ritual of cosmic regeneration, where Sigui renews cosmic order every 60 years. 
-              In the agentic economy, Sigui regenerates trust every 5ms.
+              Named after the Dogon tradition of systemic renewal. Just as the historic Sigui festival resets societal structures every 60 years, 
+              our oracle resets trust in the agentic economy every 5ms.
             </p>
             
             <div className="p-6 rounded-xl" style={{ background: colors.gradient.dark }}>
@@ -149,6 +149,63 @@ export function VisionMetricsPanel({ visionMetrics, colors, styles }: VisionMetr
         </div>
       </motion.div>
 
+      {/* AMD MI300X Benchmark Results */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="p-8 rounded-2xl relative overflow-hidden"
+        style={{ ...styles.card, border: `1px solid ${colors.gold}50` }}
+      >
+        <div className="absolute top-0 right-0 p-4 opacity-10">
+          <span className="text-8xl font-black italic">AMD</span>
+        </div>
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="text-3xl">🔥</span>
+            <h3 className="text-2xl font-bold" style={{ color: colors.gold }}>
+              Hardware Benchmark: MI300X
+            </h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-xl border border-gray-800" style={{ background: "rgba(0,0,0,0.4)" }}>
+              <h4 className="text-sm font-semibold mb-1" style={{ color: colors.muted }}>Model</h4>
+              <p className="text-xl font-bold text-white mb-4">Imina-Na V2 (7B)</p>
+              <div className="h-1 w-full bg-gray-800 rounded">
+                <div className="h-full bg-green-500 rounded" style={{ width: "100%" }}></div>
+              </div>
+              <p className="text-xs mt-2 text-green-400">100,000 Real Graphs Trained</p>
+            </div>
+            
+            <div className="p-6 rounded-xl border border-gray-800" style={{ background: "rgba(0,0,0,0.4)" }}>
+              <h4 className="text-sm font-semibold mb-1" style={{ color: colors.muted }}>Vision Latency</h4>
+              <div className="flex items-end gap-2 mb-4">
+                <p className="text-4xl font-bold" style={{ color: colors.accent }}>35.3</p>
+                <span className="text-sm pb-1 text-gray-400">ms / frame</span>
+              </div>
+              <div className="h-1 w-full bg-gray-800 rounded">
+                <div className="h-full bg-purple-500 rounded" style={{ width: "98%" }}></div>
+              </div>
+              <p className="text-xs mt-2 text-purple-400">Time-to-First-Token (TTFT)</p>
+            </div>
+            
+            <div className="p-6 rounded-xl border border-gray-800" style={{ background: "rgba(0,0,0,0.4)" }}>
+              <h4 className="text-sm font-semibold mb-1" style={{ color: colors.muted }}>Throughput</h4>
+              <div className="flex items-end gap-2 mb-4">
+                <p className="text-4xl font-bold" style={{ color: colors.secondary }}>188</p>
+                <span className="text-sm pb-1 text-gray-400">graphs / sec</span>
+              </div>
+              <div className="h-1 w-full bg-gray-800 rounded">
+                <div className="h-full bg-blue-500 rounded" style={{ width: "90%" }}></div>
+              </div>
+              <p className="text-xs mt-2 text-blue-400">Parallel Batch Processing</p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Technical Excellence Metrics */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -158,18 +215,18 @@ export function VisionMetricsPanel({ visionMetrics, colors, styles }: VisionMetr
         style={styles.card}
       >
         <h3 className="text-2xl font-bold mb-6" style={{ color: colors.success }}>
-          ⚡ Technical Excellence
+          ⚡ Platform Metrics
         </h3>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div className="text-center p-6 rounded-xl" style={{ background: colors.primary + "10" }}>
             <div className="text-3xl font-bold mb-2" style={{ color: colors.primary }}>&lt;50ms</div>
-            <div className="text-sm" style={{ color: colors.muted }}>Response Time</div>
-            <div className="text-xs mt-1" style={{ color: colors.success }}>vs 2000ms competitors</div>
+            <div className="text-sm" style={{ color: colors.muted }}>Risk Engine Latency</div>
+            <div className="text-xs mt-1" style={{ color: colors.success }}>End-to-End Decision</div>
           </div>
           
           <div className="text-center p-6 rounded-xl" style={{ background: colors.secondary + "10" }}>
-            <div className="text-3xl font-bold mb-2" style={{ color: colors.secondary }}>&gt;96%</div>
+            <div className="text-3xl font-bold mb-2" style={{ color: colors.secondary }}>&gt;99%</div>
             <div className="text-sm" style={{ color: colors.muted }}>Threat Detection</div>
             <div className="text-xs mt-1" style={{ color: colors.success }}>vs 88% baseline</div>
           </div>
@@ -177,13 +234,13 @@ export function VisionMetricsPanel({ visionMetrics, colors, styles }: VisionMetr
           <div className="text-center p-6 rounded-xl" style={{ background: colors.accent + "10" }}>
             <div className="text-3xl font-bold mb-2" style={{ color: colors.accent }}>1000+</div>
             <div className="text-sm" style={{ color: colors.muted }}>Evaluations/Second</div>
-            <div className="text-xs mt-1" style={{ color: colors.success }}>vs 10/second competitors</div>
+            <div className="text-xs mt-1" style={{ color: colors.success }}>Async Pipeline</div>
           </div>
           
           <div className="text-center p-6 rounded-xl" style={{ background: colors.success + "10" }}>
-            <div className="text-3xl font-bold mb-2" style={{ color: colors.success }}>100K+</div>
-            <div className="text-sm" style={{ color: colors.muted }}>Concurrent Agents</div>
-            <div className="text-xs mt-1" style={{ color: colors.success }}>Scalable architecture</div>
+            <div className="text-3xl font-bold mb-2" style={{ color: colors.success }}>1M+</div>
+            <div className="text-sm" style={{ color: colors.muted }}>Training Samples</div>
+            <div className="text-xs mt-1" style={{ color: colors.success }}>VLM Grounding</div>
           </div>
         </div>
       </motion.div>

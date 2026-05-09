@@ -89,7 +89,7 @@ class ArcWardenAgent:
         """Start the autonomous agent loop."""
         self.running = True
         self._task = asyncio.create_task(self.run(), name="arcwarden-core")
-        logger.info("[AGENT] ArcWarden autonomous loop started (100ms cycles)")
+        logger.info("[AGENT] Sigui autonomous loop started (100ms cycles)")
 
     async def stop(self):
         """Gracefully stop the agent loop."""
