@@ -1,0 +1,866 @@
+[
+  {
+    "name": "AgentRegistered",
+    "inputs": [
+      {
+        "name": "agent_did",
+        "type": "string",
+        "indexed": true
+      },
+      {
+        "name": "agent_address",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "verification_tier",
+        "type": "uint8",
+        "indexed": false
+      },
+      {
+        "name": "reputation_score",
+        "type": "uint16",
+        "indexed": false
+      },
+      {
+        "name": "registration_time",
+        "type": "uint256",
+        "indexed": false
+      }
+    ],
+    "anonymous": false,
+    "type": "event"
+  },
+  {
+    "name": "AgentUpdated",
+    "inputs": [
+      {
+        "name": "agent_did",
+        "type": "string",
+        "indexed": true
+      },
+      {
+        "name": "reputation_score",
+        "type": "uint16",
+        "indexed": false
+      },
+      {
+        "name": "verification_tier",
+        "type": "uint8",
+        "indexed": false
+      },
+      {
+        "name": "last_update",
+        "type": "uint256",
+        "indexed": false
+      }
+    ],
+    "anonymous": false,
+    "type": "event"
+  },
+  {
+    "name": "ReputationScoreUpdated",
+    "inputs": [
+      {
+        "name": "agent_did",
+        "type": "string",
+        "indexed": true
+      },
+      {
+        "name": "old_score",
+        "type": "uint16",
+        "indexed": false
+      },
+      {
+        "name": "new_score",
+        "type": "uint16",
+        "indexed": false
+      },
+      {
+        "name": "update_reason",
+        "type": "string",
+        "indexed": false
+      }
+    ],
+    "anonymous": false,
+    "type": "event"
+  },
+  {
+    "name": "VerificationTierUpdated",
+    "inputs": [
+      {
+        "name": "agent_did",
+        "type": "string",
+        "indexed": true
+      },
+      {
+        "name": "old_tier",
+        "type": "uint8",
+        "indexed": false
+      },
+      {
+        "name": "new_tier",
+        "type": "uint8",
+        "indexed": false
+      },
+      {
+        "name": "verification_time",
+        "type": "uint256",
+        "indexed": false
+      }
+    ],
+    "anonymous": false,
+    "type": "event"
+  },
+  {
+    "name": "AgentDeactivated",
+    "inputs": [
+      {
+        "name": "agent_did",
+        "type": "string",
+        "indexed": true
+      },
+      {
+        "name": "deactivation_time",
+        "type": "uint256",
+        "indexed": false
+      },
+      {
+        "name": "reason",
+        "type": "string",
+        "indexed": false
+      }
+    ],
+    "anonymous": false,
+    "type": "event"
+  },
+  {
+    "name": "AgentReactivated",
+    "inputs": [
+      {
+        "name": "agent_did",
+        "type": "string",
+        "indexed": true
+      },
+      {
+        "name": "reactivation_time",
+        "type": "uint256",
+        "indexed": false
+      }
+    ],
+    "anonymous": false,
+    "type": "event"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "function",
+    "name": "register_agent",
+    "inputs": [
+      {
+        "name": "agent_did",
+        "type": "string"
+      },
+      {
+        "name": "public_key",
+        "type": "bytes32"
+      },
+      {
+        "name": "verification_tier",
+        "type": "uint8"
+      },
+      {
+        "name": "metadata_uri",
+        "type": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ]
+  },
+  {
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "name": "update_reputation",
+    "inputs": [
+      {
+        "name": "agent_address",
+        "type": "address"
+      },
+      {
+        "name": "new_reputation_score",
+        "type": "uint16"
+      },
+      {
+        "name": "update_reason",
+        "type": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ]
+  },
+  {
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "name": "update_agent_verification_tier",
+    "inputs": [
+      {
+        "name": "agent_address",
+        "type": "address"
+      },
+      {
+        "name": "new_verification_tier",
+        "type": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ]
+  },
+  {
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "name": "deactivate_agent",
+    "inputs": [
+      {
+        "name": "agent_address",
+        "type": "address"
+      },
+      {
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ]
+  },
+  {
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "name": "reactivate_agent",
+    "inputs": [
+      {
+        "name": "agent_address",
+        "type": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ]
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "get_agent_identity",
+    "inputs": [
+      {
+        "name": "agent_address",
+        "type": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "did",
+            "type": "string"
+          },
+          {
+            "name": "public_key",
+            "type": "bytes32"
+          },
+          {
+            "name": "verification_tier",
+            "type": "uint8"
+          },
+          {
+            "name": "reputation_score",
+            "type": "uint16"
+          },
+          {
+            "name": "registration_time",
+            "type": "uint256"
+          },
+          {
+            "name": "last_update",
+            "type": "uint256"
+          },
+          {
+            "name": "metadata_uri",
+            "type": "string"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "total_transactions",
+            "type": "uint256"
+          },
+          {
+            "name": "successful_transactions",
+            "type": "uint256"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "get_agent_by_did",
+    "inputs": [
+      {
+        "name": "agent_did",
+        "type": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "did",
+            "type": "string"
+          },
+          {
+            "name": "public_key",
+            "type": "bytes32"
+          },
+          {
+            "name": "verification_tier",
+            "type": "uint8"
+          },
+          {
+            "name": "reputation_score",
+            "type": "uint16"
+          },
+          {
+            "name": "registration_time",
+            "type": "uint256"
+          },
+          {
+            "name": "last_update",
+            "type": "uint256"
+          },
+          {
+            "name": "metadata_uri",
+            "type": "string"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "total_transactions",
+            "type": "uint256"
+          },
+          {
+            "name": "successful_transactions",
+            "type": "uint256"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "get_agent_stats",
+    "inputs": [
+      {
+        "name": "agent_address",
+        "type": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "total_evaluations",
+            "type": "uint256"
+          },
+          {
+            "name": "blocked_transactions",
+            "type": "uint256"
+          },
+          {
+            "name": "threat_patterns_contributed",
+            "type": "uint256"
+          },
+          {
+            "name": "insurance_claims_made",
+            "type": "uint256"
+          },
+          {
+            "name": "insurance_payouts",
+            "type": "uint256"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "calculate_effective_reputation",
+    "inputs": [
+      {
+        "name": "agent_address",
+        "type": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint16"
+      }
+    ]
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "is_agent_verified",
+    "inputs": [
+      {
+        "name": "agent_address",
+        "type": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ]
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "get_verification_tier_details",
+    "inputs": [
+      {
+        "name": "tier",
+        "type": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string"
+      },
+      {
+        "name": "",
+        "type": "string"
+      },
+      {
+        "name": "",
+        "type": "uint16"
+      },
+      {
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ]
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "get_registry_statistics",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "name": "",
+        "type": "uint16"
+      },
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ]
+  },
+  {
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "name": "transfer_ownership",
+    "inputs": [
+      {
+        "name": "new_owner",
+        "type": "address"
+      }
+    ],
+    "outputs": []
+  },
+  {
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "name": "accept_ownership",
+    "inputs": [],
+    "outputs": []
+  },
+  {
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "name": "set_verification_authority",
+    "inputs": [
+      {
+        "name": "new_authority",
+        "type": "address"
+      }
+    ],
+    "outputs": []
+  },
+  {
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "name": "pause_registry",
+    "inputs": [],
+    "outputs": []
+  },
+  {
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "name": "unpause_registry",
+    "inputs": [],
+    "outputs": []
+  },
+  {
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "name": "set_verification_tier_config",
+    "inputs": [
+      {
+        "name": "tier",
+        "type": "uint8"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "requirements",
+        "type": "string"
+      },
+      {
+        "name": "trust_multiplier",
+        "type": "uint16"
+      },
+      {
+        "name": "verification_fee",
+        "type": "uint256"
+      },
+      {
+        "name": "validity_period",
+        "type": "uint256"
+      }
+    ],
+    "outputs": []
+  },
+  {
+    "stateMutability": "payable",
+    "type": "fallback"
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "agent_identities",
+    "inputs": [
+      {
+        "name": "arg0",
+        "type": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "did",
+            "type": "string"
+          },
+          {
+            "name": "public_key",
+            "type": "bytes32"
+          },
+          {
+            "name": "verification_tier",
+            "type": "uint8"
+          },
+          {
+            "name": "reputation_score",
+            "type": "uint16"
+          },
+          {
+            "name": "registration_time",
+            "type": "uint256"
+          },
+          {
+            "name": "last_update",
+            "type": "uint256"
+          },
+          {
+            "name": "metadata_uri",
+            "type": "string"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "total_transactions",
+            "type": "uint256"
+          },
+          {
+            "name": "successful_transactions",
+            "type": "uint256"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "identity_by_did",
+    "inputs": [
+      {
+        "name": "arg0",
+        "type": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ]
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "verification_tiers",
+    "inputs": [
+      {
+        "name": "arg0",
+        "type": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "requirements",
+            "type": "string"
+          },
+          {
+            "name": "trust_multiplier",
+            "type": "uint16"
+          },
+          {
+            "name": "verification_fee",
+            "type": "uint256"
+          },
+          {
+            "name": "validity_period",
+            "type": "uint256"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "agent_stats",
+    "inputs": [
+      {
+        "name": "arg0",
+        "type": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "total_evaluations",
+            "type": "uint256"
+          },
+          {
+            "name": "blocked_transactions",
+            "type": "uint256"
+          },
+          {
+            "name": "threat_patterns_contributed",
+            "type": "uint256"
+          },
+          {
+            "name": "insurance_claims_made",
+            "type": "uint256"
+          },
+          {
+            "name": "insurance_payouts",
+            "type": "uint256"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ]
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "pending_owner",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ]
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "registry_paused",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ]
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "verification_authority",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ]
+  },
+  {
+    "stateMutability": "view",
+    "type": "function",
+    "name": "registry_stats",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "total_agents",
+            "type": "uint256"
+          },
+          {
+            "name": "verified_agents",
+            "type": "uint256"
+          },
+          {
+            "name": "platinum_agents",
+            "type": "uint256"
+          },
+          {
+            "name": "gold_agents",
+            "type": "uint256"
+          },
+          {
+            "name": "silver_agents",
+            "type": "uint256"
+          },
+          {
+            "name": "bronze_agents",
+            "type": "uint256"
+          },
+          {
+            "name": "average_reputation",
+            "type": "uint16"
+          },
+          {
+            "name": "total_verification_fees",
+            "type": "uint256"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "stateMutability": "nonpayable",
+    "type": "constructor",
+    "inputs": [],
+    "outputs": []
+  }
+]

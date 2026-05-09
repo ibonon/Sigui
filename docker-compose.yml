@@ -25,7 +25,7 @@ services:
       - .env
     environment:
       # Override DB and log paths to use Docker volumes
-      - DB_PATH=/app/db/arcwarden.db
+      - DB_PATH=/app/db/sigui.db
       - ECOSYSTEM_METRICS_PATH=/app/ecosystem/metrics.json
       - DEMO_REPORT_PATH=/app/ecosystem/demo_report.json
     volumes:

@@ -51,19 +51,45 @@ class PolicyBrain:
         self._lock = asyncio.Lock()
 
     async def initialize(self):
-        latest = await memory.get_latest_policy_update()
-        if latest:
-            self.allow_threshold = float(
-                latest.get("allow_threshold", self.allow_threshold)
-            )
-            self.block_threshold = float(
-                latest.get("block_threshold", self.block_threshold)
-            )
+        # 1. Try loading from Hogonat DAO (on-chain or mock) — governance source of truth
+        try:
+            from governance.hogonat_client import hogonat_client
+            dao_allow, dao_block = await hogonat_client.get_thresholds()
+            async with self._lock:
+                self.allow_threshold = dao_allow
+                self.block_threshold = dao_block
+            mode = "on-chain" if not hogonat_client.mock_mode else "mock"
             logger.info(
-                f"[POLICY_BRAIN] loaded adaptive thresholds allow<{self.allow_threshold:.3f} block>={self.block_threshold:.3f}"
+                f"[POLICY_BRAIN] thresholds from Hogonat ({mode}) "
+                f"allow<{dao_allow:.3f} block>={dao_block:.3f}"
             )
+        except Exception as exc:
+            logger.warning(f"[POLICY_BRAIN] Hogonat unavailable ({exc}) — falling back to memory")
+            # 2. Fallback: last recorded policy update in MemoClaw
+            latest = await memory.get_latest_policy_update()
+            if latest:
+                async with self._lock:
+                    self.allow_threshold = float(
+                        latest.get("allow_threshold", self.allow_threshold)
+                    )
+                    self.block_threshold = float(
+                        latest.get("block_threshold", self.block_threshold)
+                    )
+                logger.info(
+                    f"[POLICY_BRAIN] loaded thresholds from memory "
+                    f"allow<{self.allow_threshold:.3f} block>={self.block_threshold:.3f}"
+                )
 
     async def get_thresholds(self) -> tuple[float, float]:
+        """Returns thresholds, refreshing from Hogonat DAO if available."""
+        try:
+            from governance.hogonat_client import hogonat_client
+            dao_allow, dao_block = await hogonat_client.get_thresholds()
+            async with self._lock:
+                self.allow_threshold = dao_allow
+                self.block_threshold = dao_block
+        except Exception:
+            pass  # Use cached values
         async with self._lock:
             return self.allow_threshold, self.block_threshold
 

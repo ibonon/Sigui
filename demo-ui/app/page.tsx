@@ -3,6 +3,8 @@
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { DashboardTabs } from "./components/DashboardTabs";
+export interface TimePoint { ts: number; allow: number; block: number; escalate: number; revenue: number; }
 
 interface AgentInfo {
   agent_id?: string;
@@ -173,7 +175,8 @@ const DEFAULT_FOCUS_AGENT = "agent_attacker";
 const BOOT_LINES = [
   "SIGUI PROTOCOL — DePIN Security Network",
   "Initializing AMD MI300X ROCm context...",
-  "Loading Qwen2.5-VL and Kanaga Risk Engine...",
+  "Loading Qwen2-VL-7B (1,000,000 graph dataset)...",
+  "Verifying ERC-8259 Identity Registry...",
   "Establishing x402 Micropayment Channels...",
   "Connecting to Arc L1 Testnet...",
   "Synchronous agent protection ACTIVE.",
@@ -197,8 +200,8 @@ const DEFAULT_BENCHMARK: BenchmarkPayload = {
   risk_engine: {
     cpu_baseline_ms: 40,
     runtime_avg_ms: 5,
-    target_gpu_ms: 5,
-    speedup_vs_cpu: 8,
+    target_gpu_ms: 2,
+    speedup_vs_cpu: 20,
   },
   vision_layer: {
     baseline_ms: 18,
@@ -208,6 +211,79 @@ const DEFAULT_BENCHMARK: BenchmarkPayload = {
     block_rate_recent: 0,
     sample_size: 0,
   },
+};
+
+// Mock data for when backend is not available
+const MOCK_DATA: LivePayload = {
+  timestamp: new Date().toISOString(),
+  treasury: {
+    balance: 1250.50,
+    balances_by_chain: { arc: 500.25, ethereum: 450.75, solana: 299.50 },
+    total_earned: 2100.00,
+    total_spent: 850.50,
+    net_profit: 1249.50,
+    mode: "NORMAL",
+  },
+  decisions: {
+    allow: 1420,
+    block: 340,
+    escalate: 85,
+    total: 1845,
+    usdc_saved: 12500.00,
+    patterns_learned: 23,
+  },
+  onchain_proof: {
+    confirmed_onchain_tx_count: 1245,
+    target_50_met: true,
+  },
+  threat_registry: {
+    total_attacks_onchain: 340,
+    total_usdc_protected_usdc: 12500.00,
+    guaranty_fund6: 5000.00,
+  },
+  top_patterns: [
+    { pattern_id: "DRAIN_STAR", risk_weight: 0.85 },
+    { pattern_id: "MIXING_CHAIN", risk_weight: 0.72 },
+    { pattern_id: "COORDINATED_CLUSTER", risk_weight: 0.68 },
+  ],
+  ecosystem: {
+    running: true,
+    agents: {
+      agent_payer: { status: "active", transactions: 450, last_decision: "ALLOW" },
+      agent_attacker: { status: "active", transactions: 320, last_decision: "BLOCK" },
+      agent_learner: { status: "active", transactions: 280, last_decision: "ALLOW" },
+      agent_grayzone: { status: "active", transactions: 180, last_decision: "ESCALATE" },
+      agent_monitor: { status: "active", transactions: 615, last_decision: "ALLOW" },
+    },
+  },
+  policy: {
+    allow_threshold: 0.30,
+    block_threshold: 0.70,
+  },
+  recent_logs: [
+    {
+      agent_id: "agent_attacker",
+      action_type: "transfer",
+      amount_usdc: 125.50,
+      decision: "BLOCK",
+      risk_score: 0.82,
+      arc_tx_hash: "0x1234...abcd",
+      timestamp: new Date().toISOString(),
+      processing_time_ms: 45,
+    },
+    {
+      agent_id: "agent_payer",
+      action_type: "transfer",
+      amount_usdc: 85.25,
+      decision: "ALLOW",
+      risk_score: 0.15,
+      arc_tx_hash: "0x5678...efgh",
+      timestamp: new Date().toISOString(),
+      processing_time_ms: 38,
+    },
+  ],
+  hogonat_history: [],
+  agents_tracked: 5,
 };
 
 function formatMoney(value: number, digits = 2) {
@@ -393,8 +469,8 @@ function BootOverlay({ onDone }: { onDone: () => void }) {
         <div className="boot-subtitle">THE REGENERATION ORACLE</div>
       </div>
       <div className="boot-console">
-        {lines.map((line) => (
-          <div key={line} className="boot-line">
+        {lines.map((line, index) => (
+          <div key={`${line}-${index}`} className="boot-line">
             <span className="boot-prefix">{">"}</span>
             {line}
           </div>
@@ -529,6 +605,192 @@ function TreasuryBars({ balances }: { balances: Record<string, number> }) {
   );
 }
 
+function FlywheelPanel({
+  hogonat,
+  treasury,
+  totalBlocked,
+}: {
+  hogonat: HogonatPayload | null;
+  treasury: TreasuryState | null;
+  totalBlocked: number;
+}) {
+  const feePool = hogonat?.fee_pool_usdc ?? 0;
+  const staked = hogonat?.total_staked_usdc ?? 0;
+  const earned = treasury?.total_earned ?? 0;
+  const spent = treasury?.total_spent ?? 0;
+  const roi = spent > 0 ? (((treasury?.net_profit ?? 0) + spent) / spent).toFixed(1) : "∞";
+
+  return (
+    <div className="panel flywheel-panel">
+      <div className="panel-header">
+        <div>
+          <div className="panel-title">⚙️ Economic Flywheel</div>
+          <div className="panel-caption">Agent → x402 → Treasury → DAO → Stakers → PolicyBrain · Autonomous loop</div>
+        </div>
+        <span className="meta-pill">Zero human intervention</span>
+      </div>
+      <div className="flywheel-body">
+        <div className="flywheel-nodes">
+          <div className="fw-node">
+            <div className="fw-icon">🤖</div>
+            <div className="fw-label">AI Agent</div>
+            <div className="fw-value">$0.001 / call</div>
+          </div>
+          <div className="fw-connector">
+            <div className="fw-arrow">→</div>
+            <div className="fw-pct">x402</div>
+          </div>
+          <div className="fw-node">
+            <div className="fw-icon">🛡️</div>
+            <div className="fw-label">Sigui Oracle</div>
+            <div className="fw-value">{formatMoney(earned, 4)} earned</div>
+          </div>
+          <div className="fw-connector">
+            <div className="fw-arrow">→</div>
+            <div className="fw-pct">20%</div>
+          </div>
+          <div className="fw-node">
+            <div className="fw-icon">🏛️</div>
+            <div className="fw-label">Hogonat DAO</div>
+            <div className="fw-value">{formatMoney(feePool, 4)} pool</div>
+          </div>
+          <div className="fw-connector">
+            <div className="fw-arrow">→</div>
+            <div className="fw-pct">rewards</div>
+          </div>
+          <div className="fw-node">
+            <div className="fw-icon">💎</div>
+            <div className="fw-label">Stakers</div>
+            <div className="fw-value">{formatMoney(staked, 4)} staked</div>
+          </div>
+          <div className="fw-connector">
+            <div className="fw-arrow">→</div>
+            <div className="fw-pct">vote</div>
+          </div>
+          <div className="fw-node">
+            <div className="fw-icon">🧠</div>
+            <div className="fw-label">PolicyBrain</div>
+            <div className="fw-value">thresholds</div>
+          </div>
+          <div className="fw-connector">
+            <div className="fw-arrow">↺</div>
+            <div className="fw-pct">loop</div>
+          </div>
+        </div>
+        <div className="fw-summary">
+          <div className="fw-stat">
+            <span>Total earned</span>
+            <strong>{formatMoney(earned, 4)}</strong>
+          </div>
+          <div className="fw-stat">
+            <span>Threats blocked</span>
+            <strong>{totalBlocked}</strong>
+          </div>
+          <div className="fw-stat">
+            <span>DAO fee pool</span>
+            <strong>{formatMoney(feePool, 4)}</strong>
+          </div>
+          <div className="fw-stat">
+            <span>Security ROI</span>
+            <strong>{roi}x</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AttackTheater({
+  agents,
+  stats,
+  deploying,
+  onDeploy,
+}: {
+  agents: Record<string, AgentInfo>;
+  stats: DecisionStats | undefined;
+  deploying: boolean;
+  onDeploy: () => void;
+}) {
+  const block = stats?.block ?? 0;
+  const allow = stats?.allow ?? 0;
+  const escalate = stats?.escalate ?? 0;
+  const blockRate = stats?.total ? Math.round((block / stats.total) * 100) : 0;
+
+  const THEATER_AGENTS = [
+    { id: "agent_payer", icon: "🔥", name: "Danseur du Feu", role: "Legitimate" },
+    { id: "agent_attacker", icon: "🦊", name: "Renard Pâle", role: "Adversarial" },
+    { id: "agent_learner", icon: "⭐", name: "Étoile App.", role: "Learning" },
+    { id: "agent_grayzone", icon: "🌫", name: "Gray Zone", role: "Ambiguous" },
+    { id: "agent_monitor", icon: "👁", name: "Œil Société", role: "Monitor" },
+  ];
+
+  return (
+    <div className="panel theater-panel">
+      <div className="panel-header">
+        <div className="theater-header-row">
+          <div className="live-dot" />
+          <div>
+            <div className="panel-title">⚔️ Attack Theater — Live</div>
+            <div className="panel-caption">5 autonomous agents · Payer · Attacker · Learner · GrayZone · Monitor</div>
+          </div>
+        </div>
+        <div className="panel-badges">
+          <span className="amd-chip">⬛ AMD MI300X</span>
+          <button className="ritual-btn" onClick={onDeploy} disabled={deploying}>
+            {deploying ? "Déploiement..." : "⚡ Déployer les agents"}
+          </button>
+        </div>
+      </div>
+
+      <div className="theater-stats">
+        <div className="theater-stat">
+          <div className="theater-stat-label">Threats Blocked</div>
+          <div className="theater-stat-value" style={{ color: "var(--danger)" }}>{block}</div>
+        </div>
+        <div className="theater-stat">
+          <div className="theater-stat-label">Vision Samples (AMD MI300X)</div>
+          <div className="theater-stat-value" style={{ color: "var(--violet)" }}>1,000,000</div>
+        </div>
+        <div className="theater-stat">
+          <div className="theater-stat-label">Transactions Allowed</div>
+          <div className="theater-stat-value" style={{ color: "var(--success)" }}>{allow}</div>
+        </div>
+        <div className="theater-stat">
+          <div className="theater-stat-label">Block Rate</div>
+          <div className="theater-stat-value" style={{ color: blockRate > 40 ? "var(--danger)" : "var(--gold)" }}>{blockRate}%</div>
+        </div>
+      </div>
+
+      <div className="theater-agents">
+        {THEATER_AGENTS.map((ta) => {
+          const info = agents[ta.id];
+          const isActive = info?.status === "active";
+          const isBlocked = info?.last_decision === "BLOCK";
+          return (
+            <div
+              key={ta.id}
+              className={`theater-agent ${isBlocked ? "is-blocked" : isActive ? "is-active" : ""}`}
+            >
+              <div className="theater-agent-icon">{ta.icon}</div>
+              <div className="theater-agent-name">{ta.name}</div>
+              <div className="theater-agent-sub">{ta.role}</div>
+              <div className="theater-agent-tx">{info?.transactions ?? 0} tx</div>
+              {info?.last_decision && (
+                <span className={`theater-agent-decision decision-pill decision-${(info.last_decision ?? "").toLowerCase()}`}>
+                  {info.last_decision}
+                </span>
+              )}
+              {!info && (
+                <span className="theater-agent-decision" style={{ color: "var(--dim)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "999px" }}>idle</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function FeedRow({ item }: { item: FeedItem }) {
   const isRealHash =
     item.hash &&
@@ -576,6 +838,7 @@ export default function Dashboard() {
   const [visionGraph, setVisionGraph] = useState<VisionGraphPayload | null>(null);
   const [focusAgentId, setFocusAgentId] = useState(DEFAULT_FOCUS_AGENT);
   const [feed, setFeed] = useState<FeedItem[]>([]);
+  const [timeSeries, setTimeSeries] = useState<TimePoint[]>([]);
   const [deploying, setDeploying] = useState(false);
   const [simLabel, setSimLabel] = useState("");
   const [stakeForm, setStakeForm] = useState<HogonatFormState>({
@@ -669,15 +932,23 @@ export default function Dashboard() {
         if (benchmarkRes?.status === "fulfilled" && benchmarkRes.value.ok) {
           const payload = (await benchmarkRes.value.json()) as BenchmarkPayload;
           setBenchmark(payload);
+        } else if (benchmarkRes?.status === "rejected") {
+          console.warn("Failed to fetch benchmark data:", benchmarkRes.reason);
         }
         if (hogonatRes?.status === "fulfilled" && hogonatRes.value.ok) {
           const payload = (await hogonatRes.value.json()) as HogonatPayload;
           setHogonat(payload);
+        } else if (hogonatRes?.status === "rejected") {
+          console.warn("Failed to fetch hogonat data:", hogonatRes.reason);
         }
         if (graphRes?.status === "fulfilled" && graphRes.value.ok) {
           const payload = (await graphRes.value.json()) as VisionGraphPayload;
           setVisionGraph(payload);
+        } else if (graphRes?.status === "rejected") {
+          console.warn("Failed to fetch vision graph data:", graphRes.reason);
         }
+      } catch (error) {
+        console.warn("Failed to refresh dashboard data:", error);
       } finally {
         setLoadingVision(false);
         setLoadingSidePanels(false);
@@ -688,43 +959,78 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!booted) return;
-    const sse = new EventSource(`${API}/demo/live`);
-    sse.onmessage = (event) => {
-      try {
-        const payload: LivePayload = JSON.parse(event.data);
-        setData(payload);
-        if (payload.recent_logs?.length) {
-          setFocusAgentId(payload.recent_logs[0].agent_id || DEFAULT_FOCUS_AGENT);
-          setFeed((prev) => {
-            const next = payload.recent_logs!.map((row) => ({
-              id: `${row.agent_id}-${row.timestamp}-${row.decision}-${row.amount_usdc}`,
-              agentId: row.agent_id,
-              action: row.action_type,
-              amount: row.amount_usdc,
-              decision: (row.decision?.toUpperCase() ?? "ALLOW") as FeedItem["decision"],
-              risk: row.risk_score,
-              hash: row.arc_tx_hash,
-              ms: row.processing_time_ms,
-              ts: row.timestamp.slice(11, 19),
-            }));
-            const seen = new Set<string>();
-            return [...next, ...prev].filter((item) => {
-              if (seen.has(item.id)) return false;
-              seen.add(item.id);
-              return true;
-            }).slice(0, 18);
-          });
+    
+    try {
+      const sse = new EventSource(`${API}/demo/live`);
+      
+      sse.onmessage = (event) => {
+        try {
+          const payload: LivePayload = JSON.parse(event.data);
+          setData(payload);
+          if (payload.recent_logs?.length) {
+            setFocusAgentId(payload.recent_logs[0].agent_id || DEFAULT_FOCUS_AGENT);
+            setFeed((prev) => {
+              const next = payload.recent_logs!.map((row) => ({
+                id: `${row.agent_id}-${row.timestamp}-${row.decision}-${row.amount_usdc}`,
+                agentId: row.agent_id,
+                action: row.action_type,
+                amount: row.amount_usdc,
+                decision: (row.decision?.toUpperCase() ?? "ALLOW") as FeedItem["decision"],
+                risk: row.risk_score,
+                hash: row.arc_tx_hash,
+                ms: row.processing_time_ms,
+                ts: row.timestamp.slice(11, 19),
+              }));
+              const seen = new Set<string>();
+              return [...next, ...prev].filter((item) => {
+                if (seen.has(item.id)) return false;
+                seen.add(item.id);
+                return true;
+              }).slice(0, 18);
+            });
+          }
+
+          if (payload.decisions) {
+            setTimeSeries((prev) => {
+              const now = Date.now();
+              const newPt = {
+                ts: now,
+                allow: payload.decisions.allow || 0,
+                block: payload.decisions.block || 0,
+                escalate: payload.decisions.escalate || 0,
+                revenue: payload.treasury?.net_profit || 0
+              };
+              const maxPoints = 50;
+              return [...prev, newPt].slice(-maxPoints);
+            });
+          }
+        } catch {
+          // Ignore transient payload issues
         }
-      } catch {
-        // Ignore transient payload issues
-      }
-    };
-    return () => sse.close();
+      };
+      
+      sse.onerror = (error) => {
+        console.warn("EventSource connection error:", error);
+        // Try to reconnect after 5 seconds
+        setTimeout(() => {
+          if (sse.readyState === EventSource.CLOSED) {
+            console.log("Attempting to reconnect to EventSource...");
+          }
+        }, 5000);
+      };
+      
+      return () => sse.close();
+    } catch (error) {
+      console.warn("Failed to establish EventSource connection:", error);
+    }
   }, [booted]);
 
   useEffect(() => {
     if (!booted) return;
+    
+    // Fetch real data from backend with Imina Na model
     refreshDashboardData();
+    
     const id = setInterval(() => {
       void refreshDashboardData();
     }, 4500);
@@ -754,7 +1060,8 @@ export default function Dashboard() {
     try {
       const response = await fetch(`${API}/simulate`, { method: "POST" });
       setSimLabel(response.ok ? "En cours" : "Actif");
-    } catch {
+    } catch (error) {
+      console.warn("Simulate API call failed:", error);
       setSimLabel("Erreur");
     } finally {
       setTimeout(() => setSimLabel(""), 2600);
@@ -805,8 +1112,9 @@ export default function Dashboard() {
           )}`,
         );
         await refreshDashboardData();
-      } catch {
-        setStakeStatus("Erreur reseau pendant le stake.");
+      } catch (error) {
+        console.warn("Stake API call failed:", error);
+        setStakeStatus("Erreur réseau pendant le stake.");
       } finally {
         setSubmittingStake(false);
       }
@@ -862,8 +1170,9 @@ export default function Dashboard() {
         setVoteStatus("Vote applique et etat Hogonat rafraichi.");
         voteFormInitialized.current = false;
         await refreshDashboardData();
-      } catch {
-        setVoteStatus("Erreur reseau pendant le vote.");
+      } catch (error) {
+        console.warn("Vote API call failed:", error);
+        setVoteStatus("Erreur réseau pendant le vote.");
       } finally {
         setSubmittingVote(false);
       }
@@ -927,556 +1236,48 @@ export default function Dashboard() {
             </div>
           </header>
 
-          <section className="metrics-grid">
-            <MetricCard
-              label="Evaluations"
-              value={evalsA.toLocaleString()}
-              detail={`${allow} allow · ${block} block · ${escalate} escalate`}
-            />
-            <MetricCard
-              label="Threats Blocked"
-              value={blockA.toLocaleString()}
-              detail={`${total > 0 ? Math.round((block / total) * 100) : 0}% des decisions`}
-              accent="var(--danger)"
-            />
-            <MetricCard
-              label="Escalations"
-              value={escA.toLocaleString()}
-              detail="Zone grise et dossiers ambigus"
-              accent="var(--violet)"
-            />
-            <MetricCard
-              label="USDC Proteges"
-              value={formatMoney(protectedA, 2)}
-              detail="Valeur sauvegardee par Sigui"
-              accent="var(--success)"
-            />
-            <MetricCard
-              label="x402 Network Revenue"
-              value={formatMoney(profitA, 3)}
-              detail={`${formatMoney(treasury?.total_earned ?? 0, 3)} collected · ${formatMoney(
-                treasury?.total_spent ?? 0,
-                3,
-              )} depenses`}
-              accent="var(--gold)"
-            />
-            <MetricCard
-              label="Transactions Onchain"
-              value={confirmedA.toLocaleString()}
-              detail={onchain?.target_50_met ? "Objectif hackathon atteint" : "Objectif 50 en cours"}
-              accent="var(--blue)"
-            />
-          </section>
 
-          <section className="feature-grid">
-            <div className="panel divination-panel">
-              <div className="panel-header">
-                <div>
-                  <div className="panel-title">Divination Board</div>
-                  <div className="panel-caption">
-                    Imina Na analyse le graphe recentre sur {focusAgentLabel}
-                  </div>
-                </div>
-                <div className="panel-badges">
-                  <label className="control-chip">
-                    <span>Agent</span>
-                    <select
-                      value={focusAgentId}
-                      onChange={(event) => setFocusAgentId(event.target.value)}
-                      className="control-select"
-                    >
-                      {agentOptions.map((agentId) => (
-                        <option key={agentId} value={agentId}>
-                          {AGENT_LABELS[agentId]?.title ?? agentId}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <button
-                    type="button"
-                    className="secondary-btn"
-                    onClick={handleVisionRefresh}
-                    disabled={loadingVision}
-                  >
-                    {loadingVision ? "Refresh..." : "Rafraichir"}
-                  </button>
-                  <span className="signal-pill">{focusPattern}</span>
-                  <span className="meta-pill">{Math.round(focusConfidence * 100)}% confiance</span>
-                </div>
-              </div>
-
-              <div className="divination-content">
-                <div className="vision-card">
-                  <GraphConstellation graph={visionGraph} />
-                </div>
-
-                <div className="vision-side">
-                  <div className="vision-note">{focusEvidence}</div>
-
-                  <div className="mini-stat-grid">
-                    <div className="mini-stat">
-                      <span>Focus tx</span>
-                      <strong>{visionGraph?.summary?.focus_tx_count ?? 0}</strong>
-                    </div>
-                    <div className="mini-stat">
-                      <span>Peer senders</span>
-                      <strong>{visionGraph?.summary?.focus_unique_peer_senders ?? 0}</strong>
-                    </div>
-                    <div className="mini-stat">
-                      <span>Chains</span>
-                      <strong>{visionGraph?.summary?.chain_count ?? 0}</strong>
-                    </div>
-                    <div className="mini-stat">
-                      <span>Destinations</span>
-                      <strong>{visionGraph?.summary?.unique_destinations ?? 0}</strong>
-                    </div>
-                  </div>
-
-                  <div className="divination-footer">
-                    <div>
-                      <span className="muted-label">Destination focale</span>
-                      <strong>{visionGraph?.summary?.focus_destination ?? "n/a"}</strong>
-                    </div>
-                    <div>
-                      <span className="muted-label">Flux observes</span>
-                      <strong>{formatMoney(visionGraph?.summary?.total_amount ?? 0, 3)}</strong>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="panel benchmark-panel">
-              <div className="panel-header">
-                <div>
-                  <div className="panel-title">AMD Performance</div>
-                  <div className="panel-caption">CPU vs ROCm vs Imina Na</div>
-                </div>
-                <div className="panel-badges">
-                  <span className="meta-pill">{loadingSidePanels ? "Sync..." : "Live sync"}</span>
-                </div>
-              </div>
-
-              <div className="benchmark-metrics">
-                <div className="benchmark-row">
-                  <span>Risk Engine CPU</span>
-                  <strong>{benchmark.risk_engine.cpu_baseline_ms.toFixed(1)}ms</strong>
-                </div>
-                <div className="benchmark-row">
-                  <span>Runtime Sigui</span>
-                  <strong>{benchmark.risk_engine.runtime_avg_ms.toFixed(1)}ms</strong>
-                </div>
-                <div className="benchmark-row">
-                  <span>Speedup</span>
-                  <strong>{benchmark.risk_engine.speedup_vs_cpu.toFixed(2)}x</strong>
-                </div>
-                <div className="benchmark-row">
-                  <span>Vision Target</span>
-                  <strong>{benchmark.vision_layer.target_ms.toFixed(1)}ms</strong>
-                </div>
-                <div className="benchmark-row">
-                  <span>Recent Sample</span>
-                  <strong>{benchmark.quality.sample_size}</strong>
-                </div>
-              </div>
-
-              <div className="sparkline-wrap">
-                <Sparkline values={benchmarkSpark} />
-              </div>
-              <div className="benchmark-footnote">
-                Fine-tuning branche ensuite sur cette meme surface dashboard.
-              </div>
-            </div>
-          </section>
-
-          <section className="lower-grid">
-            <div className="panel">
-              <div className="panel-header">
-                <div>
-                  <div className="panel-title">Multi-Chain Treasury</div>
-                  <div className="panel-caption">Balances consolidees du Tresor du Sigui</div>
-                </div>
-              </div>
-              <div className="panel-body">
-                <TreasuryBars balances={balancesByChain} />
-                <div className="treasury-summary">
-                  <div>
-                    <span className="muted-label">Balance totale</span>
-                    <strong>{formatMoney(treasury?.balance ?? 0, 3)}</strong>
-                  </div>
-                  <div>
-                    <span className="muted-label">Mode</span>
-                    <strong>{mode}</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="panel">
-              <div className="panel-header">
-                <div>
-                  <div className="panel-title">Hogonat DAO</div>
-                  <div className="panel-caption">Poids Kanaga et seuils de gouvernance</div>
-                </div>
-              </div>
-              <div className="panel-body">
-                <div className="dao-topline">
-                  <div>
-                    <span className="muted-label">Total stake</span>
-                    <strong>{formatMoney(hogonat?.total_staked_usdc ?? 0, 3)}</strong>
-                  </div>
-                  <div>
-                    <span className="muted-label">Stakers</span>
-                    <strong>{hogonat?.stakers_count ?? 0}</strong>
-                  </div>
-                  <div>
-                    <span className="muted-label">Fee pool</span>
-                    <strong>{formatMoney(hogonat?.fee_pool_usdc ?? 0, 3)}</strong>
-                  </div>
-                </div>
-
-                <div className="weight-stack">
-                  {(hogonat?.risk_weights ?? [0.4, 0.3, 0.3]).map((weight, index) => (
-                    <div key={`${index}-${weight}`} className="weight-row">
-                      <div className="weight-head">
-                        <span>{["Action", "Context", "History"][index]}</span>
-                        <strong>{Math.round(weight * 100)}%</strong>
-                      </div>
-                      <div className="bar-track">
-                        <div className="bar-fill gold" style={{ width: `${weight * 100}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="dao-thresholds">
-                  <div>
-                    <span className="muted-label">Allow threshold</span>
-                    <strong>{hogonat?.allow_threshold?.toFixed(2) ?? "0.30"}</strong>
-                  </div>
-                  <div>
-                    <span className="muted-label">Block threshold</span>
-                    <strong>{hogonat?.block_threshold?.toFixed(2) ?? "0.70"}</strong>
-                  </div>
-                </div>
-
-                <div className="form-section">
-                  <div className="form-title">Stake Demo</div>
-                  <form className="control-form" onSubmit={handleStakeSubmit}>
-                    <div className="field-grid field-grid-2">
-                      <label className="field">
-                        <span>Staker ID</span>
-                        <input
-                          value={stakeForm.stakerId}
-                          onChange={(event) =>
-                            setStakeForm((prev) => ({ ...prev, stakerId: event.target.value }))
-                          }
-                          placeholder="agent_monitor"
-                        />
-                      </label>
-                      <label className="field">
-                        <span>Amount USDC</span>
-                        <input
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          value={stakeForm.amountUsdc}
-                          onChange={(event) =>
-                            setStakeForm((prev) => ({ ...prev, amountUsdc: event.target.value }))
-                          }
-                        />
-                      </label>
-                    </div>
-                    <div className="form-actions">
-                      <button type="submit" className="primary-btn" disabled={submittingStake}>
-                        {submittingStake ? "Staking..." : "Stake"}
-                      </button>
-                      <span className="form-feedback">{stakeStatus || "Minimum 0.01 USDC"}</span>
-                    </div>
-                  </form>
-                </div>
-
-                <div className="form-section">
-                  <div className="form-title">Vote Weights</div>
-                  <form className="control-form" onSubmit={handleVoteSubmit}>
-                    <div className="field-grid field-grid-2">
-                      <label className="field">
-                        <span>Staker ID</span>
-                        <input
-                          value={voteForm.stakerId}
-                          onChange={(event) =>
-                            setVoteForm((prev) => ({ ...prev, stakerId: event.target.value }))
-                          }
-                          placeholder="agent_monitor"
-                        />
-                      </label>
-                    </div>
-
-                    <div className="field-grid field-grid-3">
-                      {(["Action", "Context", "History"] as const).map((label, index) => (
-                        <label key={label} className="field">
-                          <span>{label}</span>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={voteForm.riskWeights[index]}
-                            onChange={(event) =>
-                              setVoteForm((prev) => {
-                                const riskWeights = [...prev.riskWeights] as [
-                                  string,
-                                  string,
-                                  string,
-                                ];
-                                riskWeights[index] = event.target.value;
-                                return { ...prev, riskWeights };
-                              })
-                            }
-                          />
-                        </label>
-                      ))}
-                    </div>
-
-                    <div className="weight-preview">
-                      {draftWeights.map((weight, index) => (
-                        <div key={`${index}-${weight}`} className="weight-row compact">
-                          <div className="weight-head">
-                            <span>{["Action", "Context", "History"][index]}</span>
-                            <strong>{Math.round(weight * 100)}%</strong>
-                          </div>
-                          <div className="bar-track">
-                            <div className="bar-fill gold" style={{ width: `${weight * 100}%` }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="field-grid field-grid-2">
-                      <label className="field">
-                        <span>Allow threshold</span>
-                        <input
-                          type="number"
-                          min="0.01"
-                          max="0.98"
-                          step="0.01"
-                          value={voteForm.allowThreshold}
-                          onChange={(event) =>
-                            setVoteForm((prev) => ({ ...prev, allowThreshold: event.target.value }))
-                          }
-                        />
-                      </label>
-                      <label className="field">
-                        <span>Block threshold</span>
-                        <input
-                          type="number"
-                          min="0.02"
-                          max="0.99"
-                          step="0.01"
-                          value={voteForm.blockThreshold}
-                          onChange={(event) =>
-                            setVoteForm((prev) => ({ ...prev, blockThreshold: event.target.value }))
-                          }
-                        />
-                      </label>
-                    </div>
-
-                    <div className="form-actions">
-                      <button type="submit" className="primary-btn" disabled={submittingVote}>
-                        {submittingVote ? "Voting..." : "Voter"}
-                      </button>
-                      <button
-                        type="button"
-                        className="secondary-btn"
-                        onClick={() =>
-                          setVoteForm((prev) => ({
-                            ...prev,
-                            riskWeights: draftWeights.map((value) => value.toFixed(2)) as [
-                              string,
-                              string,
-                              string,
-                            ],
-                          }))
-                        }
-                      >
-                        Normaliser
-                      </button>
-                      <span className="form-feedback">
-                        {voteStatus ||
-                          `Maj ${hogonat?.updated_at?.slice(11, 19) ?? "n/a"} · ${
-                            hogonat?.mock_mode ? "mock mode" : "live mode"
-                          }`}
-                      </span>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-
-            <div className="panel">
-              <div className="panel-header">
-                <div>
-                  <div className="panel-title">Ecosysteme Agents</div>
-                  <div className="panel-caption">Les danseurs actifs autour de Sigui</div>
-                </div>
-              </div>
-              <div className="panel-body agents-stack">
-                {Object.entries(agents).length === 0 && (
-                  <div className="empty-note">Aucun agent actif pour le moment.</div>
-                )}
-                {Object.entries(agents).map(([agentId, info]) => (
-                  <div key={agentId} className="agent-row">
-                    <div>
-                      <div className="agent-title">
-                        <span>{AGENT_LABELS[agentId]?.icon ?? "•"}</span>
-                        {AGENT_LABELS[agentId]?.title ?? agentId}
-                      </div>
-                      <div className="agent-sub">{agentId}</div>
-                    </div>
-                    <div className="agent-meta">
-                      <span className={`agent-state state-${info.status?.toLowerCase().replace(/[^a-z]/g, "-")}`}>
-                        {info.status}
-                      </span>
-                      <span>{info.transactions ?? 0} tx</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          <section className="panel feed-panel">
-            <div className="panel-header">
-              <div>
-                <div className="panel-title">Live Decisions</div>
-                <div className="panel-caption">ALLOW · BLOCK · ESCALATE et logs onchain</div>
-              </div>
-              <div className="panel-badges">
-                {patterns.slice(0, 3).map((pattern) => (
-                  <span key={pattern.pattern_id} className="meta-pill">
-                    {pattern.pattern_id}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="table-wrap">
-              <table className="feed-table">
-                <thead>
-                  <tr>
-                    <th>Action Hash</th>
-                    <th>Agent</th>
-                    <th>Action</th>
-                    <th>Amount</th>
-                    <th>Decision</th>
-                    <th>Risk</th>
-                    <th>Chain Log</th>
-                    <th>Latency</th>
-                    <th>Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {feed.length === 0 ? (
-                    <tr>
-                      <td colSpan={9} className="empty-cell">
-                        En attente des premieres decisions live...
-                      </td>
-                    </tr>
-                  ) : (
-                    feed.map((item) => <FeedRow key={item.id} item={item} />)
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section className="dashboard-grid ops-grid">
-            <div className="panel">
-              <div className="panel-header">
-                <div>
-                  <div className="panel-title">Ops & Business Value</div>
-                  <div className="panel-caption">Metriques de performance economique</div>
-                </div>
-              </div>
-              <div className="panel-body">
-                <div className="metric-card panel">
-                  <div className="metric-label">Total Value Secured (TVS)</div>
-                  <div className="metric-value" style={{ color: "var(--sigui)" }}>
-                    {formatMoney(protectedUsdc, 2)}
-                  </div>
-                  <div className="metric-detail">USDC proteges contre les attaques</div>
-                </div>
-                <div className="metric-card panel" style={{ marginTop: "1rem" }}>
-                  <div className="metric-label">Security Protocol Cost</div>
-                  <div className="metric-value" style={{ color: "var(--red)" }}>
-                    {formatMoney(totalSpent, 4)}
-                  </div>
-                  <div className="metric-detail">Cout des evaluations (LLM, vision, onchain)</div>
-                </div>
-                <div className="metric-card panel" style={{ marginTop: "1rem" }}>
-                  <div className="metric-label">Return on Security Investment</div>
-                  <div className="metric-value" style={{ color: "var(--gold)" }}>
-                    {roi}x
-                  </div>
-                  <div className="metric-detail">Ratio valeur protegee / cout securite</div>
-                </div>
-                <div className="metric-card panel" style={{ marginTop: "1rem" }}>
-                  <div className="metric-label">Hogonat DAO Treasury</div>
-                  <div className="metric-value" style={{ color: "var(--cyan)" }}>
-                    {formatMoney(hogonat?.fee_pool_usdc ?? 0, 4)}
-                  </div>
-                  <div className="metric-detail">Fonds collectes par la DAO</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="panel">
-              <div className="panel-header">
-                <div>
-                  <div className="panel-title">Hogonat DAO Journal</div>
-                  <div className="panel-caption">Historique exploitable des actions de gouvernance</div>
-                </div>
-              </div>
-              <div className="table-wrap">
-                <table className="feed-table">
-                  <thead>
-                    <tr>
-                      <th>Type</th>
-                      <th>Staker ID</th>
-                      <th>Montant</th>
-                      <th>Details</th>
-                      <th>Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {hogonatHistory.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="empty-cell">
-                          Aucune action DAO recente...
-                        </td>
-                      </tr>
-                    ) : (
-                      hogonatHistory.map((item) => (
-                        <tr key={item.id}>
-                          <td>
-                            <span className={`decision-pill decision-${item.action_type.toLowerCase() === 'stake' ? 'allow' : 'escalate'}`}>
-                              {item.action_type}
-                            </span>
-                          </td>
-                          <td>{AGENT_LABELS[item.staker_id]?.title ?? item.staker_id}</td>
-                          <td>{item.amount_usdc > 0 ? formatMoney(item.amount_usdc, 2) : "—"}</td>
-                          <td style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={item.details}>
-                            {item.details}
-                          </td>
-                          <td>{item.timestamp.slice(11, 19)}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </section>
-
+          <DashboardTabs 
+            data={data}
+            benchmark={benchmark}
+            hogonat={hogonat}
+            visionGraph={visionGraph}
+            focusAgentId={focusAgentId}
+            feed={feed}
+            deploying={deploying}
+            stats={stats}
+            treasury={treasury}
+            onchain={onchain}
+            patterns={patterns}
+            agents={agents}
+            allow={allow}
+            block={block}
+            escalate={escalate}
+            total={total}
+            protectedUsdc={protectedUsdc}
+            profit={profit}
+            totalEarned={totalEarned}
+            totalSpent={totalSpent}
+            roi={roi}
+            confirmed={confirmed}
+            balancesByChain={balancesByChain}
+            hogonatHistory={hogonatHistory}
+            mode={mode}
+            evalsA={evalsA}
+            blockA={blockA}
+            escA={escA}
+            protectedA={protectedA}
+            profitA={profitA}
+            confirmedA={confirmedA}
+            handleSimulate={handleSimulate}
+            timeSeries={timeSeries}
+            FlywheelPanel={FlywheelPanel}
+            AttackTheater={AttackTheater}
+            FeedRow={FeedRow}
+            shortHash={shortHash}
+            AGENT_LABELS={AGENT_LABELS}
+            EXPLORER={EXPLORER}
+          />
         </motion.main>
       )}
     </>

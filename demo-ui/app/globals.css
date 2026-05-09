@@ -221,8 +221,16 @@ button {
     font-size: 11px;
     font-family: var(--mono);
     border: 1px solid rgba(246, 201, 14, 0.14);
-    background: rgba(255, 255, 255, 0.03);
 }
+
+.demo-mode {
+    background: rgba(226, 75, 74, 0.15);
+    border-color: rgba(226, 75, 74, 0.3);
+    color: var(--danger);
+    animation: pulse 2s infinite;
+}
+
+
 
 .mode-pill {
     font-weight: 700;
@@ -803,7 +811,296 @@ button {
     padding: 24px;
 }
 
+/* ── Ops Grid ───────────────────────────────────────────────────────────── */
+.dashboard-grid {
+    display: grid;
+    gap: 14px;
+}
+
+.ops-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* ── AMD Badge ──────────────────────────────────────────────────────────── */
+.amd-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-family: var(--mono);
+    font-weight: 700;
+    background: linear-gradient(90deg, rgba(237,28,36,0.18), rgba(246,201,14,0.12));
+    border: 1px solid rgba(237,28,36,0.32);
+    color: #ff6b6b;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+/* ── BLOCK Pulse ────────────────────────────────────────────────────────── */
+@keyframes block-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(226,75,74,0); }
+    50% { box-shadow: 0 0 0 6px rgba(226,75,74,0.18); }
+}
+
+.decision-block {
+    animation: block-pulse 2.2s ease-in-out infinite;
+}
+
+/* ── Flywheel Panel ─────────────────────────────────────────────────────── */
+.flywheel-panel {
+    overflow: hidden;
+}
+
+.flywheel-body {
+    padding: 20px 24px 24px;
+}
+
+.flywheel-nodes {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.fw-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(246,201,14,0.14);
+    min-width: 110px;
+    transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.fw-node:hover {
+    border-color: rgba(246,201,14,0.38);
+    background: rgba(246,201,14,0.05);
+}
+
+.fw-icon {
+    font-size: 22px;
+    line-height: 1;
+}
+
+.fw-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    letter-spacing: 0.04em;
+}
+
+.fw-value {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--gold);
+    text-align: center;
+}
+
+.fw-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.fw-arrow {
+    color: var(--gold);
+    font-size: 18px;
+    line-height: 1;
+    animation: fw-pulse 2s ease-in-out infinite;
+}
+
+.fw-pct {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+@keyframes fw-pulse {
+    0%, 100% { opacity: 1; transform: translateX(0); }
+    50% { opacity: 0.5; transform: translateX(3px); }
+}
+
+.fw-connector-down .fw-arrow {
+    animation-name: fw-pulse-down;
+}
+
+@keyframes fw-pulse-down {
+    0%, 100% { opacity: 1; transform: translateY(0); }
+    50% { opacity: 0.5; transform: translateY(3px); }
+}
+
+.fw-summary {
+    margin-top: 20px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: rgba(246,201,14,0.05);
+    border: 1px solid rgba(246,201,14,0.12);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 12px;
+}
+
+.fw-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.fw-stat span {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+}
+
+.fw-stat strong {
+    font-size: 16px;
+    font-family: var(--mono);
+    color: var(--gold-soft);
+}
+
+/* ── Attack Theater ─────────────────────────────────────────────────────── */
+.theater-panel {
+    overflow: hidden;
+}
+
+.theater-header-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger);
+    animation: live-blink 1.2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes live-blink {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(226,75,74,0); }
+    50% { opacity: 0.6; box-shadow: 0 0 0 5px rgba(226,75,74,0.22); }
+}
+
+.theater-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 12px;
+    padding: 16px 20px 0;
+}
+
+.theater-stat {
+    padding: 14px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(246,201,14,0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.theater-stat-label {
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.theater-stat-value {
+    font-size: 22px;
+    font-family: var(--mono);
+    font-weight: 700;
+}
+
+.theater-agents {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0,1fr));
+    gap: 10px;
+    padding: 16px 20px 20px;
+}
+
+.theater-agent {
+    padding: 14px 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(246,201,14,0.10);
+    background: rgba(255,255,255,0.02);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transition: border-color 0.3s ease;
+}
+
+.theater-agent.is-active {
+    border-color: rgba(29,158,117,0.35);
+    background: rgba(29,158,117,0.04);
+}
+
+.theater-agent.is-blocked {
+    border-color: rgba(226,75,74,0.35);
+    background: rgba(226,75,74,0.04);
+    animation: block-pulse 2s ease-in-out infinite;
+}
+
+.theater-agent-icon {
+    font-size: 26px;
+}
+
+.theater-agent-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+}
+
+.theater-agent-sub {
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--muted);
+    text-align: center;
+}
+
+.theater-agent-tx {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gold);
+}
+
+.theater-agent-decision {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-family: var(--mono);
+}
+
 @media (max-width: 1280px) {
+    .ops-grid {
+        grid-template-columns: 1fr;
+    }
+    .fw-summary {
+        grid-template-columns: repeat(2, minmax(0,1fr));
+    }
+    .theater-agents {
+        grid-template-columns: repeat(3, minmax(0,1fr));
+    }
+    .theater-stats {
+        grid-template-columns: repeat(2, minmax(0,1fr));
+    }
     .metrics-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
@@ -841,6 +1138,9 @@ button {
     .field-grid-3 {
         grid-template-columns: 1fr;
     }
+    .theater-agents {
+        grid-template-columns: repeat(2, minmax(0,1fr));
+    }
 }
 
 @media (max-width: 560px) {
@@ -855,4 +1155,9 @@ button {
     .panel-header {
         flex-direction: column;
     }
+    .theater-agents {
+        grid-template-columns: 1fr;
+    }
 }
+
+

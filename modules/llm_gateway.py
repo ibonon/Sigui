@@ -309,4 +309,4 @@ class OpenShellGateway(_GatewayBase):
 # ─────────────────────────────────────────────────────────────────────────────
 
 lebe_gateway = LebeGateway()
-llm_gateway = OpenShellGateway()  # kept as-is — used by PolicyBrain / agent graph
+llm_gateway = lebe_gateway  # Changed to use the local finetuned AMD model (Lebe) instead of Anthropic

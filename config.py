@@ -129,7 +129,7 @@ class Settings(BaseSettings):
     vision_endpoint: str = Field(
         default="http://134.199.201.220:8002/v1/chat/completions", env="VISION_ENDPOINT"
     )
-    vision_model_name: str = Field(default="imina-na", env="VISION_MODEL_NAME")
+    vision_model_name: str = Field(default="Ibonon/imina_na_lora", env="VISION_MODEL_NAME")
     vision_confidence_block_threshold: float = Field(
         default=0.80, env="VISION_CONFIDENCE_BLOCK_THRESHOLD"
     )
@@ -154,7 +154,7 @@ class Settings(BaseSettings):
         return bool(self.hogonat_contract_address.strip())
 
     # ─── Database ─────────────────────────────────────────────────────────────
-    db_path: str = Field(default="./db/arcwarden.db", env="DB_PATH")
+    db_path: str = Field(default="./db/sigui.db", env="DB_PATH")
 
     # ─── Demo Mode ────────────────────────────────────────────────────────────
     demo_mode: bool = Field(default=True, env="DEMO_MODE")

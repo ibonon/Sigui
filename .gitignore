@@ -34,3 +34,5 @@ db/*.db-*
 *.zip
 data/
 datasets/
+dataset_v2_real_100k/
+sauvegarde_brouillons/

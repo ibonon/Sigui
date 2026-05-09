@@ -75,7 +75,7 @@ class GraphBuilderService:
         total_amount = float(summary.get("total_amount", 0.0) or 0.0)
         dominant_chain = str(summary.get("dominant_chain") or current_chain or "arc")
 
-        if focus_peer_senders >= 4 or focus_tx_count >= 8:
+        if focus_peer_senders >= 10 or focus_tx_count >= 30:
             return (
                 "DRAIN_STAR",
                 0.88,
@@ -86,7 +86,7 @@ class GraphBuilderService:
                 ),
             )
 
-        if chain_count >= 2 and unique_destinations >= 3 and tx_count >= 6:
+        if chain_count >= 2 and unique_destinations >= 5 and tx_count >= 15:
             return (
                 "MIXING_CHAIN",
                 0.83,
@@ -97,7 +97,7 @@ class GraphBuilderService:
                 ),
             )
 
-        if focus_peer_senders >= 2 and unique_destinations >= 2 and total_amount >= 0.5:
+        if focus_peer_senders >= 5 and unique_destinations >= 5 and total_amount >= 5.0:
             return (
                 "COORDINATED_CLUSTER",
                 0.8,
