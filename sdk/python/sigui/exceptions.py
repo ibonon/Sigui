@@ -46,25 +46,36 @@ class SiguiBlockedError(SiguiError):
     Raised when verdict is BLOCK and raise_on_block=True.
     Allows agents to use try/except instead of checking verdict manually.
     """
-    def __init__(self, result):
-        self.result = result
-        super().__init__(
-            f"Action BLOCKED by Sigui — "
-            f"risk={result.risk_score:.3f} reason={result.reason}"
-        )
+    def __init__(self, reason, risk_score: float = 0.0, vision_pattern: str | None = None, decision=None):
+        if hasattr(reason, "reason"):
+            result = reason
+            self.result = result
+            self.decision = result
+            self.reason = result.reason
+            self.risk_score = result.risk_score
+            self.vision_pattern = getattr(result, "vision_pattern", None)
+            msg = f"Action BLOCKED by Sigui — risk={result.risk_score:.3f} reason={result.reason}"
+        else:
+            self.reason = reason
+            self.risk_score = risk_score
+            self.vision_pattern = vision_pattern
+            self.decision = decision
+            self.result = decision
+            msg = f"Transaction blocked by Sigui: {reason}"
+        super().__init__(msg)
 
 
-class SiguiEscalationRequiredError(SiguiError):
+class SiguiEscalateError(SiguiError):
     """
     Raised when verdict is ESCALATE and raise_on_escalate=True.
-    Contains the original evaluation result.
+    Contains the original evaluation decision.
     """
-    def __init__(self, result):
-        self.result = result
-        super().__init__(
-            f"Action requires ESCALATION — "
-            f"risk={result.risk_score:.3f} cost=${result.escalation_cost_usdc}"
-        )
+    def __init__(self, decision):
+        self.decision = decision
+        self.result = decision
+        super().__init__(f"Transaction requires escalation (score={decision.risk_score:.2f})")
+
+SiguiEscalationRequiredError = SiguiEscalateError
 
 
 class SiguiServiceUnavailableError(SiguiError):

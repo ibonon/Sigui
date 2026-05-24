@@ -26,6 +26,12 @@ from sigui import (
 )
 from sigui.models import EvaluationResult
 
+try:
+    from sigui.integrations.crewai import SiguiEvaluationTool
+    CREWAI_TOOL_AVAILABLE = True
+except ImportError:
+    CREWAI_TOOL_AVAILABLE = False
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Générateur de transactions — s'adapte à N agents
@@ -166,6 +172,19 @@ async def run_demo(n_agents: int = 6, offline: bool = False):
         api_url="http://localhost:8000",
         agent_id="sigui_sdk_treasurer",
     ) as client:
+        if CREWAI_TOOL_AVAILABLE:
+            native_tool = SiguiEvaluationTool(
+                sigui_client=client,
+                auto_escalate=True,
+            )
+            preview = await native_tool._arun(
+                destination="0xServiceBEEF",
+                amount_usdc=0.01,
+                chain="arc",
+                action_type="transfer",
+                reason="CrewAI native tool preview",
+            )
+            print(f"  CrewAI native tool preview: {preview}\n")
 
         for tx in transactions:
             agent_label = f"{tx.agent_icon} {tx.agent_name}"[:col['agent']]

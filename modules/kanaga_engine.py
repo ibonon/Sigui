@@ -39,15 +39,22 @@ class KanagaEngine:
         self,
         components: dict[str, float],
         deltas: dict[str, float] | None = None,
+        weights: dict[str, float] | None = None,
     ) -> KanagaOutput:
         deltas = deltas or {}
-        a = float(components.get("action", 0.0))
-        c = float(components.get("context", 0.0))
-        h = float(components.get("history", 0.0))
-        flow = float(deltas.get("flow", 0.0))
-        service = float(deltas.get("service", 0.0))
-        contract = float(deltas.get("contract", 0.0))
-        vision = float(deltas.get("vision", 0.0))
+        weights = weights or {"financial": 1.0, "behavioral": 1.0, "visual_topology": 1.0}
+        
+        w_fin = max(0.0, float(weights.get("financial", 1.0)))
+        w_beh = max(0.0, float(weights.get("behavioral", 1.0)))
+        w_vis = max(0.0, float(weights.get("visual_topology", 1.0)))
+
+        a = float(components.get("action", 0.0)) * w_fin
+        c = float(components.get("context", 0.0)) * w_beh
+        h = float(components.get("history", 0.0)) * w_beh
+        flow = float(deltas.get("flow", 0.0)) * w_beh
+        service = float(deltas.get("service", 0.0)) * w_beh
+        contract = float(deltas.get("contract", 0.0)) * w_beh
+        vision = float(deltas.get("vision", 0.0)) * w_vis
 
         device = self._select_device()
         if TORCH_AVAILABLE:

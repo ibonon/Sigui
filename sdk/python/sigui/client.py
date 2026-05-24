@@ -49,7 +49,7 @@ from .models import (
 from .x402 import CircleWallet, DemoWallet, WalletAdapter, X402Handler
 
 _DEFAULT_TIMEOUT = 15.0
-_SDK_VERSION = "0.1.0"
+_SDK_VERSION = "0.2.0"
 
 
 class SiguiClient:
@@ -85,8 +85,16 @@ class SiguiClient:
         raise_on_block: bool = False,
         raise_on_escalate: bool = False,
         timeout: float = _DEFAULT_TIMEOUT,
+        config = None,
     ):
-        self._api_url = api_url.rstrip("/")
+        from .config import SiguiConfig
+        self.config = config
+        if self.config is None:
+            self.config = SiguiConfig(
+                api_url=api_url,
+                chains=[chain.value if isinstance(chain, Chain) else chain]
+            )
+        self._api_url = self.config.api_url.rstrip("/")
         self._wallet = wallet or DemoWallet()
         self._chain = Chain(chain) if isinstance(chain, str) else chain
         self._default_agent_id = agent_id
@@ -95,13 +103,19 @@ class SiguiClient:
         self._timeout = timeout
         self._x402 = X402Handler(self._wallet, self._chain.value)
         self._http: Optional[httpx.AsyncClient] = None
+        self._mode = self._detect_mode()
 
         is_demo = isinstance(self._wallet, DemoWallet)
         logger.info(
             f"[SIGUI·SDK v{_SDK_VERSION}] Initialized — "
             f"api={self._api_url} chain={self._chain.value} "
-            f"mode={'DEMO' if is_demo else 'PRODUCTION'}"
+            f"mode={self._mode.upper()}"
         )
+
+    def _detect_mode(self) -> str:
+        if not self.config.api_key:
+            return "local"
+        return self.config.mode or "api"
 
     # ── Context manager ────────────────────────────────────────────────────────
 
@@ -230,6 +244,19 @@ class SiguiClient:
         _raise_block = raise_on_block if raise_on_block is not None else self._raise_on_block
         _raise_escalate = raise_on_escalate if raise_on_escalate is not None else self._raise_on_escalate
 
+        if self._mode == "local":
+            from .local.rules_engine import LocalRulesEngine
+            engine = LocalRulesEngine(self.config)
+            result = engine.evaluate(amount, destination, context or {})
+            
+            if _raise_block and result.is_blocked:
+                from .exceptions import SiguiBlockedError
+                raise SiguiBlockedError(result)
+            if _raise_escalate and result.needs_escalation:
+                from .exceptions import SiguiEscalateError
+                raise SiguiEscalateError(result)
+            return result
+
         body: dict[str, Any] = {
             "agent_id": _agent_id,
             "action_type": action_type,
@@ -237,6 +264,7 @@ class SiguiClient:
             "destination": destination,
             "chain": _chain,
             "context": context or {},
+            "weights": self.config.weights,
         }
 
         t0 = time.perf_counter()
@@ -261,6 +289,16 @@ class SiguiClient:
             chain=_chain,
             raw=raw,
         )
+        
+        from .models import RawSignals
+        if "raw_signals" in raw:
+            raw_sig = raw["raw_signals"]
+            result.raw_signals = RawSignals(
+                behavioral=raw_sig.get("behavioral", {}),
+                visual_topology=raw_sig.get("visual_topology", {}),
+                financial=raw_sig.get("financial", {}),
+                provenance=raw_sig.get("provenance", "unknown")
+            )
 
         logger.info(
             f"[SIGUI·SDK] evaluate → {result.verdict.value} "

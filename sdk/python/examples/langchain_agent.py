@@ -12,6 +12,7 @@ from typing import Optional
 
 # ── Sigui ─────────────────────────────────────────────────────────────────────
 from sigui import SiguiClient, Verdict
+from sigui.integrations.langchain import create_langchain_tool
 
 # ── LangChain ─────────────────────────────────────────────────────────────────
 try:
@@ -27,60 +28,19 @@ except ImportError:
 _sigui = SiguiClient(
     api_url="http://localhost:8000",
     agent_id="langchain_agent_01",
-    raise_on_block=False,  # On gère manuellement pour montrer le flow
+    raise_on_block=False,  # On gere manuellement pour montrer le flow
 )
 
 
 # ── Sigui Tool pour LangChain ──────────────────────────────────────────────────
 
 if LANGCHAIN_AVAILABLE:
-    @tool
-    async def safe_transfer(
-        destination: str,
-        amount_usdc: float,
-        chain: str = "arc",
-        reason: str = "",
-    ) -> str:
-        """
-        Execute a USDC transfer protected by Sigui security oracle.
-        
-        Always call this tool BEFORE executing any payment.
-        Returns 'AUTHORIZED' or 'BLOCKED: <reason>'.
-        
-        Args:
-            destination: Recipient address (hex for EVM, base58 for Solana)
-            amount_usdc: Amount in USDC to transfer
-            chain: Target chain (arc, ethereum, solana)
-            reason: Why this transfer is being made
-        """
-        result = await _sigui.evaluate(
-            amount=amount_usdc,
-            destination=destination,
-            action_type="transfer",
-            chain=chain,
-            context={"reason": reason},
-        )
-
-        if result.is_safe:
-            return (
-                f"AUTHORIZED: ${amount_usdc} USDC → {destination[:12]}… "
-                f"(risk={result.risk_score:.3f}, tx={result.action_hash[:8]})"
-            )
-        elif result.is_blocked:
-            return f"BLOCKED: {result.reason} (risk={result.risk_score:.3f})"
-        else:  # ESCALATE
-            # Auto-escalate for the LangChain agent
-            esc = await _sigui.escalate(
-                amount=amount_usdc,
-                destination=destination,
-                chain=chain,
-            )
-            if esc.verdict == Verdict.ALLOW_WITH_CAP:
-                return (
-                    f"AUTHORIZED_WITH_CAP: max ${esc.cap_amount_usdc:.4f} USDC "
-                    f"(deep analysis: {esc.analysis[:80]})"
-                )
-            return f"BLOCKED_AFTER_REVIEW: {esc.analysis[:100]}"
+    safe_transfer = create_langchain_tool(
+        _sigui,
+        name="safe_transfer",
+        description="Evaluate a USDC transfer with Sigui before execution.",
+        auto_escalate=True,
+    )
 
 
 # ── Demo sans LLM (pour le hackathon) ─────────────────────────────────────────
@@ -113,6 +73,18 @@ async def demo_without_llm():
     ]
 
     async with _sigui:
+        if LANGCHAIN_AVAILABLE:
+            tool_result = await safe_transfer.ainvoke(
+                {
+                    "destination": "0xRecipientABCDEF1234567890ABCDEF1234567890",
+                    "amount_usdc": 0.10,
+                    "chain": "arc",
+                    "reason": "Pay for AI API service",
+                }
+            )
+            print("Tool output:", tool_result)
+            print()
+
         for tc in test_cases:
             print(f"📤 Transfer: ${tc['amount_usdc']} → {tc['destination'][:14]}… ({tc['chain']})")
             result = await _sigui.evaluate(

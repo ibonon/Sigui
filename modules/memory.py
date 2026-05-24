@@ -393,9 +393,7 @@ class MemoClaw:
         async with self._lock:
             async with self._db.execute(
                 """SELECT * FROM decisions
-                WHERE arc_tx_hash NOT LIKE '0xSIM_%'
-                    AND arc_tx_hash NOT LIKE '0xERROR_%'
-                    AND arc_tx_hash != ''
+                WHERE COALESCE(arc_tx_hash, '') NOT LIKE '0xERROR_%'
                 ORDER BY timestamp DESC LIMIT ?""",
                 (limit,),
             ) as cursor:
@@ -406,9 +404,7 @@ class MemoClaw:
         async with self._lock:
             async with self._db.execute(
                 """SELECT decision, COUNT(*) as cnt FROM decisions
-                WHERE arc_tx_hash NOT LIKE '0xSIM_%'
-                    AND arc_tx_hash NOT LIKE '0xERROR_%'
-                    AND arc_tx_hash != ''
+                WHERE COALESCE(arc_tx_hash, '') NOT LIKE '0xERROR_%'
                 GROUP BY decision"""
             ) as cursor:
                 rows = await cursor.fetchall()

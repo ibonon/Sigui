@@ -33,11 +33,14 @@ from .exceptions import (
     SiguiRateLimitError,
     SiguiServiceUnavailableError,
 )
-from .models import Chain, EscalationResult, EvaluationResult, TreasuryState, Verdict
-from .x402 import CircleWallet, DemoWallet
+from .models import Chain, EscalationResult, EvaluationResult, TreasuryState, Verdict, Decision
+from .x402 import CircleWallet, DemoWallet, WalletAdapter
+from .protect import protect
+from .config import SiguiConfig
+from .session import SiguiSession
 
-__version__ = "0.1.0"
-__author__ = "Sigui Protocol"
+__version__ = "1.0.0"
+__author__ = "Eric Warma"
 __license__ = "MIT"
 
 __all__ = [
@@ -53,6 +56,7 @@ __all__ = [
     # Wallets
     "DemoWallet",
     "CircleWallet",
+    "WalletAdapter",
     # Exceptions
     "SiguiError",
     "SiguiConnectionError",
@@ -61,5 +65,11 @@ __all__ = [
     "SiguiRateLimitError",
     "SiguiBlockedError",
     "SiguiEscalationRequiredError",
+    "SiguiEscalateError",
     "SiguiServiceUnavailableError",
+    # v1.0 Core
+    "protect",
+    "SiguiConfig",
+    "SiguiSession",
+    "Decision",
 ]

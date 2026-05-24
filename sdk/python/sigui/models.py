@@ -22,6 +22,17 @@ class Chain(str, Enum):
 
 
 @dataclass
+class RawSignals:
+    """Couche Brute (Raw Layer) pour l'ERC-8259"""
+    behavioral: dict = field(default_factory=dict)
+    visual_topology: dict = field(default_factory=dict)
+    financial: dict = field(default_factory=dict)
+    provenance: str = "unknown"
+
+
+
+
+@dataclass
 class EvaluationResult:
     """
     Result of a POST /evaluate call.
@@ -59,9 +70,17 @@ class EvaluationResult:
     vision_confidence: float = 0.0
     evaluation_price_usdc: float = 0.001
     chain: str = "arc"
+    layers_triggered: dict = field(default_factory=dict)
+    chain_tx_log: str = ""
     raw: dict = field(default_factory=dict)
+    raw_signals: RawSignals = field(default_factory=RawSignals)
 
     # ── Convenience properties ─────────────────────────────────────────────
+
+    @property
+    def synthetic_score(self) -> int:
+        """Retourne un score synthétique de sécurité de 0 (Critique) à 1000 (Très sûr)."""
+        return int((1.0 - self.risk_score) * 1000)
 
     @property
     def is_safe(self) -> bool:
@@ -147,3 +166,5 @@ class PaymentInfo:
     is_native: bool
     resource: str
     description: str
+
+Decision = EvaluationResult

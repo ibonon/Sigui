@@ -58,6 +58,13 @@ class ActionInput(BaseModel):
             "subscription",
             "governance",
             "identity",
+            # Added in SDK v0.2.0 — new integrations (OpenAI Agents, AutoGen, smolagents)
+            "bridge",
+            "bridge_in",
+            "bridge_out",
+            "stake",
+            "unstake",
+            "treasury",
         }
     )
 

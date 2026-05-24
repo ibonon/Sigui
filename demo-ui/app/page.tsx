@@ -830,6 +830,33 @@ function FeedRow({ item }: { item: FeedItem }) {
   );
 }
 
+// ── DEMO SIMULATION ENGINE ────────────────────────────────────────────────────
+// Generates realistic live data when backend is offline
+const DEMO_AGENTS = ["agent_payer", "agent_attacker", "agent_learner", "agent_grayzone", "agent_monitor"];
+const DEMO_ACTIONS = ["transfer", "swap", "borrow", "stake", "withdraw", "bridge"];
+const DEMO_DECISIONS: FeedItem["decision"][] = ["ALLOW", "ALLOW", "ALLOW", "BLOCK", "ESCALATE"];
+
+function makeDemoFeedItem(): FeedItem {
+  const agentId = DEMO_AGENTS[Math.floor(Math.random() * DEMO_AGENTS.length)];
+  const decision = DEMO_DECISIONS[Math.floor(Math.random() * DEMO_DECISIONS.length)];
+  const amount = parseFloat((Math.random() * 980 + 20).toFixed(2));
+  const risk = decision === "BLOCK" ? 0.72 + Math.random() * 0.28
+    : decision === "ESCALATE" ? 0.45 + Math.random() * 0.25
+    : Math.random() * 0.28;
+  const hash = decision !== "ALLOW" ? undefined : `0x${Math.random().toString(16).slice(2, 10)}...${Math.random().toString(16).slice(2, 6)}`;
+  return {
+    id: `${agentId}-${Date.now()}-${Math.random()}`,
+    agentId,
+    action: DEMO_ACTIONS[Math.floor(Math.random() * DEMO_ACTIONS.length)],
+    amount,
+    decision,
+    risk: parseFloat(risk.toFixed(3)),
+    hash,
+    ms: Math.floor(Math.random() * 30 + 8),
+    ts: new Date().toISOString().slice(11, 19),
+  };
+}
+
 export default function Dashboard() {
   const [booted, setBooted] = useState(false);
   const [data, setData] = useState<LivePayload | null>(null);
@@ -841,6 +868,7 @@ export default function Dashboard() {
   const [timeSeries, setTimeSeries] = useState<TimePoint[]>([]);
   const [deploying, setDeploying] = useState(false);
   const [simLabel, setSimLabel] = useState("");
+  const [backendOnline, setBackendOnline] = useState(false);
   const [stakeForm, setStakeForm] = useState<HogonatFormState>({
     stakerId: "agent_monitor",
     amountUsdc: "0.01",
@@ -857,6 +885,8 @@ export default function Dashboard() {
   const [submittingVote, setSubmittingVote] = useState(false);
   const [loadingVision, setLoadingVision] = useState(false);
   const [loadingSidePanels, setLoadingSidePanels] = useState(false);
+  // Simulation counters (used when backend is offline)
+  const simCounters = useRef({ allow: 1420, block: 340, escalate: 85, earned: 2.1842, protected: 12500, confirmed: 1245 });
   const voteFormInitialized = useRef(false);
 
   const clock = useClock();
@@ -957,73 +987,137 @@ export default function Dashboard() {
     [focusAgentId],
   );
 
+  // ── Live data from backend SSE ────────────────────────────────────────────
   useEffect(() => {
     if (!booted) return;
-    
-    try {
-      const sse = new EventSource(`${API}/demo/live`);
-      
-      sse.onmessage = (event) => {
-        try {
-          const payload: LivePayload = JSON.parse(event.data);
-          setData(payload);
-          if (payload.recent_logs?.length) {
-            setFocusAgentId(payload.recent_logs[0].agent_id || DEFAULT_FOCUS_AGENT);
-            setFeed((prev) => {
-              const next = payload.recent_logs!.map((row) => ({
-                id: `${row.agent_id}-${row.timestamp}-${row.decision}-${row.amount_usdc}`,
-                agentId: row.agent_id,
-                action: row.action_type,
-                amount: row.amount_usdc,
-                decision: (row.decision?.toUpperCase() ?? "ALLOW") as FeedItem["decision"],
-                risk: row.risk_score,
-                hash: row.arc_tx_hash,
-                ms: row.processing_time_ms,
-                ts: row.timestamp.slice(11, 19),
-              }));
-              const seen = new Set<string>();
-              return [...next, ...prev].filter((item) => {
-                if (seen.has(item.id)) return false;
-                seen.add(item.id);
-                return true;
-              }).slice(0, 18);
-            });
-          }
 
-          if (payload.decisions) {
-            setTimeSeries((prev) => {
-              const now = Date.now();
-              const newPt = {
-                ts: now,
-                allow: payload.decisions.allow || 0,
-                block: payload.decisions.block || 0,
-                escalate: payload.decisions.escalate || 0,
-                revenue: payload.treasury?.net_profit || 0
-              };
-              const maxPoints = 50;
-              return [...prev, newPt].slice(-maxPoints);
-            });
-          }
-        } catch {
-          // Ignore transient payload issues
-        }
-      };
-      
-      sse.onerror = (error) => {
-        console.warn("EventSource connection error:", error);
-        // Try to reconnect after 5 seconds
-        setTimeout(() => {
-          if (sse.readyState === EventSource.CLOSED) {
-            console.log("Attempting to reconnect to EventSource...");
-          }
-        }, 5000);
-      };
-      
-      return () => sse.close();
-    } catch (error) {
-      console.warn("Failed to establish EventSource connection:", error);
-    }
+    let sse: EventSource | null = null;
+    let sseConnected = false;
+
+    const connect = () => {
+      try {
+        sse = new EventSource(`${API}/demo/live`);
+
+        sse.onopen = () => {
+          sseConnected = true;
+          setBackendOnline(true);
+        };
+
+        sse.onmessage = (event) => {
+          sseConnected = true;
+          setBackendOnline(true);
+          try {
+            const payload: LivePayload = JSON.parse(event.data);
+            setData(payload);
+            if (payload.recent_logs?.length) {
+              setFocusAgentId(payload.recent_logs[0].agent_id || DEFAULT_FOCUS_AGENT);
+              setFeed((prev) => {
+                const next = payload.recent_logs!.map((row) => ({
+                  id: `${row.agent_id}-${row.timestamp}-${row.decision}-${row.amount_usdc}`,
+                  agentId: row.agent_id,
+                  action: row.action_type,
+                  amount: row.amount_usdc,
+                  decision: (row.decision?.toUpperCase() ?? "ALLOW") as FeedItem["decision"],
+                  risk: row.risk_score,
+                  hash: row.arc_tx_hash,
+                  ms: row.processing_time_ms,
+                  ts: row.timestamp.slice(11, 19),
+                }));
+                const seen = new Set<string>();
+                return [...next, ...prev].filter((item) => {
+                  if (seen.has(item.id)) return false;
+                  seen.add(item.id);
+                  return true;
+                }).slice(0, 18);
+              });
+            }
+            if (payload.decisions) {
+              setTimeSeries((prev) => {
+                const newPt = {
+                  ts: Date.now(),
+                  allow: payload.decisions.allow || 0,
+                  block: payload.decisions.block || 0,
+                  escalate: payload.decisions.escalate || 0,
+                  revenue: payload.treasury?.net_profit || 0,
+                };
+                return [...prev, newPt].slice(-50);
+              });
+            }
+          } catch { /* ignore */ }
+        };
+
+        sse.onerror = () => {
+          if (!sseConnected) setBackendOnline(false);
+        };
+      } catch { /* ignore */ }
+    };
+
+    connect();
+    return () => sse?.close();
   }, [booted]);
+
+  // ── Autonomous demo simulation (kicks in when backend is offline) ─────────
+  useEffect(() => {
+    if (!booted) return;
+
+    const tick = () => {
+      if (backendOnline) return; // let real SSE drive the UI
+
+      const c = simCounters.current;
+      // randomly pick decision outcome
+      const roll = Math.random();
+      const isBlock = roll > 0.82;
+      const isEsc = !isBlock && roll > 0.77;
+      const isAllow = !isBlock && !isEsc;
+
+      if (isAllow) c.allow++;
+      if (isBlock) { c.block++; }
+      if (isEsc) c.escalate++;
+      c.earned += 0.001;
+      c.protected += isBlock ? Math.random() * 800 + 200 : 0;
+      if (isAllow && Math.random() > 0.7) c.confirmed++;
+
+      const newItem = makeDemoFeedItem();
+
+      setFeed((prev) => [newItem, ...prev].slice(0, 18));
+
+      setTimeSeries((prev) => [
+        ...prev,
+        { ts: Date.now(), allow: c.allow, block: c.block, escalate: c.escalate, revenue: c.earned },
+      ].slice(-50));
+
+      // Build synthetic LivePayload
+      const syntheticData: LivePayload = {
+        ...MOCK_DATA,
+        timestamp: new Date().toISOString(),
+        treasury: {
+          balance: c.earned * 0.8,
+          balances_by_chain: { arc: c.earned * 0.4, ethereum: c.earned * 0.25, solana: c.earned * 0.15 },
+          total_earned: c.earned,
+          total_spent: c.earned * 0.12,
+          net_profit: c.earned * 0.88,
+          mode: "NORMAL",
+        },
+        decisions: { allow: c.allow, block: c.block, escalate: c.escalate, total: c.allow + c.block + c.escalate, usdc_saved: c.protected, patterns_learned: 23 },
+        onchain_proof: { confirmed_onchain_tx_count: c.confirmed, target_50_met: c.confirmed >= 50 },
+        threat_registry: { total_attacks_onchain: c.block, total_usdc_protected_usdc: c.protected, guaranty_fund6: c.protected * 0.4 },
+        ecosystem: {
+          running: true,
+          agents: {
+            agent_payer: { status: "active", transactions: Math.floor(c.allow * 0.32), last_decision: "ALLOW" },
+            agent_attacker: { status: "active", transactions: Math.floor(c.block * 0.85), last_decision: "BLOCK" },
+            agent_learner: { status: "active", transactions: Math.floor(c.allow * 0.18), last_decision: "ALLOW" },
+            agent_grayzone: { status: "active", transactions: Math.floor(c.escalate * 0.9), last_decision: "ESCALATE" },
+            agent_monitor: { status: "active", transactions: Math.floor((c.allow + c.block) * 0.4), last_decision: "ALLOW" },
+          },
+        },
+      };
+      setData(syntheticData);
+    };
+
+    const id = setInterval(tick, 1200);
+    return () => clearInterval(id);
+  }, [booted, backendOnline]);
 
   useEffect(() => {
     if (!booted) return;
@@ -1222,6 +1316,12 @@ export default function Dashboard() {
               <span className="meta-pill">x402</span>
               <span className="meta-pill">Uptime {uptime}</span>
               <span className="meta-pill">{clock}</span>
+              {!backendOnline && (
+                <span className="mode-pill demo-mode">⚡ DEMO SIMULATION</span>
+              )}
+              {backendOnline && (
+                <span className="mode-pill mode-normal">🟢 LIVE</span>
+              )}
             </div>
 
             <div className="topbar-right">

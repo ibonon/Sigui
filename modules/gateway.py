@@ -478,9 +478,12 @@ def register_routes(app: FastAPI):
             "visual_evidence": vision_eval.visual_evidence,
         }
 
+        weights = body.get("weights", {"financial": 1.0, "behavioral": 1.0, "visual_topology": 1.0})
+        
         kanaga_out = kanaga_engine.compute(
             components=risk.components,
             deltas={"vision": vision_eval.risk_delta},
+            weights=weights,
         )
         risk.risk_score = kanaga_out.risk_score
         if vision_eval.risk_delta > 0:
@@ -645,6 +648,17 @@ def register_routes(app: FastAPI):
         )
 
         payload = decision_out.model_dump()
+
+        # ── Build layers_triggered for SDK v0.2.0 ─────────────────────────────
+        _memoclaw_weight: float = 0.0
+        for _r in risk.rules_triggered:
+            if "memoclaw_pattern_weight_" in _r:
+                try:
+                    _memoclaw_weight = float(_r.split("memoclaw_pattern_weight_")[-1])
+                except ValueError:
+                    pass
+                break
+
         payload.update(
             {
                 "vision_pattern": vision_eval.pattern,
@@ -656,6 +670,39 @@ def register_routes(app: FastAPI):
                 "processing_vision_time_ms": vision_eval.inference_time_ms,
                 "evaluation_price_usdc": final_price,
                 "chain": chain,
+                # SDK v0.2.0: arc_tx_log alias expected by EvaluationResult.chain_tx_log
+                "chain_tx_log": decision_out.arc_tx_log,
+                # SDK v0.2.0: per-layer risk deltas (0.0 = layer did not trigger)
+                "layers_triggered": {
+                    "financial":          round(kanaga_out.components.get("action", 0.0), 4),
+                    "behavioral":         round(kanaga_out.components.get("context", 0.0), 4),
+                    "history":            round(kanaga_out.components.get("history", 0.0), 4),
+                    "vision":             round(vision_eval.risk_delta, 4),
+                    "service_registry":   round(kanaga_out.deltas.get("service", 0.0), 4),
+                    "contract_inspector": round(kanaga_out.deltas.get("contract", 0.0), 4),
+                    "anti_splitting":     round(kanaga_out.deltas.get("flow", 0.0), 4),
+                    "memoclaw_pattern":   round(_memoclaw_weight, 4),
+                },
+                "raw_signals": {
+                    "financial": {
+                        "amount_usdc": action.amount_usdc,
+                        "action_score": kanaga_out.components.get("action", 0.0),
+                    },
+                    "behavioral": {
+                        "history_score": kanaga_out.components.get("history", 0.0),
+                        "context_score": kanaga_out.components.get("context", 0.0),
+                        "flow_delta": kanaga_out.deltas.get("flow", 0.0),
+                        "service_delta": kanaga_out.deltas.get("service", 0.0),
+                        "contract_delta": kanaga_out.deltas.get("contract", 0.0),
+                    },
+                    "visual_topology": {
+                        "pattern": vision_eval.pattern,
+                        "confidence": round(vision_eval.confidence, 4),
+                        "risk_delta": vision_eval.risk_delta,
+                        "evidence": vision_eval.visual_evidence,
+                    },
+                    "provenance": f"{kanaga_out.device} (Kanaga) / {vision_eval.model} (Imina Na)",
+                }
             }
         )
         return payload
