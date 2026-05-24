@@ -18,7 +18,7 @@ def _detect_framework(agent: Any) -> str:
         return "google_adk"
     return "generic"
 
-def protect(agent: Any, config: SiguiConfig = None, agent_id: str = None) -> Any:
+def protect(agent: Any, config: SiguiConfig | None = None, agent_id: str | None = None) -> Any:
     """
     Wraps any agent object with Sigui protection.
     Works with any framework.

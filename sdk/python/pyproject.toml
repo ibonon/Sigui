@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "sigui"
-version = "1.0.0"
+name = "sigui-sdk"
+version = "0.2.0"
 description = "Python SDK for Sigui Protocol — Autonomous Security for the Agentic Economy"
 readme = "README.md"
 license = { text = "MIT" }

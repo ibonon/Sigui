@@ -40,11 +40,11 @@ try:
     _CREWAI_AVAILABLE = True
 except ImportError:
     _CREWAI_AVAILABLE = False
-    _BaseTool = None
-    _BaseModel = None
-    _ConfigDict = None
-    _Field = None
-    _PrivateAttr = None
+    _BaseTool = None  # type: ignore
+    _BaseModel = None  # type: ignore
+    _ConfigDict = None  # type: ignore
+    _Field = None  # type: ignore
+    _PrivateAttr = None  # type: ignore
 
 
 # ── Input schema (defined only when pydantic is available via crewai) ─────────
