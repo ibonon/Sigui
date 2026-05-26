@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sigui-sdk"
-version = "0.3.0"
+version = "0.3.1"
 description = "Sigui Protocol SDK — Decentralized Agent Security"
 readme = "README.md"
 license = { text = "MIT" }

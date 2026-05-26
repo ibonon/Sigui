@@ -73,4 +73,16 @@ __all__ = [
     "SiguiConfig",
     "SiguiSession",
     "Decision",
+    # Local & Pretrained
+    "start_mock_server",
+    "from_pretrained",
 ]
+
+# Imports différés pour éviter la dépendance stricte
+def start_mock_server(*args, **kwargs):
+    from .local import start_mock_server as _start
+    return _start(*args, **kwargs)
+
+async def from_pretrained(*args, **kwargs):
+    from .pretrained import from_pretrained as _from_pt
+    return await _from_pt(*args, **kwargs)

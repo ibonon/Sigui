@@ -112,7 +112,7 @@ export default function HeroSection() {
         >
           <div className="border border-[var(--border)] bg-[var(--surface)] rounded-sm overflow-hidden relative">
             {/* Mock dashboard */}
-            <div className="border-b border-[var(--border)] bg-[var(--surface-2)] px-5 py-3 flex items-center gap-3">
+            <div className="border-b border-[var(--border)] bg-[var(--surface-2)] px-8 py-5 flex items-center gap-3">
               <div className="flex gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
                 <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
@@ -124,22 +124,22 @@ export default function HeroSection() {
                 LIVE
               </span>
             </div>
-            <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Metric mini-cards */}
               {[
                 { label: "Transactions inspectées", value: "2,847,291", color: "text-[var(--text)]" },
                 { label: "Attaques bloquées", value: "1,204", color: "text-red-400" },
                 { label: "Latence moyenne", value: "38ms", color: "text-[var(--status-green)]" },
               ].map((m) => (
-                <div key={m.label} className="border border-[var(--border)] rounded-sm p-3 bg-[var(--bg)]">
+                <div key={m.label} className="border border-[var(--border)] rounded-sm p-6 bg-[var(--bg)]">
                   <div className={`font-mono text-xl font-bold ${m.color}`}>{m.value}</div>
                   <div className="font-mono text-[11px] text-[var(--text-muted)] mt-1">{m.label}</div>
                 </div>
               ))}
             </div>
             {/* Animated risk pipeline bar */}
-            <div className="px-5 pb-5">
-              <div className="border border-[var(--border)] rounded-sm p-4 bg-[var(--bg)]">
+            <div className="px-8 pb-8">
+              <div className="border border-[var(--border)] rounded-sm p-6 bg-[var(--bg)]">
                 <div className="font-mono text-[10px] text-[var(--text-muted)] uppercase tracking-widest mb-3">
                   Risk Pipeline — dernière transaction
                 </div>

@@ -1,0 +1,36 @@
+[package]
+name = "sigui_protocol"
+version = "0.1.0"
+edition = "2024_07"
+description = "Sigui Protocol — Decentralized AI Agent Reputation & Threat Registry on Starknet"
+authors = ["Sigui Protocol Team"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/sigui-protocol/contracts"
+keywords = ["starknet", "ai", "agents", "reputation", "security"]
+
+[dependencies]
+starknet = ">=2.8.0"
+openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.20.0" }
+
+[[target.starknet-contract]]
+name = "AgentReputation"
+allowed-libfuncs-list.name = "experimental"
+sierra = true
+casm = true
+
+[[target.starknet-contract]]
+name = "ThreatRegistry"
+allowed-libfuncs-list.name = "experimental"
+sierra = true
+casm = true
+
+[tool.scarb-doc]
+output-format = "html"
+target-dir = "docs"
+
+[profile.release]
+sierra-replace-ids = false
+
+[profile.dev]
+sierra-replace-ids = true
