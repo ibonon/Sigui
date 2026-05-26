@@ -38,6 +38,7 @@ from .x402 import CircleWallet, DemoWallet, WalletAdapter
 from .protect import protect
 from .config import SiguiConfig
 from .session import SiguiSession
+from .discovery import NodeDiscovery
 
 __version__ = "1.0.0"
 __author__ = "Eric Warma"

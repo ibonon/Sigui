@@ -64,3 +64,17 @@ def claim_rewards():
     assert share > 0, "no rewards"
     self.fee_pool -= share
     assert extcall ERC20(USDC).transfer(msg.sender, share), "transfer failed"
+
+# ── NexusMind Worker Governance ──────────────────────────────────────────────
+
+worker_votes: public(HashMap[address, uint256])
+
+@external
+def vote_approve_worker(worker: address):
+    """
+    DAO members vote to approve a new NexusMind node as a Sigui Worker.
+    In a real implementation, reaching a threshold of total_staked would
+    trigger a callback to NexusMindSiguiBridge.
+    """
+    assert self.stakers[msg.sender] > 0, "Not a staker"
+    self.worker_votes[worker] += self.stakers[msg.sender]

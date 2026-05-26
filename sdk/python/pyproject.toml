@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sigui-sdk"
-version = "0.2.0"
-description = "Python SDK for Sigui Protocol — Autonomous Security for the Agentic Economy"
+version = "0.3.0"
+description = "Sigui Protocol SDK — Decentralized Agent Security"
 readme = "README.md"
 license = { text = "MIT" }
-authors = [{ name = "Sigui Protocol", email = "sdk@sigui.io" }]
+authors = [{ name = "Eric Warma", email = "eric@sigui.io" }]
 keywords = [
     "ai", "agents", "security", "usdc", "web3", "x402", "arc",
     "langchain", "langgraph", "crewai", "autogen", "openai-agents",

@@ -1,17 +1,26 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import { CRTOverlay } from "./components/CRTOverlay";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Sigui Protocol — The Regeneration Oracle",
-  description:
-    "Omnichain visual security oracle with Imina Na, Kanaga, Hogonat DAO and multi-chain treasury dashboard.",
+  title: "Sigui | NexusMind",
+  description: "Autonomous Security and P2P Intelligence",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={inter.className}>
+        <CRTOverlay />
+        {children}
+      </body>
     </html>
   );
 }
-

@@ -1,24 +1,33 @@
-@import url("https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-    --bg: #0d0f2b;
-    --bg-2: #121537;
-    --panel: rgba(20, 24, 58, 0.88);
-    --panel-soft: rgba(28, 34, 78, 0.88);
-    --border: rgba(246, 201, 14, 0.16);
-    --border-strong: rgba(246, 201, 14, 0.32);
-    --text: #f5f7ff;
-    --muted: #aab2d5;
-    --dim: #7180b9;
-    --gold: #f6c90e;
-    --gold-soft: #ffd84d;
-    --success: #1d9e75;
-    --danger: #e24b4a;
-    --violet: #8b5cf6;
-    --blue: #73a7ff;
-    --mono: "JetBrains Mono", monospace;
-    --ui: "Inter", sans-serif;
-    --title: "Cinzel Decorative", serif;
+  --bg: #050b14;
+  --bg-2: #0a1120;
+  --panel: #0d1527;
+  --panel-soft: #121c33;
+  --border: #1a2744;
+  --border-strong: #23355a;
+  
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --dim: #64748b;
+  
+  /* NexusMind PRD Colors */
+  --primary: #0ea5e9; /* Cyan */
+  --secondary: #10b981; /* Emerald */
+  --gold: #f6c90e;
+  --gold-soft: rgba(246, 201, 14, 0.2);
+  --success: #10b981;
+  --danger: #ef4444;
+  --accent: #8b5cf6;
+
+  --ui: 'Inter', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --title: "Cinzel Decorative", serif;
 }
 
 *,
@@ -32,8 +41,7 @@ html {
 }
 
 body {
-    margin: 0;
-    min-height: 100vh;
+    background-color: var(--bg);
     color: var(--text);
     font-family: var(--ui);
     background:

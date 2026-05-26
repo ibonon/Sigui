@@ -113,14 +113,21 @@ class SiguiClient:
         )
 
     def _detect_mode(self) -> str:
-        if not self.config.api_key:
+        if self.config and self.config.api_key:
+            return "network"
+        if "network.sigui.io" in self._api_url:
+            return "network"
+        if not self.config or not getattr(self.config, "api_key", None):
             return "local"
-        return self.config.mode or "api"
+        return getattr(self.config, "mode", "api")
 
     # ── Context manager ────────────────────────────────────────────────────────
 
     async def __aenter__(self) -> "SiguiClient":
-        self._http = httpx.AsyncClient(timeout=self._timeout)
+        headers = {}
+        if self.config and getattr(self.config, "api_key", None):
+            headers["Authorization"] = f"Bearer {self.config.api_key}"
+        self._http = httpx.AsyncClient(timeout=self._timeout, headers=headers)
         return self
 
     async def __aexit__(self, *_):
@@ -130,7 +137,10 @@ class SiguiClient:
 
     def _get_client(self) -> httpx.AsyncClient:
         if self._http is None:
-            self._http = httpx.AsyncClient(timeout=self._timeout)
+            headers = {}
+            if self.config and getattr(self.config, "api_key", None):
+                headers["Authorization"] = f"Bearer {self.config.api_key}"
+            self._http = httpx.AsyncClient(timeout=self._timeout, headers=headers)
         return self._http
 
     # ── Base HTTP call with x402 auto-handling ─────────────────────────────────

@@ -123,6 +123,10 @@ def _classify_tx(tx_hash: str) -> str:
 def register_routes(app: FastAPI):
     """Register all ArcWarden routes and middleware on the FastAPI app."""
 
+    # ── NexusMind Integration ──────────────────────────────────────────────────
+    from modules.nexusmind_router import register_nexusmind_routes
+    register_nexusmind_routes(app)
+
     # ── x402 Payment Middleware ────────────────────────────────────────────────
     @app.middleware("http")
     async def x402_payment_middleware(request: Request, call_next):
@@ -705,6 +709,21 @@ def register_routes(app: FastAPI):
                 }
             }
         )
+
+        # ── NexusMind Integration ──────────────────────────────────────────────
+        from modules.nexusmind_router import broadcast_decision
+        import asyncio
+        asyncio.create_task(broadcast_decision(
+            agent_id=action.agent_id,
+            decision=dec,
+            amount_usdc=action.amount_usdc,
+            pattern=vision_eval.pattern if vision_eval.pattern != "NORMAL" else "HEURISTIC",
+            latency_ms=decision_out.processing_time_ms,
+            risk_score=risk.risk_score,
+            fee_usdc=final_price,
+            node_id="node_001",  # Simulate this node handling the request for now
+        ))
+
         return payload
 
     # ── Escalate (Claude deep analysis) ───────────────────────────────────────

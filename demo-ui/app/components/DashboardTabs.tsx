@@ -4,7 +4,19 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TimeSeriesPanel, DecisionDonut, BarGauge, FunnelChart, SankeyFlow } from "./Charts";
 
-interface DashboardTabsProps {
+import { SecurityDashboard } from "./SecurityDashboard";
+import { NodesDashboard } from "./NodesDashboard";
+import { MarketplaceDashboard } from "./MarketplaceDashboard";
+import { WalletDashboard } from "./WalletDashboard";
+import { IdentityDashboard } from "./IdentityDashboard";
+import { ResearchDashboard } from "./ResearchDashboard";
+
+import { ScientificMetrics } from "./ScientificMetrics";
+import { NetworkMap } from "./NetworkMap";
+import { TaskFeed } from "./TaskFeed";
+import { NodeSettings } from "./NodeSettings";
+
+export interface DashboardTabsProps {
   data: any;
   benchmark: any;
   hogonat: any;
@@ -92,7 +104,13 @@ export function DashboardTabs({
   const formatMoney = (value: number, digits = 2) => `$${value.toFixed(digits)}`;
 
   const tabs = [
-    { id: "overview", label: "Overview" },
+    { id: "overview", label: "P2P Network" },
+    { id: "security", label: "Security" },
+    { id: "nodes", label: "Nodes" },
+    { id: "wallet", label: "Wallet" },
+    { id: "identity", label: "Identity" },
+    { id: "research", label: "Research" },
+    { id: "marketplace", label: "Marketplace" },
     { id: "agents", label: "Agents" },
     { id: "vision", label: "Vision" },
     { id: "economics", label: "Economics" },
@@ -100,8 +118,8 @@ export function DashboardTabs({
   ];
 
   return (
-    <div className="dashboard-tabs">
-      <div className="tab-navigation">
+    <div className="dashboard-tabs relative z-10">
+      <div className="tab-navigation flex flex-wrap gap-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -114,76 +132,55 @@ export function DashboardTabs({
       </div>
 
       <div className="tab-content">
+        {activeTab === "security" && <SecurityDashboard />}
+        {activeTab === "nodes" && <NodesDashboard />}
+        {activeTab === "wallet" && <WalletDashboard />}
+        {activeTab === "identity" && <IdentityDashboard />}
+        {activeTab === "research" && <ResearchDashboard />}
+        {activeTab === "marketplace" && <MarketplaceDashboard />}
         {activeTab === "overview" && (
           <div className="overview-grid">
-            <div className="metrics-row">
-              <div className="metric-card panel">
-                <div className="metric-label">Evaluations</div>
-                <div className="metric-value">{evalsA}</div>
-                <div className="metric-detail">Total processed</div>
+            <ScientificMetrics />
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2">
+                <NetworkMap />
               </div>
-              <div className="metric-card panel">
-                <div className="metric-label">Threats Blocked</div>
-                <div className="metric-value" style={{ color: "var(--danger)" }}>{blockA}</div>
-                <div className="metric-detail">Malicious transactions</div>
-              </div>
-              <div className="metric-card panel">
-                <div className="metric-label">USDC Protected</div>
-                <div className="metric-value" style={{ color: "var(--gold)" }}>{formatMoney(protectedA)}</div>
-                <div className="metric-detail">Total value secured</div>
-              </div>
-              <div className="metric-card panel">
-                <div className="metric-label">Net Profit</div>
-                <div className="metric-value" style={{ color: "var(--success)" }}>{formatMoney(profitA, 3)}</div>
-                <div className="metric-detail">Treasury earnings</div>
+              <div className="h-[400px]">
+                <TaskFeed />
               </div>
             </div>
 
-            <div className="charts-row">
-              <div className="panel chart-panel">
-                <div className="panel-header">
-                  <div className="panel-title">Decision Timeline</div>
-                  <div className="panel-caption">Real-time security decisions</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <NodeSettings />
+              <div className="md:col-span-2 panel p-6">
+                <div className="panel-header mb-4 border-b border-border pb-4">
+                  <div className="panel-title">Threat Feed (Sigui Protocol Gateway)</div>
+                  <div className="panel-caption">Global security decisions overlay</div>
                 </div>
-                <TimeSeriesPanel data={timeSeries} />
-              </div>
-
-              <div className="panel chart-panel">
-                <div className="panel-header">
-                  <div className="panel-title">Decision Distribution</div>
-                  <div className="panel-caption">Allow vs Block vs Escalate</div>
+                  <div className="feed-table-wrapper">
+                    <table className="feed-table">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Agent</th>
+                          <th>Action</th>
+                          <th>Amount</th>
+                          <th>Decision</th>
+                          <th>Risk</th>
+                          <th>Hash</th>
+                          <th>Time</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {feed.map((item) => (
+                          <FeedRow key={item.id} item={item} />
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <DecisionDonut allow={allow} block={block} escalate={escalate} />
               </div>
-            </div>
-
-            <div className="feed-panel">
-              <div className="panel-header">
-                <div className="panel-title">Live Transaction Feed</div>
-                <div className="panel-caption">Recent security evaluations</div>
-              </div>
-              <div className="feed-table-wrapper">
-                <table className="feed-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Agent</th>
-                      <th>Action</th>
-                      <th>Amount</th>
-                      <th>Decision</th>
-                      <th>Risk</th>
-                      <th>Hash</th>
-                      <th>Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {feed.map((item) => (
-                      <FeedRow key={item.id} item={item} />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
           </div>
         )}
 
