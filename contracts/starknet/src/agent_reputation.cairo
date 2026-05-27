@@ -23,8 +23,8 @@
 
 // ── External imports ─────────────────────────────────────────
 use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
-use openzeppelin_access::ownable::OwnableComponent;
-use openzeppelin_security::pausable::PausableComponent;
+use openzeppelin::access::ownable::OwnableComponent;
+use openzeppelin::security::pausable::PausableComponent;
 
 // ── Public interface ──────────────────────────────────────────
 
@@ -114,19 +114,17 @@ pub mod AgentReputation {
         OwnableComponent, PausableComponent
     };
 
-    // ── Component wiring ──────────────────────────────────────────
-    component!(path: OwnableComponent, storage: ownable, event: OwnableEvent);
-    component!(path: PausableComponent, storage: pausable, event: PausableEvent);
+// ── Component wiring ──────────────────────────────────────────
+component!(path: OwnableComponent, storage: ownable, event: OwnableEvent);
+component!(path: PausableComponent, storage: pausable, event: PausableEvent);
 
-    // Ownable internal helpers (owner check + transfer)
-    #[abi(embed_v0)]
-    impl OwnableMixinImpl = OwnableComponent::OwnableTwoStepMixinImpl<ContractState>;
-    impl OwnableInternalImpl = OwnableComponent::InternalImpl<ContractState>;
+#[abi(embed_v0)]
+impl OwnableMixinImpl = OwnableComponent::OwnableMixinImpl<ContractState>;
+impl OwnableInternalImpl = OwnableComponent::InternalImpl<ContractState>;
 
-    // Pausable internal helpers
-    #[abi(embed_v0)]
-    impl PausableMixinImpl = PausableComponent::PausableImpl<ContractState>;
-    impl PausableInternalImpl = PausableComponent::InternalImpl<ContractState>;
+#[abi(embed_v0)]
+impl PausableImpl = PausableComponent::PausableImpl<ContractState>;
+impl PausableInternalImpl = PausableComponent::InternalImpl<ContractState>;
     use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
     use starknet::storage::{Map, StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess, StorageMapWriteAccess};
 
@@ -141,19 +139,13 @@ pub mod AgentReputation {
     // ── Storage ───────────────────────────────────────────────
     #[storage]
     struct Storage {
-        /// Component sub-storage for Ownable.
         #[substorage(v0)]
         ownable: OwnableComponent::Storage,
-        /// Component sub-storage for Pausable.
         #[substorage(v0)]
         pausable: PausableComponent::Storage,
-        /// agent address → full profile.
         profiles: Map<ContractAddress, AgentProfile>,
-        /// agent address → DID string hash (keccak of the ByteArray).
         did_hashes: Map<ContractAddress, felt252>,
-        /// account address → oracle role flag.
         oracles: Map<ContractAddress, bool>,
-        /// agent address → registration flag (avoids re-registration).
         registered: Map<ContractAddress, bool>,
     }
 
@@ -244,7 +236,7 @@ pub mod AgentReputation {
         self.ownable.initializer(owner);
 
         // Grant oracle role to initial_oracle if non-zero.
-        let zero: ContractAddress = starknet::contract_address_const::<0>();
+        let zero: ContractAddress = 0_felt252.try_into().unwrap();
         if initial_oracle != zero {
             self.oracles.write(initial_oracle, true);
         }
@@ -282,7 +274,11 @@ pub mod AgentReputation {
             if delta >= 0_i64 {
                 // Saturating add: cap at u64::MAX.
                 let d: u64 = delta.try_into().unwrap();
-                base.saturating_add(d)
+                let mut sum = base + d;
+                if sum < base { // manual saturating check
+                    sum = 0xffffffffffffffff;
+                }
+                sum
             } else {
                 // Saturating sub: floor at 0.
                 let d: u64 = (-delta).try_into().unwrap();
