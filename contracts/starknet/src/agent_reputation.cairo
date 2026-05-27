@@ -23,12 +23,8 @@
 
 // ── External imports ─────────────────────────────────────────
 use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
-use starknet::storage::{
-    StorageMapReadAccess, StorageMapWriteAccess, Map,
-    StoragePointerReadAccess, StoragePointerWriteAccess,
-};
-use openzeppelin::access::ownable::OwnableComponent;
-use openzeppelin::security::pausable::PausableComponent;
+use openzeppelin_access::ownable::OwnableComponent;
+use openzeppelin_security::pausable::PausableComponent;
 
 // ── Public interface ──────────────────────────────────────────
 
@@ -108,20 +104,6 @@ pub struct AgentProfile {
     pub last_updated: u64,
 }
 
-// ── Component wiring ──────────────────────────────────────────
-component!(path: OwnableComponent, storage: ownable, event: OwnableEvent);
-component!(path: PausableComponent, storage: pausable, event: PausableEvent);
-
-// Ownable internal helpers (owner check + transfer)
-#[abi(embed_v0)]
-impl OwnableMixinImpl = OwnableComponent::OwnableMixinImpl<ContractState>;
-impl OwnableInternalImpl = OwnableComponent::InternalImpl<ContractState>;
-
-// Pausable internal helpers
-#[abi(embed_v0)]
-impl PausableImpl = PausableComponent::PausableImpl<ContractState>;
-impl PausableInternalImpl = PausableComponent::InternalImpl<ContractState>;
-
 // ── Contract ──────────────────────────────────────────────────
 
 /// Sigui AgentReputation — on-chain identity scoring for AI agents.
@@ -130,14 +112,23 @@ pub mod AgentReputation {
     use super::{
         IAgentReputation, AgentProfile,
         OwnableComponent, PausableComponent,
-        OwnableMixinImpl, OwnableInternalImpl,
-        PausableImpl, PausableInternalImpl,
     };
+
+    // ── Component wiring ──────────────────────────────────────────
+    component!(path: OwnableComponent, storage: ownable, event: OwnableEvent);
+    component!(path: PausableComponent, storage: pausable, event: PausableEvent);
+
+    // Ownable internal helpers (owner check + transfer)
+    #[abi(embed_v0)]
+    impl OwnableMixinImpl = OwnableComponent::OwnableMixinImpl<ContractState>;
+    impl OwnableInternalImpl = OwnableComponent::InternalImpl<ContractState>;
+
+    // Pausable internal helpers
+    #[abi(embed_v0)]
+    impl PausableMixinImpl = PausableComponent::PausableMixinImpl<ContractState>;
+    impl PausableInternalImpl = PausableComponent::InternalImpl<ContractState>;
     use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
-    use starknet::storage::{
-        StorageMapReadAccess, StorageMapWriteAccess, Map,
-        StoragePointerReadAccess, StoragePointerWriteAccess,
-    };
+    use starknet::storage::{Map, StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess, StorageMapWriteAccess};
 
     // ── Tier thresholds ───────────────────────────────────────
     const TIER_RELIABLE_MIN: u64 = 1_000_u64;

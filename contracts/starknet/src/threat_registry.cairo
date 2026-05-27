@@ -29,13 +29,14 @@ pub struct ThreatPattern {
 pub mod ThreatRegistry {
     use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
     use super::{IThreatRegistry, ThreatPattern};
+    use starknet::storage::{Map, StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess, StorageMapWriteAccess};
 
     #[storage]
     struct Storage {
-        threats: starknet::storage::Map<u256, ThreatPattern>,
+        threats: Map<u256, ThreatPattern>,
         threat_count: u256,
-        oracles: starknet::storage::Map<ContractAddress, bool>,
-        threat_validations: starknet::storage::Map<(u256, ContractAddress), bool>,
+        oracles: Map<ContractAddress, bool>,
+        threat_validations: Map<(u256, ContractAddress), bool>,
         owner: ContractAddress,
     }
 
