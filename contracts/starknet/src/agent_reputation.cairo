@@ -111,7 +111,7 @@ pub struct AgentProfile {
 pub mod AgentReputation {
     use super::{
         IAgentReputation, AgentProfile,
-        OwnableComponent, PausableComponent,
+        OwnableComponent, PausableComponent
     };
 
     // ── Component wiring ──────────────────────────────────────────
@@ -120,12 +120,12 @@ pub mod AgentReputation {
 
     // Ownable internal helpers (owner check + transfer)
     #[abi(embed_v0)]
-    impl OwnableMixinImpl = OwnableComponent::OwnableMixinImpl<ContractState>;
+    impl OwnableMixinImpl = OwnableComponent::OwnableTwoStepMixinImpl<ContractState>;
     impl OwnableInternalImpl = OwnableComponent::InternalImpl<ContractState>;
 
     // Pausable internal helpers
     #[abi(embed_v0)]
-    impl PausableMixinImpl = PausableComponent::PausableMixinImpl<ContractState>;
+    impl PausableMixinImpl = PausableComponent::PausableImpl<ContractState>;
     impl PausableInternalImpl = PausableComponent::InternalImpl<ContractState>;
     use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
     use starknet::storage::{Map, StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess, StorageMapWriteAccess};
@@ -240,7 +240,7 @@ pub mod AgentReputation {
         owner: ContractAddress,
         initial_oracle: ContractAddress,
     ) {
-        // Initialise Ownable with the provided owner address.
+        // Initialize Ownable with the provided owner address.
         self.ownable.initializer(owner);
 
         // Grant oracle role to initial_oracle if non-zero.
