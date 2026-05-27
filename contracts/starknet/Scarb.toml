@@ -14,13 +14,13 @@ starknet = ">=2.8.0"
 openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.20.0" }
 
 [[target.starknet-contract]]
-name = "AgentReputation"
+name = "agent_reputation"
 allowed-libfuncs-list.name = "experimental"
 sierra = true
 casm = true
 
 [[target.starknet-contract]]
-name = "ThreatRegistry"
+name = "threat_registry"
 allowed-libfuncs-list.name = "experimental"
 sierra = true
 casm = true

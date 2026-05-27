@@ -2,17 +2,15 @@
 name = "sigui"
 version = "1.0.0"
 authors = ["Sigui Protocol Team <team@sigui.io>"]
-description = "Sigui Protocol — On-chain AI Agent Reputation & Threat Intelligence for Aptos"
 license = "Apache-2.0"
 
 [addresses]
-sigui       = "0x1f39a4fdeadbeef0000000000000000000000000000000000000000000000001"
+sigui       = "_"
 std         = "0x1"
 aptos_std   = "0x1"
 aptos_framework = "0x1"
 
-[dev-addresses]
-sigui = "0xCAFE"
+
 
 [dependencies.AptosFramework]
 git  = "https://github.com/aptos-labs/aptos-core.git"
@@ -31,5 +29,3 @@ subdir = "aptos-move/framework/move-stdlib"
 
 [dev-dependencies]
 
-[build]
-language_version = "2.0"
