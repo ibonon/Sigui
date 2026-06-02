@@ -15,13 +15,13 @@ openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", ta
 
 [[target.starknet-contract]]
 name = "agent_reputation"
-allowed-libfuncs-list.name = "experimental"
+allowed-libfuncs-list.name = "audited"
 sierra = true
 casm = true
 
 [[target.starknet-contract]]
 name = "threat_registry"
-allowed-libfuncs-list.name = "experimental"
+allowed-libfuncs-list.name = "audited"
 sierra = true
 casm = true
 

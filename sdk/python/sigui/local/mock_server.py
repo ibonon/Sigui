@@ -29,6 +29,7 @@ import threading
 import time
 import uuid
 from typing import Any, Optional
+import asyncio
 
 _uvicorn_available = False
 _fastapi_available = False
@@ -144,11 +145,13 @@ class MockSiguiServer:
         self._started = threading.Event()
         self._request_count = 0
         self._total_earned = 0.0
+        self._active_connections = []
+        self._background_tasks = set()
 
         self._app = self._build_app()
 
     def _build_app(self) -> "FastAPI":  # type: ignore
-        from fastapi import FastAPI, Request  # type: ignore
+        from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect  # type: ignore
         from fastapi.middleware.cors import CORSMiddleware  # type: ignore
         from fastapi.responses import JSONResponse  # type: ignore
 
@@ -160,7 +163,8 @@ class MockSiguiServer:
 
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],
+            allow_origins=["*", "http://localhost:3001", "http://127.0.0.1:3001"],
+            allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
         )
@@ -270,6 +274,17 @@ class MockSiguiServer:
                 },
             }
 
+        @app.websocket("/ws/live")
+        async def websocket_endpoint(websocket: WebSocket):
+            await websocket.accept()
+            server_ref._active_connections.append(websocket)
+            try:
+                while True:
+                    # Keep connection alive
+                    await websocket.receive_text()
+            except WebSocketDisconnect:
+                server_ref._active_connections.remove(websocket)
+
         return app
 
     def start(self) -> "MockSiguiServer":
@@ -280,7 +295,7 @@ class MockSiguiServer:
             self._app,
             host=self.host,
             port=self.port,
-            log_level="error",  # Silent mode
+            log_level="debug",
         )
         self._server = uvicorn.Server(config)
 
@@ -288,6 +303,11 @@ class MockSiguiServer:
             import asyncio
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
+            
+            # Start background live stream generator
+            task = loop.create_task(self._live_stream_generator())
+            self._background_tasks.add(task)
+            
             loop.run_until_complete(self._server.serve())
 
         self._thread = threading.Thread(target=_run, daemon=True, name="sigui-mock-server")
@@ -311,6 +331,81 @@ class MockSiguiServer:
             self._server.should_exit = True
         if self._thread:
             self._thread.join(timeout=2.0)
+
+    async def _live_stream_generator(self):
+        """Tâche de fond qui génère des transactions simulées et les streame aux WebSockets."""
+        agents = ["agent_payer", "agent_attacker", "agent_learner", "agent_grayzone", "agent_monitor"]
+        chains = ["arc", "ethereum", "solana"]
+        
+        while not (self._server and self._server.should_exit):
+            await asyncio.sleep(random.uniform(0.3, 1.2))  # Generate 1-3 tx per second
+            if not self._active_connections:
+                continue
+                
+            amount = random.uniform(10, 5000)
+            destination = f"0x{uuid.uuid4().hex[:40]}"
+            # Randomly trigger a known bad address to show BLOCKs
+            if random.random() < 0.15:
+                destination = random.choice(list(_KNOWN_BAD))
+                
+            risk, verdict, reason = _compute_risk(amount, destination, "transfer")
+            agent = random.choice(agents)
+            
+            payload = {
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "treasury": {
+                    "balance": round(self._total_earned * 0.7, 4),
+                    "total_earned": round(self._total_earned, 4),
+                    "total_spent": round(self._total_earned * 0.3, 4),
+                    "net_profit": round(self._total_earned * 0.7, 4),
+                    "mode": "NORMAL",
+                    "balances_by_chain": {"arc": round(self._total_earned * 0.5, 4), "ethereum": round(self._total_earned * 0.5, 4)}
+                },
+                "decisions": {
+                    "allow": max(10, int(self._request_count * 0.8)),
+                    "block": max(2, int(self._request_count * 0.15)),
+                    "escalate": max(1, int(self._request_count * 0.05)),
+                    "total": self._request_count,
+                    "usdc_saved": round(self._request_count * 25.5, 2),
+                    "patterns_learned": 42
+                },
+                "recent_logs": [
+                    {
+                        "agent_id": agent,
+                        "action_type": "transfer",
+                        "amount_usdc": round(amount, 2),
+                        "decision": verdict,
+                        "risk_score": round(risk, 4),
+                        "arc_tx_hash": f"0x{uuid.uuid4().hex[:40]}",
+                        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                        "processing_time_ms": random.randint(12, 45)
+                    }
+                ],
+                "ecosystem": {
+                    "running": True,
+                    "agents": {
+                        "agent_payer": {"status": "active", "transactions": 100},
+                        "agent_attacker": {"status": "active", "transactions": 100},
+                        "agent_learner": {"status": "active", "transactions": 100},
+                        "agent_grayzone": {"status": "active", "transactions": 100},
+                        "agent_monitor": {"status": "active", "transactions": 100}
+                    }
+                }
+            }
+            
+            self._request_count += 1
+            self._total_earned += 0.001
+            
+            dead_connections = []
+            for ws in self._active_connections:
+                try:
+                    await ws.send_json(payload)
+                except Exception:
+                    dead_connections.append(ws)
+            
+            for ws in dead_connections:
+                if ws in self._active_connections:
+                    self._active_connections.remove(ws)
 
     def __enter__(self) -> "MockSiguiServer":
         return self.start()

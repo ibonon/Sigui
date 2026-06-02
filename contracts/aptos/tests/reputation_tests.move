@@ -8,7 +8,7 @@ module sigui::reputation_tests {
     #[test(admin = @sigui)]
     public fun test_initialization(admin: &signer) {
         agent_reputation::initialize(admin);
-        assert!(agent_reputation::get_total_agents(signer::address_of(admin)) == 0, 1);
+        assert!(agent_reputation::total_agents(signer::address_of(admin)) == 0, 1);
     }
 
     #[test(admin = @sigui, agent1 = @0x123)]
@@ -23,7 +23,7 @@ module sigui::reputation_tests {
         
         agent_reputation::register_agent(agent1, admin_addr, did);
         
-        assert!(agent_reputation::get_total_agents(admin_addr) == 1, 1);
+        assert!(agent_reputation::total_agents(admin_addr) == 1, 1);
         assert!(agent_reputation::get_reputation(admin_addr, agent1_addr) == 500, 2); // Initial reputation is 500
     }
 

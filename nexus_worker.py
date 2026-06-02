@@ -9,19 +9,20 @@ import os
 import random
 import sys
 import time
+from contextlib import asynccontextmanager
 
 import httpx
 import uvicorn
+import websockets  # FIX #2: top-level import, not inside loops
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from loguru import logger
 from pydantic import BaseModel
 
-app = FastAPI(title="NexusMind P2P Worker")
-
 PORT = int(os.getenv("PORT", 8001))
 NODE_ID = f"nexus_node_{PORT}"
-TRACKER_URL = "http://localhost:8000"
-TRACKER_WS = "ws://localhost:8000/nexusmind/ws/tracker"
+# FIX #23: read from env vars so the tracker can be configured without touching source code
+TRACKER_URL = os.getenv("TRACKER_URL", "http://localhost:8000")
+TRACKER_WS  = os.getenv("TRACKER_WS",  "ws://localhost:8000/nexusmind/ws/tracker")
 
 # P2P State
 peers = set()
@@ -70,11 +71,15 @@ def compute_hash(data: str, difficulty: int) -> str:
             return h
         nonce += 1
 
-@app.on_event("startup")
-async def startup_event():
+# FIX #2: use lifespan context manager instead of deprecated @app.on_event("startup")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     logger.info(f"[{NODE_ID}] Starting P2P Node on port {PORT}")
     asyncio.create_task(connect_to_tracker())
     asyncio.create_task(background_task_generator())
+    yield
+
+app = FastAPI(title="NexusMind P2P Worker", lifespan=lifespan)
 
 async def connect_to_tracker():
     """Connect to Sigui Gateway tracker to discover peers and register."""
@@ -93,7 +98,6 @@ async def connect_to_tracker():
     # Then connect via WS
     while True:
         try:
-            import websockets
             async with websockets.connect(TRACKER_WS) as ws:
                 logger.info(f"[{NODE_ID}] Connected to Tracker WS")
                 await ws.send(json.dumps({"type": "announce", "node_id": NODE_ID, "port": PORT}))
@@ -114,17 +118,28 @@ async def connect_to_tracker():
 async def handle_task(task_id: str, task_type: str, payload: dict, tracker_ws):
     logger.info(f"[{NODE_ID}] Starting task {task_id} ({task_type})")
     start = time.time()
-    
+
     result = None
     if task_type == "prime":
         # Run in executor to not block async loop
         result = await asyncio.to_thread(compute_prime, payload.get("target", 1000))
     elif task_type == "hash":
         result = await asyncio.to_thread(compute_hash, payload.get("data", "nexus"), payload.get("difficulty", 4))
-    
+    elif task_type == "matrix":
+        # FIX #17: handle matrix task — simple dot product simulation
+        size = payload.get("size", 32)
+        def _matmul(n: int) -> float:
+            import math
+            # Simulate an n×n matrix trace as a representative compute result
+            return round(sum(math.sin(i) * math.cos(i) for i in range(n * n)), 6)
+        result = await asyncio.to_thread(_matmul, size)
+    else:
+        logger.warning(f"[{NODE_ID}] Unknown task type '{task_type}' — skipping")
+        result = None
+
     elapsed = (time.time() - start) * 1000
     logger.info(f"[{NODE_ID}] Completed {task_id} in {elapsed:.2f}ms")
-    
+
     await tracker_ws.send(json.dumps({
         "type": "task_result",
         "node_id": NODE_ID,
@@ -143,7 +158,6 @@ async def background_task_generator():
         task_id = f"task_{random.randint(1000, 9999)}"
         
         try:
-            import websockets
             async with websockets.connect(f"ws://localhost:{target_port}/ws/p2p") as ws:
                 payload = {
                     "type": "p2p_task",
@@ -158,7 +172,7 @@ async def background_task_generator():
                 logger.info(f"[{NODE_ID}] Received P2P result for {task_id}: {res}")
         except Exception as e:
             logger.warning(f"[{NODE_ID}] Failed to send P2P task to {target_port}: {e}")
-            peers.remove(target_port)
+            peers.discard(target_port)  # FIX #3: discard() never raises KeyError
 
 @app.websocket("/ws/p2p")
 async def p2p_endpoint(websocket: WebSocket):

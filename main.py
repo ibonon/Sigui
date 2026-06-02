@@ -244,6 +244,16 @@ async def lifespan(app: FastAPI):
     # 12 ── Vision endpoint probe — confirms whether real AMD GPU is in the loop
     _vision_gpu_ready = await _probe_vision_endpoint()
 
+    # 13 ── NexusMind tracker dispatch loop (FIX #4b)
+    #       Replaces the removed @app.on_event("startup") in nexusmind_router.py.
+    #       It must be started inside the lifespan to ensure event loops match.
+    try:
+        from modules.nexusmind_router import start_tracker_dispatch
+        await start_tracker_dispatch()
+        logger.info("[MAIN] ✅ NexusMind tracker dispatch loop started")
+    except Exception as _tracker_e:
+        logger.warning(f"[MAIN] NexusMind tracker dispatch failed ({_tracker_e}) — continuing")
+
     # ── Startup diagnostics ───────────────────────────────────────────────────
     val_stats = await response_validator.get_global_stats()
     logger.info(
@@ -309,9 +319,11 @@ app = FastAPI(
 )
 
 # ── CORS — open for demo/jury dashboards ──────────────────────────────────────
+# FIX #9: restrict CORS origins in production to prevent arbitrary cross-origin
+# requests. demo_mode=True keeps the wildcard for jury/dashboard convenience.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Intentionally open — demo mode only
+    allow_origins=["*"] if settings.demo_mode else [],  # set FRONTEND_URL in production
     allow_methods=["*"],
     allow_headers=["*"],
 )

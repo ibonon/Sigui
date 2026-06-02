@@ -11,11 +11,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, StreamingResponse
 from loguru import logger
 
-from agent.loop import AgentMode
+from agent.loop import AgentMode, agent as arc_agent
 from blockchain import get_adapter
 from clients.integrations import arc_client
 from clients.threat_registry import (
@@ -610,18 +610,16 @@ def register_routes(app: FastAPI):
                 outcome_label = "risky_allow"  # ALLOW dans la zone grise
             elif pattern_extra >= 0.25:
                 outcome_label = "risky_allow"  # ALLOW sur pattern d'attaque connu
-            elif agent_profile["tx_count"] == 0 and action.amount_usdc > 0.5:
+            elif agent_profile and agent_profile["tx_count"] == 0 and action.amount_usdc > 0.5:
                 outcome_label = "risky_allow"  # Premier tx avec montant élevé
         elif dec == "BLOCK":
             if risk.risk_score < 0.35:
                 outcome_label = "safe_block"  # Bloqué alors que faible risque
-            elif agent_profile["trust_score"] > 0.70:
+            elif agent_profile and agent_profile["trust_score"] > 0.70:
                 outcome_label = "contested_block"  # Agent établi bloqué
 
         # Déclencher self_critique immédiatement si comportement risqué détecté
         if outcome_label == "risky_allow":
-            from agent.loop import agent as arc_agent
-
             arc_agent.request_critique()
 
         await memory.log_episode(
@@ -712,7 +710,6 @@ def register_routes(app: FastAPI):
 
         # ── NexusMind Integration ──────────────────────────────────────────────
         from modules.nexusmind_router import broadcast_decision
-        import asyncio
         asyncio.create_task(broadcast_decision(
             agent_id=action.agent_id,
             decision=dec,
@@ -983,45 +980,7 @@ def register_routes(app: FastAPI):
                 )
         return rows
 
-    # ── Service Top (service registry dashboard) ──────────────────────────────
-    @app.get("/services/top", tags=["Services"])
-    async def services_top(limit: int = 10):
-        """
-        Returns the top services by total volume received — used by the
-        Service Registry panel in the dashboard.
-        """
-        if not memory._db:
-            return []
-
-        rows = []
-        async with memory._lock:
-            cur = await memory._db.execute(
-                """
-                SELECT address, name, trust_level, category,
-                       total_received, unique_payers, complaints,
-                       first_seen, last_seen, tags
-                FROM service_registry
-                ORDER BY total_received DESC, unique_payers DESC
-                LIMIT ?
-                """,
-                (limit,),
-            )
-            for r in await cur.fetchall():
-                rows.append(
-                    {
-                        "address": r["address"],
-                        "name": r["name"],
-                        "trust": r["trust_level"],
-                        "category": r["category"],
-                        "total_received_usdc": round(r["total_received"] or 0.0, 6),
-                        "unique_payers": r["unique_payers"] or 0,
-                        "complaints": r["complaints"] or 0,
-                        "first_seen": r["first_seen"],
-                        "last_seen": r["last_seen"],
-                        "tags": json.loads(r["tags"] or "[]"),
-                    }
-                )
-        return rows
+    # ── Service Top block removed — route moved above /services/{address} (FIX #1) ──
 
     # ── Hogonat Governance ─────────────────────────────────────────────────────
     @app.get("/hogonat/state", tags=["Simulation"])
@@ -1188,16 +1147,72 @@ def register_routes(app: FastAPI):
         """Server-sent events stream for premium demo UI."""
 
         async def event_generator():
+            # FIX #20: Wrap with try/except so the generator exits cleanly when
+            # the client disconnects. Without this, the while-loop keeps running
+            # and holding DB resources until the next server restart.
+            try:
+                while True:
+                    stats = await memory.get_stats()
+                    patterns = await memory.get_top_patterns(5)
+                    agents = await memory.get_all_agents()
+                    # Comptage onchain via méthode dédiée (requête SQL unique, connexion partagée)
+                    onchain_counts = await memory.get_onchain_counts()
+                    simulated_tx_count = onchain_counts["simulated_tx_count"]
+                    confirmed_onchain_tx_count = onchain_counts[
+                        "confirmed_onchain_tx_count"
+                    ]
+                    recent_logs = await memory.get_recent_decisions(20)
+                    allow_threshold, block_threshold = await policy_brain.get_thresholds()
+                    latest_policy = await memory.get_latest_policy_update()
+                    hogonat_history_list = await memory.get_hogonat_history(15)
+                    payload = {
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "treasury": treasury.get_state(),
+                        "decisions": stats,
+                        "onchain_proof": {
+                            "simulated_tx_count": simulated_tx_count,
+                            "confirmed_onchain_tx_count": confirmed_onchain_tx_count,
+                            "target_50_met": confirmed_onchain_tx_count >= 50,
+                        },
+                        "threat_registry": await threat_registry.get_stats(),
+                        "top_patterns": patterns,
+                        "agents_tracked": len(agents),
+                        "ecosystem": ecosystem_orchestrator.get_status(),
+                        "policy": {
+                            "allow_threshold": allow_threshold,
+                            "block_threshold": block_threshold,
+                            "latest_update": latest_policy,
+                        },
+                        "recent_logs": recent_logs,
+                        "hogonat_history": hogonat_history_list,
+                    }
+                    yield f"data: {json.dumps(payload)}\n\n"
+                    await asyncio.sleep(2)
+            except asyncio.CancelledError:
+                # Client disconnected — exit generator cleanly
+                return
+
+        headers = {
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        }
+        return StreamingResponse(
+            event_generator(), media_type="text/event-stream", headers=headers
+        )
+
+    @app.websocket("/ws/live")
+    async def ws_live(websocket: WebSocket):
+        """WebSocket stream for premium demo UI (Attack Theater)."""
+        await websocket.accept()
+        try:
             while True:
                 stats = await memory.get_stats()
                 patterns = await memory.get_top_patterns(5)
                 agents = await memory.get_all_agents()
-                # Comptage onchain via méthode dédiée (requête SQL unique, connexion partagée)
                 onchain_counts = await memory.get_onchain_counts()
                 simulated_tx_count = onchain_counts["simulated_tx_count"]
-                confirmed_onchain_tx_count = onchain_counts[
-                    "confirmed_onchain_tx_count"
-                ]
+                confirmed_onchain_tx_count = onchain_counts["confirmed_onchain_tx_count"]
                 recent_logs = await memory.get_recent_decisions(20)
                 allow_threshold, block_threshold = await policy_brain.get_thresholds()
                 latest_policy = await memory.get_latest_policy_update()
@@ -1223,14 +1238,9 @@ def register_routes(app: FastAPI):
                     "recent_logs": recent_logs,
                     "hogonat_history": hogonat_history_list,
                 }
-                yield f"data: {json.dumps(payload)}\n\n"
+                await websocket.send_text(json.dumps(payload))
                 await asyncio.sleep(2)
-
-        headers = {
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        }
-        return StreamingResponse(
-            event_generator(), media_type="text/event-stream", headers=headers
-        )
+        except WebSocketDisconnect:
+            pass
+        except asyncio.CancelledError:
+            pass

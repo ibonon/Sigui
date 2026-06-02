@@ -29,7 +29,7 @@ pub struct ThreatPattern {
 pub mod ThreatRegistry {
     use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
     use super::{IThreatRegistry, ThreatPattern};
-    use starknet::storage::{Map, StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess, StorageMapWriteAccess};
+    use starknet::storage::{Map, StorageMapReadAccess, StorageMapWriteAccess};
 
     #[storage]
     struct Storage {

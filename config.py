@@ -5,7 +5,7 @@ Pydantic Settings with dotenv loading
 
 from typing import Optional
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -66,8 +66,10 @@ class Settings(BaseSettings):
     # ─── Anthropic ────────────────────────────────────────────────────────────
     anthropic_api_key: str = Field(default="demo_key", env="ANTHROPIC_API_KEY")
     decision_ai_enabled: bool = Field(default=True, env="DECISION_AI_ENABLED")
+    # FIX #21: corrected model name — 'claude-sonnet-4-20250514' does not exist in
+    # the Anthropic API and would cause 400 errors on every escalation call.
     decision_ai_model: str = Field(
-        default="claude-sonnet-4-20250514", env="DECISION_AI_MODEL"
+        default="claude-sonnet-4-5", env="DECISION_AI_MODEL"
     )
     decision_ai_timeout_s: int = Field(default=3, env="DECISION_AI_TIMEOUT_S")
     crewai_enabled: bool = Field(default=True, env="CREWAI_ENABLED")
@@ -179,6 +181,26 @@ class Settings(BaseSettings):
     )
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
+
+    # FIX #8: Validate that critical secrets are present when demo_mode is False.
+    # This prevents the server from starting in production with empty/demo keys.
+    @model_validator(mode="after")
+    def _validate_production_keys(self) -> "Settings":
+        if self.demo_mode:
+            return self  # demo mode — no key validation required
+        errors = []
+        if not self.arc_signer_private_key:
+            errors.append("ARC_SIGNER_PRIVATE_KEY is required when DEMO_MODE=false")
+        if self.anthropic_api_key in ("", "demo_key"):
+            errors.append("ANTHROPIC_API_KEY is required when DEMO_MODE=false")
+        if self.circle_api_key in ("", "demo_key"):
+            errors.append("CIRCLE_API_KEY is required when DEMO_MODE=false")
+        if errors:
+            raise ValueError(
+                "Production configuration errors (set DEMO_MODE=true to bypass):\n"
+                + "\n".join(f"  • {e}" for e in errors)
+            )
+        return self
 
 
 settings = Settings()

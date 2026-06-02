@@ -151,6 +151,14 @@ class ArcClient:
 
         # [HACKATHON DEMO] Circle's API returns a UUID for pending transactions, while Web3 expects '0x...'.
         if not tx_hash.startswith("0x"):
+            # FIX #10: Don't just blindly accept anything not starting with 0x.
+            # Validate it's a strict UUID format so malicious inputs don't pass.
+            import re
+            uuid_regex = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
+            if not uuid_regex.match(tx_hash):
+                logger.warning(f"[ARC] Verify: Rejecting invalid payment hash format: '{tx_hash}'")
+                return False
+
             # Assume it's a valid Circle Transaction ID that is pending settlement
             logger.info(
                 f"[ARC] Verify: Accepting Circle Transaction UUID '{tx_hash}' as valid payment"

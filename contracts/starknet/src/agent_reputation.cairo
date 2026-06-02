@@ -22,9 +22,10 @@
 // ============================================================
 
 // ── External imports ─────────────────────────────────────────
-use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
+use starknet::ContractAddress;
 use openzeppelin::access::ownable::OwnableComponent;
 use openzeppelin::security::pausable::PausableComponent;
+use core::integer::i64;
 
 // ── Public interface ──────────────────────────────────────────
 
@@ -77,12 +78,6 @@ pub trait IAgentReputation<TContractState> {
 
     /// Return `true` if `account` holds the ORACLE role.
     fn is_oracle(self: @TContractState, account: ContractAddress) -> bool;
-
-    /// Return the contract owner address.
-    fn owner(self: @TContractState) -> ContractAddress;
-
-    /// Return `true` if the contract is paused.
-    fn is_paused(self: @TContractState) -> bool;
 }
 
 // ── Data structures ───────────────────────────────────────────
@@ -114,19 +109,19 @@ pub mod AgentReputation {
         OwnableComponent, PausableComponent
     };
 
-// ── Component wiring ──────────────────────────────────────────
-component!(path: OwnableComponent, storage: ownable, event: OwnableEvent);
-component!(path: PausableComponent, storage: pausable, event: PausableEvent);
+    // ── Component wiring ──────────────────────────────────────────
+    component!(path: OwnableComponent, storage: ownable, event: OwnableEvent);
+    component!(path: PausableComponent, storage: pausable, event: PausableEvent);
 
-#[abi(embed_v0)]
-impl OwnableMixinImpl = OwnableComponent::OwnableMixinImpl<ContractState>;
-impl OwnableInternalImpl = OwnableComponent::InternalImpl<ContractState>;
+    #[abi(embed_v0)]
+    impl OwnableImpl = OwnableComponent::OwnableImpl<ContractState>;
+    impl OwnableInternalImpl = OwnableComponent::InternalImpl<ContractState>;
 
-#[abi(embed_v0)]
-impl PausableImpl = PausableComponent::PausableImpl<ContractState>;
-impl PausableInternalImpl = PausableComponent::InternalImpl<ContractState>;
+    #[abi(embed_v0)]
+    impl PausableImpl = PausableComponent::PausableImpl<ContractState>;
+    impl PausableInternalImpl = PausableComponent::InternalImpl<ContractState>;
     use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
-    use starknet::storage::{Map, StoragePointerReadAccess, StoragePointerWriteAccess, StorageMapReadAccess, StorageMapWriteAccess};
+    use starknet::storage::{Map, StorageMapReadAccess, StorageMapWriteAccess};
 
     // ── Tier thresholds ───────────────────────────────────────
     const TIER_RELIABLE_MIN: u64 = 1_000_u64;
@@ -147,21 +142,6 @@ impl PausableInternalImpl = PausableComponent::InternalImpl<ContractState>;
         did_hashes: Map<ContractAddress, felt252>,
         oracles: Map<ContractAddress, bool>,
         registered: Map<ContractAddress, bool>,
-    }
-
-    // ── Events ────────────────────────────────────────────────
-    #[event]
-    #[derive(Drop, starknet::Event)]
-    pub enum Event {
-        #[flat]
-        OwnableEvent: OwnableComponent::Event,
-        #[flat]
-        PausableEvent: PausableComponent::Event,
-        AgentRegistered: AgentRegistered,
-        ReputationUpdated: ReputationUpdated,
-        AgentSlashed: AgentSlashed,
-        OracleGranted: OracleGranted,
-        OracleRevoked: OracleRevoked,
     }
 
     /// Emitted the first time an agent registers on-chain.
@@ -221,6 +201,23 @@ impl PausableInternalImpl = PausableComponent::InternalImpl<ContractState>;
         pub by_owner: ContractAddress,
     }
 
+    // ── Events ────────────────────────────────────────────────
+
+    /// Unified event enum for the AgentReputation contract.
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    pub enum Event {
+        #[flat]
+        OwnableEvent: OwnableComponent::Event<ContractState>,
+        #[flat]
+        PausableEvent: PausableComponent::Event<ContractState>,
+        AgentRegistered: AgentRegistered,
+        ReputationUpdated: ReputationUpdated,
+        AgentSlashed: AgentSlashed,
+        OracleGranted: OracleGranted,
+        OracleRevoked: OracleRevoked,
+    }
+
     // ── Constructor ───────────────────────────────────────────
 
     /// Deploy the contract, setting `owner` as the initial owner
@@ -236,7 +233,7 @@ impl PausableInternalImpl = PausableComponent::InternalImpl<ContractState>;
         self.ownable.initializer(owner);
 
         // Grant oracle role to initial_oracle if non-zero.
-        let zero: ContractAddress = 0_felt252.try_into().unwrap();
+        let zero: ContractAddress = 0.try_into().unwrap();
         if initial_oracle != zero {
             self.oracles.write(initial_oracle, true);
         }
@@ -274,11 +271,12 @@ impl PausableInternalImpl = PausableComponent::InternalImpl<ContractState>;
             if delta >= 0_i64 {
                 // Saturating add: cap at u64::MAX.
                 let d: u64 = delta.try_into().unwrap();
-                let mut sum = base + d;
-                if sum < base { // manual saturating check
-                    sum = 0xffffffffffffffff;
+                let max_u64: u64 = 0xffffffffffffffff_u64;
+                if d > max_u64 - base {
+                    max_u64
+                } else {
+                    base + d
                 }
-                sum
             } else {
                 // Saturating sub: floor at 0.
                 let d: u64 = (-delta).try_into().unwrap();
@@ -418,14 +416,6 @@ impl PausableInternalImpl = PausableComponent::InternalImpl<ContractState>;
 
         fn is_oracle(self: @ContractState, account: ContractAddress) -> bool {
             self.oracles.read(account)
-        }
-
-        fn owner(self: @ContractState) -> ContractAddress {
-            self.ownable.owner()
-        }
-
-        fn is_paused(self: @ContractState) -> bool {
-            self.pausable.is_paused()
         }
     }
 }

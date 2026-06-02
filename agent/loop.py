@@ -50,9 +50,14 @@ def determine_mode(balance: float) -> AgentMode:
     return AgentMode.EMERGENCY
 
 def should_escalate(risk_score: float, mode: AgentMode) -> bool:
-    """Check if escalation is allowed given current mode and risk score."""
+    """Check if escalation is allowed given current mode and risk score.
+
+    FIX #15: Upper bound is now inclusive (<= instead of <) so a score exactly
+    at RISK_BLOCK_THRESHOLD (0.65) gets an escalation chance rather than being
+    silently blocked without review.
+    """
     min_risk = ESCALATION_RISK_MIN.get(mode, 1.00)
-    return min_risk <= risk_score < RISK_BLOCK_THRESHOLD
+    return min_risk <= risk_score <= RISK_BLOCK_THRESHOLD
 
 def is_self_protection(balance: float) -> bool:
     """Check if ArcWarden should refuse new requests (self-protection)."""

@@ -1,0 +1,79 @@
+{
+  "id": "sigui-security",
+  "name": "Sigui Security",
+  "description": "Policy plugin that screens risky blockchain tool calls before execution.",
+  "version": "0.1.2",
+  "activation": {
+    "onStartup": true
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "default": true
+      },
+      "apiUrl": {
+        "type": "string",
+        "default": "http://127.0.0.1:8765"
+      },
+      "apiKeyEnvVar": {
+        "type": "string",
+        "default": "SIGUI_API_KEY"
+      },
+      "agentId": {
+        "type": "string",
+        "default": "openclaw_agent"
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "enforce",
+          "approval-only"
+        ],
+        "default": "enforce"
+      },
+      "blockThreshold": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0.85
+      },
+      "escalateThreshold": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0.55
+      },
+      "autoEscalate": {
+        "type": "boolean",
+        "default": false
+      },
+      "failOpen": {
+        "type": "boolean",
+        "default": false
+      },
+      "timeoutMs": {
+        "type": "integer",
+        "minimum": 1000,
+        "maximum": 600000,
+        "default": 10000
+      },
+      "watchedTools": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "evm_send_transaction",
+          "aptos_submit_transaction",
+          "starknet_send_transaction",
+          "wallet_transfer",
+          "wallet_approve",
+          "wallet_swap"
+        ]
+      }
+    }
+  }
+}

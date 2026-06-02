@@ -20,6 +20,11 @@ from pydantic import BaseModel
 
 from modules.node_registry import node_registry
 
+# FIX #19: _swarms lives at module scope so it survives multiple calls to
+# register_nexusmind_routes() (e.g. during test teardown/setup) and is
+# accessible from outside the closure if needed.
+_swarms: dict = {}
+
 
 # ── WebSocket connection manager ─────────────────────────────────────────────
 
@@ -335,7 +340,13 @@ def register_nexusmind_routes(app: FastAPI) -> None:
 
     @app.get("/nexusmind/wallet/earnings", tags=["NexusMind"])
     async def get_wallet_earnings(node_id: str = "node_001", period: str = "7d"):
-        """Historical earnings breakdown (TKN + USDC) for chart rendering."""
+        """
+        Historical earnings breakdown (TKN + USDC) for chart rendering.
+
+        NOTE: Returns **simulated** data generated with a fixed seed (random.seed(42)).
+        Values are identical on every call and are used for dashboard visualisation only.
+        Replace with real DB queries when historical earnings storage is implemented.
+        """
         import random
         random.seed(42)
         days = 30 if period == "30d" else 7
@@ -347,7 +358,7 @@ def register_nexusmind_routes(app: FastAPI) -> None:
                 "tkn": round(random.uniform(80, 180), 1),
                 "usdc": round(random.uniform(0.04, 0.18), 4),
             })
-        return {"period": period, "data": data}
+        return {"period": period, "data": data, "simulated": True}
 
     # ── Identity / ERC-8259 ──────────────────────────────────────────────────
 
@@ -451,8 +462,7 @@ def register_nexusmind_routes(app: FastAPI) -> None:
         }
 
     # ── Swarm / Research ─────────────────────────────────────────────────────
-
-    _swarms: dict = {}
+    # FIX #19: _swarms is now a module-level variable (see top of file)
 
     @app.get("/nexusmind/swarm", tags=["NexusMind"])
     async def list_swarms():
@@ -568,10 +578,13 @@ async with SiguiClient(
             self.nodes[port] = ws
             await self.broadcast_peers()
 
-        def disconnect(self, port: int):
+        # FIX #5: disconnect() is now async so asyncio.create_task() is never
+        # called from a synchronous context (which would raise RuntimeError if
+        # no event loop is running). Callers must await disconnect().
+        async def disconnect(self, port: int):
             if port in self.nodes:
                 del self.nodes[port]
-            asyncio.create_task(self.broadcast_peers())
+            await self.broadcast_peers()
 
         async def broadcast_peers(self):
             peers = list(self.nodes.keys())
@@ -582,7 +595,7 @@ async with SiguiClient(
                 except:
                     dead.append(p)
             for d in dead:
-                self.disconnect(d)
+                await self.disconnect(d)
 
         async def dispatch_task(self):
             """Continuously send real compute tasks to connected nodes."""
@@ -592,12 +605,12 @@ async with SiguiClient(
                 await asyncio.sleep(random.uniform(2, 5))
                 if not self.nodes:
                     continue
-                
+
                 target_port = random.choice(list(self.nodes.keys()))
                 ws = self.nodes[target_port]
                 task_id = f"compute_{str(uuid.uuid4())[:8]}"
                 task_type = random.choice(["prime", "hash", "matrix"])
-                
+
                 try:
                     await ws.send_text(json.dumps({
                         "type": "task",
@@ -607,14 +620,18 @@ async with SiguiClient(
                     }))
                     logger.info(f"[TRACKER] Dispatched {task_type} task {task_id} to node on port {target_port}")
                 except Exception:
-                    self.disconnect(target_port)
+                    await self.disconnect(target_port)
 
     tracker = _TrackerManager()
-    
-    # Start the task dispatcher loop
-    @app.on_event("startup")
-    async def start_tracker():
-        asyncio.create_task(tracker.dispatch_task())
+
+    # Store at module level so start_tracker_dispatch() can access it (FIX #4)
+    import modules.nexusmind_router as _self_module
+    _self_module._tracker_instance = tracker
+
+    # FIX #4: removed @app.on_event("startup") — deprecated since FastAPI 0.93
+    # and unsafe when register_nexusmind_routes() is called after app creation.
+    # tracker.dispatch_task() is now started from main.py lifespan instead via
+    # start_tracker_dispatch().
 
     @app.websocket("/nexusmind/ws/tracker")
     async def ws_tracker(websocket: WebSocket):
@@ -630,7 +647,7 @@ async with SiguiClient(
                 tracker.nodes[port] = websocket
                 await tracker.broadcast_peers()
                 logger.info(f"[TRACKER] Node {node_id} joined on port {port}")
-                
+
                 while True:
                     res_data = await websocket.receive_text()
                     res = json.loads(res_data)
@@ -644,8 +661,26 @@ async with SiguiClient(
                             "latency_ms": res["latency_ms"]
                         })
         except WebSocketDisconnect:
-            pass
+            # FIX #5: await async disconnect
+            if msg.get("port") in tracker.nodes:
+                await tracker.disconnect(msg.get("port"))
         except Exception as e:
             logger.error(f"[TRACKER] WS Error: {e}")
 
     logger.info("[NEXUSMIND] Routes registered — /nexusmind/* + ws://…/nexusmind/ws/decisions + /ws/tracker")
+
+# Module-level holder for the tracker created inside register_nexusmind_routes()
+_tracker_instance = None
+
+
+async def start_tracker_dispatch() -> None:
+    """Launch the tracker dispatch loop.
+
+    Call this once from main.py lifespan AFTER register_nexusmind_routes() has run.
+    This replaces the deprecated @app.on_event("startup") handler (FIX #4).
+    """
+    if _tracker_instance is not None:
+        asyncio.create_task(_tracker_instance.dispatch_task())
+        logger.info("[NEXUSMIND] Tracker dispatch loop started")
+    else:
+        logger.warning("[NEXUSMIND] start_tracker_dispatch() called before routes were registered")

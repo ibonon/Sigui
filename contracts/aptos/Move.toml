@@ -5,27 +5,29 @@ authors = ["Sigui Protocol Team <team@sigui.io>"]
 license = "Apache-2.0"
 
 [addresses]
-sigui       = "_"
-std         = "0x1"
-aptos_std   = "0x1"
-aptos_framework = "0x1"
+sigui            = "_"
+std              = "0x1"
+aptos_std        = "0x1"
+aptos_framework  = "0x1"
 
+[dev-addresses]
+sigui            = "0xCAFE"
 
-
+# Pinned to Aptos Framework v1.18.0 (stable release)
+# Using a single git source with 3 subdirs avoids cloning the repo 3 times
 [dependencies.AptosFramework]
-git  = "https://github.com/aptos-labs/aptos-core.git"
-rev  = "mainnet"
+git    = "https://github.com/aptos-labs/aptos-core.git"
+rev    = "aptos-node-v1.18.0"
 subdir = "aptos-move/framework/aptos-framework"
 
 [dependencies.AptosStdlib]
-git  = "https://github.com/aptos-labs/aptos-core.git"
-rev  = "mainnet"
+git    = "https://github.com/aptos-labs/aptos-core.git"
+rev    = "aptos-node-v1.18.0"
 subdir = "aptos-move/framework/aptos-stdlib"
 
 [dependencies.MoveStdlib]
-git  = "https://github.com/aptos-labs/aptos-core.git"
-rev  = "mainnet"
+git    = "https://github.com/aptos-labs/aptos-core.git"
+rev    = "aptos-node-v1.18.0"
 subdir = "aptos-move/framework/move-stdlib"
 
 [dev-dependencies]
-

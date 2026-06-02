@@ -104,13 +104,15 @@ export function DashboardTabs({
   const formatMoney = (value: number, digits = 2) => `$${value.toFixed(digits)}`;
 
   const tabs = [
-    { id: "overview", label: "P2P Network" },
+    { id: "overview", label: "Network" },
     { id: "security", label: "Security" },
-    { id: "nodes", label: "Nodes" },
-    { id: "wallet", label: "Wallet" },
-    { id: "identity", label: "Identity" },
-    { id: "research", label: "Research" },
     { id: "marketplace", label: "Marketplace" },
+    { id: "wallet", label: "Wallet" },
+    { id: "system_logs", label: "System Logs" },
+    { id: "research", label: "Research" },
+    { id: "swarm", label: "Swarm" },
+    { id: "identity", label: "Identity" },
+    { id: "nodes", label: "Nodes" },
     { id: "agents", label: "Agents" },
     { id: "vision", label: "Vision" },
     { id: "economics", label: "Economics" },
@@ -138,6 +140,16 @@ export function DashboardTabs({
         {activeTab === "identity" && <IdentityDashboard />}
         {activeTab === "research" && <ResearchDashboard />}
         {activeTab === "marketplace" && <MarketplaceDashboard />}
+        { activeTab === "system_logs" && (
+          <div className="panel p-12 text-center text-muted font-mono text-lg border border-dashed border-border">
+             [System Logs Streaming...]
+          </div>
+        )}
+        { activeTab === "swarm" && (
+          <div className="panel p-12 text-center text-muted font-mono text-lg border border-dashed border-border">
+             [Swarm Multi-Agent Intelligence Deployment...]
+          </div>
+        )}
         {activeTab === "overview" && (
           <div className="overview-grid">
             <ScientificMetrics />
@@ -415,23 +427,23 @@ export function DashboardTabs({
 
       <style jsx>{`
         .dashboard-tabs {
-          padding: 24px;
+          padding: 48px;
         }
 
         .tab-navigation {
           display: flex;
-          gap: 8px;
-          margin-bottom: 24px;
+          gap: 16px;
+          margin-bottom: 48px;
           border-bottom: 1px solid var(--border);
         }
 
         .tab-button {
-          padding: 12px 24px;
+          padding: 16px 32px;
           background: transparent;
           border: none;
           color: var(--muted);
           font-family: var(--ui);
-          font-size: 14px;
+          font-size: 16px;
           font-weight: 500;
           cursor: pointer;
           border-bottom: 2px solid transparent;

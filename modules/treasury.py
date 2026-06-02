@@ -184,12 +184,22 @@ class TreasuryManager:
         """Sync balance from Circle API (or demo simulation)."""
         live_balance = await circle_client.get_wallet_balance()
         async with self._lock:
-            # Arc wallet is treated as the default chain balance.
-            self._state.balances_by_chain[settings.default_chain] = live_balance
+            # FIX #7: Only update the Arc balance — never touch other chains
+            # (Ethereum, Solana) that may have accumulated revenue locally.
+            # Additionally, only replace if Circle reports a higher value;
+            # locally-accumulated revenue between syncs must not be erased.
+            current_arc = self._state.balances_by_chain.get(settings.default_chain, 0.0)
+            self._state.balances_by_chain[settings.default_chain] = max(current_arc, live_balance)
             self._state.last_updated = datetime.utcnow().isoformat()
         await self._check_mode_change()
+        # FIX #18: use operating_mode (dynamic property) instead of _state.mode
+        # (_state.mode is the dataclass default field — always NORMAL).
+        try:
+            _mode_str = self.operating_mode.value
+        except TreasuryEmptyError:
+            _mode_str = AgentMode.EMERGENCY.value
         logger.debug(
-            f"[TREASURY] Sync: balance=${self._state.balance:.6f} mode={self._state.mode}"
+            f"[TREASURY] Sync: balance=${self._state.balance:.6f} mode={_mode_str}"
         )
 
     async def record_revenue(
