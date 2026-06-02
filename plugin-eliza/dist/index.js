@@ -1,7 +1,11 @@
 // src/actions/evaluateTransaction.ts
 import {
-  elizaLogger
+  elizaLogger,
+  composeContext,
+  generateObject,
+  ModelClass
 } from "@elizaos/core";
+import { z as z2 } from "zod";
 
 // src/environment.ts
 import { z } from "zod";
@@ -29,6 +33,18 @@ ${errorMessages}`
 }
 
 // src/actions/evaluateTransaction.ts
+var extractionTemplate = `
+Extract information about the blockchain transaction from the user's message.
+
+User Message:
+{{message.content.text}}
+
+Extract the following information:
+- action_type: The type of action (e.g., 'transfer', 'swap', 'approve', 'mint', 'interact'). Default to 'transfer' if unclear.
+- destination: The destination address or contract address. If not explicitly provided, use "0x0000000000000000000000000000000000000000".
+- amount: The numerical amount involved (e.g., 500). If none, use 0.
+- chain: The blockchain network mentioned (e.g., 'ethereum', 'aptos', 'starknet', 'solana', 'polygon'). Default to 'ethereum' if none is mentioned.
+`;
 var evaluateTransactionAction = {
   name: "EVALUATE_TRANSACTION_SECURITY",
   similes: [
@@ -46,11 +62,31 @@ var evaluateTransactionAction = {
     elizaLogger.log("Starting Sigui Protocol Security Evaluation");
     try {
       const config = await validateSiguiConfig(runtime);
-      const text = message.content.text.toLowerCase();
-      const destinationMatch = text.match(/0x[a-fA-F0-9]{40}/);
-      const destination = destinationMatch ? destinationMatch[0] : "0x0000000000000000000000000000000000000000";
-      const amountMatch = text.match(/(\d+(\.\d+)?)\s*(usdc|eth|apt|strk)/);
-      const amount = amountMatch ? parseFloat(amountMatch[1]) : 0;
+      if (!state) {
+        state = await runtime.composeState(message);
+      } else {
+        state = await runtime.updateRecentMessageState(state);
+      }
+      const context = composeContext({
+        state,
+        template: extractionTemplate
+      });
+      const extractionObj = await generateObject({
+        runtime,
+        context,
+        modelClass: ModelClass.SMALL,
+        schema: z2.object({
+          action_type: z2.string(),
+          destination: z2.string(),
+          amount: z2.number(),
+          chain: z2.string()
+        })
+      });
+      const extracted = extractionObj.object;
+      const destination = extracted?.destination || "0x0000000000000000000000000000000000000000";
+      const amount = extracted?.amount || 0;
+      const action_type = extracted?.action_type || "transfer";
+      const chain = extracted?.chain || "ethereum";
       const response = await fetch(`${config.SIGUI_API_URL}/evaluate`, {
         method: "POST",
         headers: {
@@ -58,10 +94,10 @@ var evaluateTransactionAction = {
           ...config.SIGUI_API_KEY && { "Authorization": `Bearer ${config.SIGUI_API_KEY}` }
         },
         body: JSON.stringify({
-          action_type: "transfer",
+          action_type,
           destination,
           amount_usdc: amount,
-          chain: "ethereum"
+          chain
         })
       });
       if (!response.ok) {
@@ -75,19 +111,19 @@ var evaluateTransactionAction = {
       if (decision === "BLOCK") {
         responseText = `\u{1F6A8} **SIGUI SECURITY ALERT: TRANSACTION BLOCKED** \u{1F6A8}
 
-I cannot proceed with this transaction. The Sigui AI Oracle returned a HIGH RISK score of ${riskScore.toFixed(2)}.
+I cannot proceed with this transaction on ${chain}. The Sigui AI Oracle returned a HIGH RISK score of ${riskScore.toFixed(2)}.
 
 Reason: ${reason}`;
       } else if (decision === "ESCALATE") {
         responseText = `\u26A0\uFE0F **SIGUI SECURITY WARNING: ESCALATION REQUIRED** \u26A0\uFE0F
 
-This transaction is ambiguous (Risk Score: ${riskScore.toFixed(2)}). It has been escalated for manual review. I will await further human instructions before proceeding.
+This ${action_type} on ${chain} is ambiguous (Risk Score: ${riskScore.toFixed(2)}). It has been escalated for manual review. I will await further human instructions before proceeding.
 
 Reason: ${reason}`;
       } else {
         responseText = `\u2705 **SIGUI SECURITY CLEARED**
 
-The transaction has been evaluated as low risk (Score: ${riskScore.toFixed(2)}). Proceeding with execution.`;
+The ${action_type} to ${destination} on ${chain} has been evaluated as low risk (Score: ${riskScore.toFixed(2)}). Proceeding with execution.`;
       }
       if (callback) {
         callback({
@@ -95,6 +131,19 @@ The transaction has been evaluated as low risk (Score: ${riskScore.toFixed(2)}).
           content: result
         });
       }
+      const evaluationMemory = {
+        id: crypto.randomUUID(),
+        userId: runtime.agentId,
+        agentId: runtime.agentId,
+        roomId: message.roomId,
+        content: {
+          text: `Evaluated transaction: ${action_type} of ${amount} to ${destination} on ${chain}. Result: ${decision}. Reason: ${reason}`,
+          action: "EVALUATE_TRANSACTION_SECURITY",
+          source: "sigui_oracle"
+        },
+        createdAt: Date.now()
+      };
+      await runtime.messageManager.createMemory(evaluationMemory);
       return true;
     } catch (error) {
       elizaLogger.error("Error in Sigui evaluation:", error);
@@ -137,13 +186,29 @@ The transaction has been evaluated as low risk (Score: ${riskScore.toFixed(2)}).
   ]
 };
 
+// src/providers/threatProvider.ts
+import { elizaLogger as elizaLogger2 } from "@elizaos/core";
+var threatProvider = {
+  get: async (runtime, message, state) => {
+    try {
+      const config = await validateSiguiConfig(runtime);
+      const threatStatus = "NORMAL";
+      const activeThreats = 0;
+      return `Sigui Security Oracle Global Status: ${threatStatus}. Active network-wide threats detected: ${activeThreats}. If the status is CRITICAL, advise extreme caution for any transaction.`;
+    } catch (error) {
+      elizaLogger2.error("Failed to fetch Sigui threat status in provider:", error);
+      return `Sigui Security Oracle Global Status: UNKNOWN (Error: ${error.message})`;
+    }
+  }
+};
+
 // src/index.ts
 var siguiPlugin = {
   name: "sigui",
   description: "Sigui Protocol Plugin for ElizaOS. Provides real-time AI security oracle evaluations for blockchain transactions to prevent Drain Stars, Rug Pulls, and Mixer Chains.",
   actions: [evaluateTransactionAction],
   evaluators: [],
-  providers: []
+  providers: [threatProvider]
 };
 var index_default = siguiPlugin;
 export {

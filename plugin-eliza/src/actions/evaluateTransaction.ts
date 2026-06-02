@@ -6,8 +6,25 @@ import {
     State,
     type Action,
     elizaLogger,
+    composeContext,
+    generateObject,
+    ModelClass
 } from "@elizaos/core";
+import { z } from "zod";
 import { validateSiguiConfig } from "../environment";
+
+const extractionTemplate = `
+Extract information about the blockchain transaction from the user's message.
+
+User Message:
+{{message.content.text}}
+
+Extract the following information:
+- action_type: The type of action (e.g., 'transfer', 'swap', 'approve', 'mint', 'interact'). Default to 'transfer' if unclear.
+- destination: The destination address or contract address. If not explicitly provided, use "0x0000000000000000000000000000000000000000".
+- amount: The numerical amount involved (e.g., 500). If none, use 0.
+- chain: The blockchain network mentioned (e.g., 'ethereum', 'aptos', 'starknet', 'solana', 'polygon'). Default to 'ethereum' if none is mentioned.
+`;
 
 export const evaluateTransactionAction: Action = {
     name: "EVALUATE_TRANSACTION_SECURITY",
@@ -34,13 +51,37 @@ export const evaluateTransactionAction: Action = {
         try {
             const config = await validateSiguiConfig(runtime);
             
-            // Simplified extraction for the demo. In production, Eliza providers would use LLM extraction.
-            const text = message.content.text.toLowerCase();
-            const destinationMatch = text.match(/0x[a-fA-F0-9]{40}/);
-            const destination = destinationMatch ? destinationMatch[0] : "0x0000000000000000000000000000000000000000";
+            // Update state with message if needed
+            if (!state) {
+                state = (await runtime.composeState(message)) as State;
+            } else {
+                state = await runtime.updateRecentMessageState(state);
+            }
+
+            // LLM Extraction for transaction parameters
+            const context = composeContext({
+                state,
+                template: extractionTemplate,
+            });
+
+            const extractionObj = await generateObject({
+                runtime,
+                context,
+                modelClass: ModelClass.SMALL,
+                schema: z.object({
+                    action_type: z.string(),
+                    destination: z.string(),
+                    amount: z.number(),
+                    chain: z.string()
+                })
+            });
             
-            const amountMatch = text.match(/(\d+(\.\d+)?)\s*(usdc|eth|apt|strk)/);
-            const amount = amountMatch ? parseFloat(amountMatch[1]) : 0;
+            const extracted = extractionObj.object as any;
+            
+            const destination = extracted?.destination || "0x0000000000000000000000000000000000000000";
+            const amount = extracted?.amount || 0;
+            const action_type = extracted?.action_type || "transfer";
+            const chain = extracted?.chain || "ethereum";
 
             const response = await fetch(`${config.SIGUI_API_URL}/evaluate`, {
                 method: "POST",
@@ -49,10 +90,10 @@ export const evaluateTransactionAction: Action = {
                     ...(config.SIGUI_API_KEY && { "Authorization": `Bearer ${config.SIGUI_API_KEY}` })
                 },
                 body: JSON.stringify({
-                    action_type: "transfer",
+                    action_type: action_type,
                     destination: destination,
                     amount_usdc: amount,
-                    chain: "ethereum"
+                    chain: chain
                 })
             });
 
@@ -68,11 +109,11 @@ export const evaluateTransactionAction: Action = {
 
             let responseText = "";
             if (decision === "BLOCK") {
-                responseText = `🚨 **SIGUI SECURITY ALERT: TRANSACTION BLOCKED** 🚨\n\nI cannot proceed with this transaction. The Sigui AI Oracle returned a HIGH RISK score of ${riskScore.toFixed(2)}.\n\nReason: ${reason}`;
+                responseText = `🚨 **SIGUI SECURITY ALERT: TRANSACTION BLOCKED** 🚨\n\nI cannot proceed with this transaction on ${chain}. The Sigui AI Oracle returned a HIGH RISK score of ${riskScore.toFixed(2)}.\n\nReason: ${reason}`;
             } else if (decision === "ESCALATE") {
-                responseText = `⚠️ **SIGUI SECURITY WARNING: ESCALATION REQUIRED** ⚠️\n\nThis transaction is ambiguous (Risk Score: ${riskScore.toFixed(2)}). It has been escalated for manual review. I will await further human instructions before proceeding.\n\nReason: ${reason}`;
+                responseText = `⚠️ **SIGUI SECURITY WARNING: ESCALATION REQUIRED** ⚠️\n\nThis ${action_type} on ${chain} is ambiguous (Risk Score: ${riskScore.toFixed(2)}). It has been escalated for manual review. I will await further human instructions before proceeding.\n\nReason: ${reason}`;
             } else {
-                responseText = `✅ **SIGUI SECURITY CLEARED**\n\nThe transaction has been evaluated as low risk (Score: ${riskScore.toFixed(2)}). Proceeding with execution.`;
+                responseText = `✅ **SIGUI SECURITY CLEARED**\n\nThe ${action_type} to ${destination} on ${chain} has been evaluated as low risk (Score: ${riskScore.toFixed(2)}). Proceeding with execution.`;
             }
 
             if (callback) {
@@ -82,7 +123,21 @@ export const evaluateTransactionAction: Action = {
                 });
             }
 
-            // Return true if action successfully evaluated (even if the verdict is BLOCK, the action of *evaluating* succeeded)
+            // Save the evaluation result back into memory
+            const evaluationMemory: Memory = {
+                id: crypto.randomUUID(),
+                userId: runtime.agentId,
+                agentId: runtime.agentId,
+                roomId: message.roomId,
+                content: {
+                    text: `Evaluated transaction: ${action_type} of ${amount} to ${destination} on ${chain}. Result: ${decision}. Reason: ${reason}`,
+                    action: "EVALUATE_TRANSACTION_SECURITY",
+                    source: "sigui_oracle"
+                },
+                createdAt: Date.now()
+            };
+            await runtime.messageManager.createMemory(evaluationMemory);
+
             return true;
         } catch (error: any) {
             elizaLogger.error("Error in Sigui evaluation:", error);
