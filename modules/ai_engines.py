@@ -1,5 +1,5 @@
 """
-ArcWarden v3.0 — AI Engines
+Sigui v3.0 — AI Engines
 Combines policy critique, crew decision fallback, agent graph logic, and Claude escalation.
 """
 
@@ -139,7 +139,7 @@ class PolicyBrain:
                     "gap_min": 0.10,
                 },
             }
-            system = "You are ArcWarden self-critique engine. Return only JSON."
+            system = "You are Sigui self-critique engine. Return only JSON."
 
             data, status = await llm_gateway.call_json_model(
                 system_prompt=system,
@@ -246,7 +246,7 @@ class CrewDecisionBrain:
         )
         treasurer = Agent(
             role="Treasurer",
-            goal="Protect ArcWarden treasury and avoid unprofitable risk.",
+            goal="Protect Sigui treasury and avoid unprofitable risk.",
             backstory="Balances security quality with escalation cost and service economics.",
             allow_delegation=False,
             verbose=False,
@@ -412,7 +412,7 @@ class AgentPolicyGraph:
             },
             "memory_summary": state.get("memory_summary", ""),
         }
-        system = "You are ArcWarden policy graph node. Return ONLY JSON."
+        system = "You are Sigui policy graph node. Return ONLY JSON."
 
         data, status = await llm_gateway.call_json_model(
             system_prompt=system,
@@ -462,7 +462,7 @@ class AgentPolicyGraph:
 # ────────────────────────────────────────────────────────────────────────────────
 # Escalation Engine (Claude deep analysis)
 # ────────────────────────────────────────────────────────────────────────────────
-ESCALATION_PROMPT = """Tu es le système d'escalation de ArcWarden, un agent de sécurité autonome
+ESCALATION_PROMPT = """Tu es le système d'escalation de Sigui, un agent de sécurité autonome
 qui protège les paiements USDC des agents IA sur le réseau Arc.
 
 Analyse l'action soumise et retourne UNIQUEMENT un objet JSON valide :
@@ -486,7 +486,7 @@ class EscalationResult(BaseModel):
     cap_amount_usdc: float = 0.0
     analysis: str
     confidence: float
-    paid_by_arcwarden: bool = False
+    paid_by_sigui: bool = False
     claude_cost_usdc: float = 0.0
     arc_tx_log: str = ""
     fallback_used: bool = False
@@ -591,7 +591,7 @@ class EscalationEngine:
                 cap_amount_usdc=float(lebe_data.get("cap_amount_usdc", 0.0)),
                 analysis=lebe_data.get("analysis", "No analysis provided."),
                 confidence=float(lebe_data.get("confidence", 0.75)),
-                paid_by_arcwarden=True,
+                paid_by_sigui=True,
                 claude_cost_usdc=0.0,  # Lebe runs locally — no API cost
                 degraded_mode=is_degraded,
                 reason="Operating in DEGRADED mode" if is_degraded else "",
@@ -629,7 +629,7 @@ class EscalationEngine:
                     cap_amount_usdc=float(claude_data.get("cap_amount_usdc", 0.0)),
                     analysis=claude_data.get("analysis", "No analysis provided."),
                     confidence=float(claude_data.get("confidence", 0.75)),
-                    paid_by_arcwarden=True,
+                    paid_by_sigui=True,
                     claude_cost_usdc=settings.claude_cost_per_escalation,
                     degraded_mode=is_degraded,
                     reason="Operating in DEGRADED mode" if is_degraded else "",
@@ -640,7 +640,7 @@ class EscalationEngine:
         # ── Step 3: Rule-based fallback (always available) ─────────────────────
         logger.warning("[ESCALATION] All LLM engines unavailable — rule-based fallback")
         result = self._rule_based_fallback(action, agent_profile)
-        result.paid_by_arcwarden = treasury_authorized
+        result.paid_by_sigui = treasury_authorized
         result.degraded_mode = is_degraded
         result.inference_engine = "rule_based"
         result.inference_device = "CPU"

@@ -1,5 +1,5 @@
 """
-ArcWarden v3.0 — Treasury Manager
+Sigui v3.0 — Treasury Manager
 Circle DCW integration · P&L tracking · Autonomous mode management
 """
 
@@ -46,7 +46,7 @@ class TreasuryState:
 
 class TreasuryManager:
     """
-    Autonomous treasury management for ArcWarden.
+    Autonomous treasury management for Sigui.
     Handles USDC revenues, Claude payments, Arc fees, and mode switching.
     """
 
@@ -161,7 +161,7 @@ class TreasuryManager:
     @property
     def operating_mode(self) -> AgentMode:
         if is_self_protection(self._state.balance):
-            raise TreasuryEmptyError("ArcWarden treasury empty — refusing new requests")
+            raise TreasuryEmptyError("Sigui treasury empty — refusing new requests")
         return determine_mode(self._state.balance)
 
     def get_state(self) -> dict:
@@ -229,7 +229,7 @@ class TreasuryManager:
 
     async def pay_for_escalation(self) -> bool:
         """
-        ArcWarden pays Claude from its own treasury.
+        Sigui pays Claude from its own treasury.
         Returns False if insufficient funds → fallback rule-based activated.
         """
         cost = settings.claude_cost_per_escalation

@@ -1,4 +1,4 @@
-# Sigui / ArcWarden — AMD MI300X extras
+# Sigui / Sigui — AMD MI300X extras
 # Install this AFTER requirements.txt
 #
 # ROCm note:

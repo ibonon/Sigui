@@ -1,5 +1,5 @@
 """
-ArcWarden v3.0 — MemoClaw (Memory Layer)
+Sigui v3.0 — MemoClaw (Memory Layer)
 aiosqlite-based persistent memory with pattern learning
 """
 
@@ -324,7 +324,7 @@ class MemoClaw:
         confidence: float,
         rules_triggered: list[str],
         arc_tx_hash: str,
-        arcwarden_mode: str,
+        sigui_mode: str,
         processing_time_ms: int,
         chain: str = "arc",
     ):
@@ -333,7 +333,7 @@ class MemoClaw:
                 """INSERT INTO decisions
                    (agent_id, action_type, amount_usdc, destination, action_hash, chain,
                     decision, risk_score, confidence, rules_triggered,
-                    arc_tx_hash, arcwarden_mode, processing_time_ms)
+                    arc_tx_hash, sigui_mode, processing_time_ms)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     agent_id,
@@ -347,7 +347,7 @@ class MemoClaw:
                     confidence,
                     json.dumps(rules_triggered),
                     arc_tx_hash,
-                    arcwarden_mode,
+                    sigui_mode,
                     processing_time_ms,
                 ),
             )

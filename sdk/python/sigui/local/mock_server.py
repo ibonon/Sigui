@@ -209,7 +209,7 @@ class MockSiguiServer:
                 "reason": reason,
                 "action_hash": action_hash,
                 "arc_tx_log": f"mock://tx/{uuid.uuid4().hex[:12]}",
-                "arcwarden_mode": "NORMAL",
+                "sigui_mode": "NORMAL",
                 "escalation_available": verdict == "ESCALATE",
                 "escalation_cost_usdc": 0.003,
                 "policy_source": "mock_local_rules",
@@ -249,7 +249,7 @@ class MockSiguiServer:
                 "analysis": f"[MOCK ESCALATION] Deep analysis completed. {reason} "
                              f"Manual override applied. Final risk assessment: {risk:.3f}",
                 "confidence": round(random.uniform(0.85, 0.97), 4),
-                "paid_by_arcwarden": False,
+                "paid_by_sigui": False,
                 "claude_cost_usdc": 0.0,
                 "arc_tx_log": f"mock://escalation/{uuid.uuid4().hex[:12]}",
                 "fallback_used": False,

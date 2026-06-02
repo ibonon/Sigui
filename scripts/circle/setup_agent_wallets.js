@@ -37,15 +37,15 @@ async function main() {
   const envVars = loadEnv();
   const apiKey = envVars["CIRCLE_API_KEY"];
   const entitySecret = envVars["CIRCLE_ENTITY_SECRET"];
-  const walletSetId = envVars["ARCWARDEN_WALLET_SET_ID"];
+  const walletSetId = envVars["SIGUI_WALLET_SET_ID"];
 
   if (!apiKey || !entitySecret || !walletSetId) {
-    console.error("❌ ERREUR: Il manque CIRCLE_API_KEY, CIRCLE_ENTITY_SECRET ou ARCWARDEN_WALLET_SET_ID dans le .env!");
+    console.error("❌ ERREUR: Il manque CIRCLE_API_KEY, CIRCLE_ENTITY_SECRET ou SIGUI_WALLET_SET_ID dans le .env!");
     process.exit(1);
   }
 
   console.log("==========================================");
-  console.log("🧙 ArcWarden - Création de 4 Wallets Live");
+  console.log("🧙 Sigui - Création de 4 Wallets Live");
   console.log("==========================================\n");
 
   const client = initiateDeveloperControlledWalletsClient({ 

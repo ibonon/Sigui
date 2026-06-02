@@ -89,7 +89,7 @@ async def run(base_url: str) -> int:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run ArcWarden security probe harness.")
+    parser = argparse.ArgumentParser(description="Run Sigui security probe harness.")
     parser.add_argument("--base-url", default="http://127.0.0.1:8000")
     args = parser.parse_args()
     raise SystemExit(asyncio.run(run(args.base_url)))

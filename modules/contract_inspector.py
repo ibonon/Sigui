@@ -1,5 +1,5 @@
 """
-ArcWarden v3.0 — Contract Inspector
+Sigui v3.0 — Contract Inspector
 Couche 4 du Risk Engine : analyse les adresses de destination pour distinguer
 les EOA (wallets normaux) des smart contracts, et évalue la dangerosité du
 bytecode EVM.

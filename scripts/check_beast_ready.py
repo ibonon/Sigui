@@ -1,5 +1,5 @@
 """
-ArcWarden v3.0 — Beast Readiness Checker
+Sigui v3.0 — Beast Readiness Checker
 Validates all hackathon compliance requirements before submission.
 
 Usage:
@@ -37,8 +37,8 @@ def load_env(path: Path) -> dict[str, str]:
 # Source: https://docs.arc.network/arc/references/contract-addresses
 REQUIRED_WHEN_REAL = [
     "CIRCLE_API_KEY",
-    "ARCWARDEN_WALLET_ID",
-    "ARCWARDEN_WALLET_ADDRESS",
+    "SIGUI_WALLET_ID",
+    "SIGUI_WALLET_ADDRESS",
     "PAYER_WALLET_ID",
     "ATTACKER_WALLET_ID",
     "LEARNER_WALLET_ID",
@@ -62,7 +62,7 @@ def check(base_url: str, env_path: Path, watch: bool = False) -> int:
     Run all readiness checks. Returns 0 if READY, 1 if NOT READY.
 
     Args:
-        base_url: ArcWarden API base URL
+        base_url: Sigui API base URL
         env_path: Path to the .env file
         watch:    If True, poll every 30s until READY (for CI / live monitoring)
     """
@@ -280,7 +280,7 @@ def _print(
     width = 60
     print()
     print("=" * width)
-    print("  🛡️  ArcWarden Beast Readiness v3.0")
+    print("  🛡️  Sigui Beast Readiness v3.0")
     print("=" * width)
 
     if notes:
@@ -333,7 +333,7 @@ def _print(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Check ArcWarden hackathon readiness.",
+        description="Check Sigui hackathon readiness.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -345,7 +345,7 @@ Examples:
     parser.add_argument(
         "--base-url",
         default="http://127.0.0.1:8000",
-        help="ArcWarden API base URL (default: http://127.0.0.1:8000)",
+        help="Sigui API base URL (default: http://127.0.0.1:8000)",
     )
     parser.add_argument(
         "--env-path",

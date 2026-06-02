@@ -1,4 +1,4 @@
-# ── ArcWarden v3.0 — Dockerfile ───────────────────────────────────────────────
+# ── Sigui v3.0 — Dockerfile ───────────────────────────────────────────────
 # Multi-stage build: keeps the final image lean (~500 MB)
 #
 # Stage 1 (builder): install Python deps + build Next.js UI
@@ -39,7 +39,7 @@ RUN cd demo-ui && npm run build
 FROM python:3.11-slim AS runtime
 
 LABEL maintainer="Eric Warma"
-LABEL description="ArcWarden v3.0 — Autonomous Security Oracle"
+LABEL description="Sigui v3.0 — Autonomous Security Oracle"
 LABEL version="3.0.0"
 
 # Install Node.js 20 (needed to run Next.js in production)
@@ -52,8 +52,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Non-root user for security
-RUN groupadd --gid 1001 arcwarden \
- && useradd  --uid 1001 --gid arcwarden --shell /bin/bash --create-home arcwarden
+RUN groupadd --gid 1001 sigui \
+ && useradd  --uid 1001 --gid sigui --shell /bin/bash --create-home sigui
 
 WORKDIR /app
 
@@ -62,20 +62,20 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # ── Copy application source ───────────────────────────────────────────────────
-COPY --chown=arcwarden:arcwarden . .
+COPY --chown=sigui:sigui . .
 
 # ── Copy built Next.js artifacts ──────────────────────────────────────────────
-COPY --from=builder --chown=arcwarden:arcwarden /build/demo-ui/.next      ./demo-ui/.next
-COPY --from=builder --chown=arcwarden:arcwarden /build/demo-ui/node_modules ./demo-ui/node_modules
+COPY --from=builder --chown=sigui:sigui /build/demo-ui/.next      ./demo-ui/.next
+COPY --from=builder --chown=sigui:sigui /build/demo-ui/node_modules ./demo-ui/node_modules
 
 # ── Runtime directories ───────────────────────────────────────────────────────
 RUN mkdir -p /app/db /app/logs /app/ecosystem \
- && chown -R arcwarden:arcwarden /app/db /app/logs /app/ecosystem
+ && chown -R sigui:sigui /app/db /app/logs /app/ecosystem
 
-USER arcwarden
+USER sigui
 
 # ── Ports ─────────────────────────────────────────────────────────────────────
-# 8000 — FastAPI (ArcWarden API)
+# 8000 — FastAPI (Sigui API)
 # 3001 — Next.js (demo UI)
 EXPOSE 8000 3001
 

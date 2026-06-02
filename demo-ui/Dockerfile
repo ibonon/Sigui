@@ -1,4 +1,4 @@
-# ── ArcWarden demo-ui — Dockerfile ────────────────────────────────────────────
+# ── Sigui demo-ui — Dockerfile ────────────────────────────────────────────
 # Minimal Next.js production image using node:20-slim
 # The .next build is expected to already exist (built in the parent Dockerfile
 # builder stage), so this image just serves it via `next start`.
@@ -6,7 +6,7 @@
 FROM node:20-slim
 
 LABEL maintainer="Eric Warma"
-LABEL description="ArcWarden v3.0 — Next.js Command Center UI"
+LABEL description="Sigui v3.0 — Next.js Command Center UI"
 
 # Non-root user
 RUN groupadd --gid 1001 nextjs \

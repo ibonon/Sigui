@@ -1,8 +1,8 @@
 # @version 0.4.3
 # @title ThreatRegistry
-# @notice Onchain threat intelligence registry for ArcWarden v3.0.
+# @notice Onchain threat intelligence registry for Sigui v3.0.
 #         Every BLOCK decision is permanently recorded here.
-#         Only the ArcWarden oracle (owner) can write. Anyone can read.
+#         Only the Sigui oracle (owner) can write. Anyone can read.
 # @dev    Security patterns applied:
 #         - Owner-only write access (Checks-Effects-Interactions)
 #         - @nonreentrant guard on state-changing functions
@@ -70,7 +70,7 @@ event FundWithdrawn:
 # ── Constructor ────────────────────────────────────────────────────────────────
 @deploy
 def __init__():
-    """Deploy the ThreatRegistry. Deployer becomes the owner (ArcWarden oracle)."""
+    """Deploy the ThreatRegistry. Deployer becomes the owner (Sigui oracle)."""
     self.owner   = msg.sender
     self.paused  = False
 
@@ -94,7 +94,7 @@ def recordAttack(
     layer: uint8,
 ):
     """
-    @notice Record a blocked attack. Only callable by the ArcWarden oracle (owner).
+    @notice Record a blocked attack. Only callable by the Sigui oracle (owner).
     @param agent         Agent's Arc wallet address (cryptographic identity)
     @param pattern       keccak256(action_type + destination + amount_bucket)
     @param amount_usdc6  Transaction amount × 1_000_000 (6-decimal USDC)
@@ -154,7 +154,7 @@ def recordAttack(
 @external
 def transferOwnership(new_owner: address):
     """
-    @notice Transfer contract ownership to a new ArcWarden signer.
+    @notice Transfer contract ownership to a new Sigui signer.
             Used when rotating the oracle signing key.
     """
     self._require_owner()

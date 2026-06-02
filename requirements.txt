@@ -1,4 +1,4 @@
-# ── ArcWarden v3.0 — Python Dependencies ─────────────────────────────────────
+# ── Sigui v3.0 — Python Dependencies ─────────────────────────────────────
 # Pin minor versions for reproducibility while allowing patch updates.
 
 # ── Web framework ─────────────────────────────────────────────────────────────

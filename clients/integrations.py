@@ -1,5 +1,5 @@
 """
-ArcWarden v3.0 — Integrations Client (Arc L1 EVM & Circle DCW REST)
+Sigui v3.0 — Integrations Client (Arc L1 EVM & Circle DCW REST)
 """
 
 import asyncio
@@ -270,7 +270,7 @@ class ArcClient:
 class CircleClient:
     def __init__(self):
         self.api_key = settings.circle_api_key
-        self.wallet_id = settings.arcwarden_wallet_id
+        self.wallet_id = settings.sigui_wallet_id
         self.demo_mode = settings.demo_mode
         self._demo_seed_balance = max(settings.initial_balance_usdc, 0.2)
         self._simulated_balances: dict[str, float] = {
@@ -305,7 +305,7 @@ class CircleClient:
         amount_usdc: float,
         description: str = "",
         source_wallet_id: str | None = None,
-        user_id: str = "arcwarden",
+        user_id: str = "sigui",
     ) -> dict:
         target = source_wallet_id or self.wallet_id
         if self.demo_mode or self.api_key == "demo_key":

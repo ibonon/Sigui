@@ -24,7 +24,7 @@ async def run():
         amount_usdc=obvious_attack.amount_usdc,
         destination=obvious_attack.destination,
         risk=risk,
-        arcwarden_mode=AgentMode.NORMAL,
+        sigui_mode=AgentMode.NORMAL,
         escalation_available=True,
         agent_profile=profile,
     )

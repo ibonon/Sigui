@@ -1,5 +1,5 @@
 /**
- * ArcWarden v3.0 — GrayZone Wallet Setup
+ * Sigui v3.0 — GrayZone Wallet Setup
  * Creates the missing GrayZone agent Circle DCW wallet on ARC-TESTNET
  * and patches it directly into the .env file.
  *
@@ -9,7 +9,7 @@
  * Prerequisites in .env:
  *   CIRCLE_API_KEY
  *   CIRCLE_ENTITY_SECRET
- *   ARCWARDEN_WALLET_SET_ID
+ *   SIGUI_WALLET_SET_ID
  */
 
 import fs from "node:fs";
@@ -44,7 +44,7 @@ async function main() {
   // Read credentials from process.env (loaded via --env-file=.env)
   const apiKey = process.env.CIRCLE_API_KEY;
   const entitySecret = process.env.CIRCLE_ENTITY_SECRET;
-  const walletSetId = process.env.ARCWARDEN_WALLET_SET_ID;
+  const walletSetId = process.env.SIGUI_WALLET_SET_ID;
   const existingId = process.env.GRAYZONE_WALLET_ID;
 
   // ── Validation ──────────────────────────────────────────────────────────────
@@ -63,7 +63,7 @@ async function main() {
     process.exit(1);
   }
   if (!walletSetId) {
-    console.error("❌ ARCWARDEN_WALLET_SET_ID is missing in .env.");
+    console.error("❌ SIGUI_WALLET_SET_ID is missing in .env.");
     console.error(
       "   Create a wallet set in the Circle Console and add it to .env.",
     );
@@ -78,7 +78,7 @@ async function main() {
   }
 
   console.log("==============================================");
-  console.log("🧙 ArcWarden — GrayZone Wallet Creation");
+  console.log("🧙 Sigui — GrayZone Wallet Creation");
   console.log("==============================================");
   console.log();
 
@@ -136,7 +136,7 @@ async function main() {
   console.log("   Amount         : 10–20 USDC recommended");
   console.log();
   console.log(
-    "   Then restart ArcWarden — GrayZone will activate automatically.",
+    "   Then restart Sigui — GrayZone will activate automatically.",
   );
   console.log("==============================================");
 }

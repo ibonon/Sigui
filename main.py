@@ -1,5 +1,5 @@
 """
-ArcWarden v3.0 — Main Entry Point
+Sigui v3.0 — Main Entry Point
 FastAPI lifespan: DB init → Treasury recovery → Treasury sync → Agent loop → Serve
 
 Run with:
@@ -33,7 +33,7 @@ def _configure_logging():
     """
     Configure loguru:
     - stderr: coloured, human-readable (INFO+)
-    - logs/arcwarden_YYYY-MM-DD.log: JSON-style, rotation 100 MB, 7 days retention
+    - logs/sigui_YYYY-MM-DD.log: JSON-style, rotation 100 MB, 7 days retention
     """
     logger.remove()  # Drop the default handler
 

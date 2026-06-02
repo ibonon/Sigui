@@ -1,5 +1,5 @@
 """
-ArcWarden v3.0 — Agent Loop & Policy
+Sigui v3.0 — Agent Loop & Policy
 Autonomous 100ms asyncio loop — mode management, self-monitoring, and dynamic policy logic.
 """
 import asyncio
@@ -10,7 +10,7 @@ from loguru import logger
 # Policy & Core Definitions
 # ────────────────────────────────────────────────────────────────────────────────
 class AgentMode(str, Enum):
-    """ArcWarden operational modes — driven by treasury health."""
+    """Sigui operational modes — driven by treasury health."""
     NORMAL    = "NORMAL"      # Balance > $0.50 — all functions active, full escalation
     DEGRADED  = "DEGRADED"    # Balance $0.10–$0.50 — escalation only for R > 0.55
     EMERGENCY = "EMERGENCY"   # Balance < $0.10 — rules only, no Claude
@@ -60,14 +60,14 @@ def should_escalate(risk_score: float, mode: AgentMode) -> bool:
     return min_risk <= risk_score <= RISK_BLOCK_THRESHOLD
 
 def is_self_protection(balance: float) -> bool:
-    """Check if ArcWarden should refuse new requests (self-protection)."""
+    """Check if Sigui should refuse new requests (self-protection)."""
     return balance <= BALANCE_EMERGENCY_THRESHOLD
 
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Agent Core Loop
 # ────────────────────────────────────────────────────────────────────────────────
-class ArcWardenAgent:
+class SiguiAgent:
     """
     Autonomous agent loop.
     Runs at 100ms cycles, manages its own operational mode based on treasury health.
@@ -93,7 +93,7 @@ class ArcWardenAgent:
     async def start(self):
         """Start the autonomous agent loop."""
         self.running = True
-        self._task = asyncio.create_task(self.run(), name="arcwarden-core")
+        self._task = asyncio.create_task(self.run(), name="sigui-core")
         logger.info("[AGENT] Sigui autonomous loop started (100ms cycles)")
 
     async def stop(self):
@@ -105,7 +105,7 @@ class ArcWardenAgent:
                 await self._task
             except asyncio.CancelledError:
                 pass
-        logger.info("[AGENT] ArcWarden loop stopped")
+        logger.info("[AGENT] Sigui loop stopped")
 
     async def run(self):
         """Main autonomous loop."""
@@ -146,4 +146,4 @@ class ArcWardenAgent:
             await asyncio.sleep(0.1)
             self.cycle += 1
 
-agent = ArcWardenAgent()
+agent = SiguiAgent()

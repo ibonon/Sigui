@@ -1,4 +1,4 @@
-# ── ArcWarden v3.0 — .dockerignore ───────────────────────────────────────────
+# ── Sigui v3.0 — .dockerignore ───────────────────────────────────────────
 # Keeps the Docker build context lean by excluding dev artifacts,
 # secrets, and generated files that are not needed inside the image.
 
@@ -22,7 +22,7 @@ pip-log.txt
 !.env.example
 
 # ── Database (use Docker volume instead) ─────────────────────────────────────
-db/arcwarden.db
+db/sigui.db
 
 # ── Logs (use Docker volume instead) ─────────────────────────────────────────
 logs/

@@ -31,7 +31,7 @@ def compute_fee(amount_usdc: float, tier: str = "payg") -> float:
     # Pour le Hackathon : le mode démo garde un fee microscopique ($0.001)
     # pour prouver la faisabilité des nano-paiements sur Arc.
     if settings.demo_mode:
-        return settings.arcwarden_eval_price_usdc
+        return settings.sigui_eval_price_usdc
 
     # Modèle de production : 0.05% de la transaction.
     fee = amount_usdc * (BASIS_POINTS / 10_000)

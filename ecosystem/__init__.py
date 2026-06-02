@@ -1,5 +1,5 @@
 """
-ArcWarden autonomous ecosystem package.
+Sigui autonomous ecosystem package.
 """
 
 from ecosystem.agents import (

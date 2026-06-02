@@ -1,5 +1,5 @@
 """
-ArcWarden v3.0 — Service Gateway
+Sigui v3.0 — Service Gateway
 FastAPI + x402 middleware — all public endpoints
 """
 
@@ -121,7 +121,7 @@ def _classify_tx(tx_hash: str) -> str:
 
 
 def register_routes(app: FastAPI):
-    """Register all ArcWarden routes and middleware on the FastAPI app."""
+    """Register all Sigui routes and middleware on the FastAPI app."""
 
     # ── NexusMind Integration ──────────────────────────────────────────────────
     from modules.nexusmind_router import register_nexusmind_routes
@@ -164,11 +164,11 @@ def register_routes(app: FastAPI):
 
             if not payment_header:
                 # Return HTTP 402 with payment instructions
-                wallet = settings.arcwarden_wallet_address
+                wallet = settings.sigui_wallet_address
                 if path == "/evaluate":
                     price = await compute_evaluation_price(amount_hint, chain)
                 else:
-                    price = settings.arcwarden_escalate_price_usdc
+                    price = settings.sigui_escalate_price_usdc
                 # Arc USDC is native with 18 decimals (isNative=True, confirmed by Circle API).
                 # maxAmountRequired must be in the token's smallest unit.
                 price_units = int(price * 10**settings.arc_usdc_decimals)
@@ -200,11 +200,11 @@ def register_routes(app: FastAPI):
                 if path == "/evaluate":
                     expected_amount = await compute_evaluation_price(amount_hint, chain)
                 else:
-                    expected_amount = settings.arcwarden_escalate_price_usdc
+                    expected_amount = settings.sigui_escalate_price_usdc
 
                 adapter = get_adapter(chain)
                 valid = await adapter.verify_payment(
-                    payment_header, expected_amount, settings.arcwarden_wallet_address
+                    payment_header, expected_amount, settings.sigui_wallet_address
                 )
                 if not valid:
                     return JSONResponse(
@@ -227,10 +227,10 @@ def register_routes(app: FastAPI):
             mode = "EMERGENCY"
 
         return {
-            "name": "ArcWarden Security Oracle",
+            "name": "Sigui Security Oracle",
             "version": "3.0",
             "type": "security_agent",
-            "description": "ArcWarden is not a firewall. It's an agent that gets paid to protect other agents.",
+            "description": "Sigui is not a firewall. It's an agent that gets paid to protect other agents.",
             "capabilities": [
                 "risk_assessment",
                 "fraud_detection",
@@ -239,16 +239,16 @@ def register_routes(app: FastAPI):
             ],
             "pricing": {
                 "evaluate": {
-                    "amount": str(settings.arcwarden_eval_price_usdc),
+                    "amount": str(settings.sigui_eval_price_usdc),
                     "currency": "USDC",
                 },
                 "escalate": {
-                    "amount": str(settings.arcwarden_escalate_price_usdc),
+                    "amount": str(settings.sigui_escalate_price_usdc),
                     "currency": "USDC",
                     "additional": True,
                 },
             },
-            "wallet": settings.arcwarden_wallet_address,
+            "wallet": settings.sigui_wallet_address,
             "network": "arc-testnet",
             "payment_protocol": "x402",
             "operating_mode": mode,
@@ -293,7 +293,7 @@ def register_routes(app: FastAPI):
     # ── Treasury ───────────────────────────────────────────────────────────────
     @app.get("/treasury", tags=["Treasury"])
     async def get_treasury():
-        """Real-time P&L and economic state of ArcWarden."""
+        """Real-time P&L and economic state of Sigui."""
         return treasury.get_state()
 
     # ── Stats ──────────────────────────────────────────────────────────────────
@@ -361,13 +361,13 @@ def register_routes(app: FastAPI):
         action.chain = chain
         action.context["chain"] = chain
 
-        # Check ArcWarden treasury health
+        # Check Sigui treasury health
         try:
             mode = treasury.operating_mode
         except TreasuryEmptyError:
             raise HTTPException(
                 status_code=503,
-                detail="ArcWarden treasury empty — service temporarily unavailable",
+                detail="Sigui treasury empty — service temporarily unavailable",
             )
 
         # Ensure agent exists in memory
@@ -404,9 +404,9 @@ def register_routes(app: FastAPI):
                 "reason": "Agent frozen by MemoClaw — repeated suspicious activity detected.",
                 "action_hash": "memoclaw_frozen",
                 "arc_tx_log": "",
-                "arcwarden_mode": mode.value,
+                "sigui_mode": mode.value,
                 "escalation_available": False,
-                "escalation_cost_usdc": settings.arcwarden_escalate_price_usdc,
+                "escalation_cost_usdc": settings.sigui_escalate_price_usdc,
                 "policy_source": "memoclaw_freeze",
                 "processing_time_ms": 1,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -505,7 +505,7 @@ def register_routes(app: FastAPI):
             amount_usdc=action.amount_usdc,
             destination=action.destination,
             risk=risk,
-            arcwarden_mode=mode,
+            sigui_mode=mode,
             escalation_available=escalation_available,
             agent_profile=agent_profile,
             skip_onchain_log=True,
@@ -575,9 +575,9 @@ def register_routes(app: FastAPI):
             elif any("contract" in r.lower() for r in _triggered):
                 _layer = LAYER_CONTRACT
 
-            # Agent wallet: use arcwarden_wallet_address as a fallback (agent_id is a string ID)
+            # Agent wallet: use sigui_wallet_address as a fallback (agent_id is a string ID)
             _agent_wallet = (
-                action.context.get("agent_wallet") or settings.arcwarden_wallet_address
+                action.context.get("agent_wallet") or settings.sigui_wallet_address
             )
             logger.info(
                 f"[GATEWAY] 🛡️ Triggering onchain recording for blocked attack (layer={_layer})"
@@ -645,7 +645,7 @@ def register_routes(app: FastAPI):
             confidence=risk.confidence,
             rules_triggered=risk.rules_triggered,
             arc_tx_hash=decision_out.arc_tx_log,
-            arcwarden_mode=mode.value,
+            sigui_mode=mode.value,
             processing_time_ms=decision_out.processing_time_ms,
         )
 
@@ -728,14 +728,14 @@ def register_routes(app: FastAPI):
     async def escalate_endpoint(request: Request):
         """
         Deep analysis endpoint — Claude API.
-        Requires additional $0.003 USDC payment. ArcWarden pays Claude from its treasury.
+        Requires additional $0.003 USDC payment. Sigui pays Claude from its treasury.
         """
         body = await request.json()
         action = ActionInput(**body)
         chain = action.chain
 
         await treasury.record_revenue(
-            settings.arcwarden_escalate_price_usdc, "escalation_fee", chain=chain
+            settings.sigui_escalate_price_usdc, "escalation_fee", chain=chain
         )
         await memory.ensure_agent(action.agent_id)
         agent_profile = await memory.get_agent(action.agent_id)
@@ -779,7 +779,7 @@ def register_routes(app: FastAPI):
             confidence=risk.confidence,
             rules_triggered=risk.rules_triggered,
             arc_tx_hash=arc_tx,
-            arcwarden_mode=esc_mode,
+            sigui_mode=esc_mode,
             processing_time_ms=0,
         )
 
@@ -792,7 +792,7 @@ def register_routes(app: FastAPI):
         **Post-service response validation** — call this AFTER receiving a service
         response and BEFORE acting on the data.
 
-        ArcWarden runs 5 detection layers:
+        Sigui runs 5 detection layers:
         1. **Prompt injection / jailbreak** — 16 regex patterns
         2. **Statistical anomaly** — Z-score vs. history + caller bounds
         3. **Schema anomaly** — suspicious keys, oversized payload, deep nesting
@@ -1069,9 +1069,9 @@ def register_routes(app: FastAPI):
                 "per-api-monetization-engine",
             ],
             "pricing": {
-                "evaluate_usdc": settings.arcwarden_eval_price_usdc,
-                "escalate_usdc": settings.arcwarden_escalate_price_usdc,
-                "price_constraint_ok": settings.arcwarden_eval_price_usdc <= 0.01,
+                "evaluate_usdc": settings.sigui_eval_price_usdc,
+                "escalate_usdc": settings.sigui_escalate_price_usdc,
+                "price_constraint_ok": settings.sigui_eval_price_usdc <= 0.01,
             },
             "onchain_proof": {
                 "decision_total": decision_total,

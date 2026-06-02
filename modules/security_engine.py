@@ -1,5 +1,5 @@
 """
-ArcWarden v3.0 — Security Engine
+Sigui v3.0 — Security Engine
 Combines Risk vector scoring (R = clip(dot(weights, [A, C, H]), 0, 1))
 and Decision Engine (ALLOW / BLOCK / ESCALATE) into a unified module.
 """
@@ -133,7 +133,7 @@ class DecisionOutput(BaseModel):
     reason: str
     action_hash: str
     arc_tx_log: str
-    arcwarden_mode: str
+    sigui_mode: str
     escalation_available: bool = False
     escalation_cost_usdc: float = 0.003
     policy_source: str = "rules"
@@ -537,7 +537,7 @@ class DecisionEngine:
         amount_usdc: float,
         destination: str,
         risk: RiskOutput,
-        arcwarden_mode: AgentMode,
+        sigui_mode: AgentMode,
         escalation_available: bool,
         agent_profile: dict | None,
     ) -> tuple[Decision | None, str]:
@@ -555,7 +555,7 @@ class DecisionEngine:
             "risk_score": risk.risk_score,
             "confidence": risk.confidence,
             "rules_triggered": risk.rules_triggered,
-            "arcwarden_mode": arcwarden_mode.value,
+            "sigui_mode": sigui_mode.value,
             "escalation_available": escalation_available,
             "agent_profile": agent_profile or {},
         }
@@ -581,7 +581,7 @@ class DecisionEngine:
             return Decision(graph_result["decision"]), "ai_langgraph"
 
         system_prompt = (
-            "You are ArcWarden policy brain. Return strict JSON only. "
+            "You are Sigui policy brain. Return strict JSON only. "
             "Prioritize fund safety. Use ESCALATE only in ambiguous zone and when escalation_available=true."
         )
 
@@ -613,7 +613,7 @@ class DecisionEngine:
         amount_usdc: float,
         destination: str,
         risk: RiskOutput,
-        arcwarden_mode: AgentMode,
+        sigui_mode: AgentMode,
         escalation_available: bool = False,
         agent_profile: dict | None = None,
         skip_onchain_log: bool = False,
@@ -636,7 +636,7 @@ class DecisionEngine:
                 amount_usdc,
                 destination,
                 risk,
-                arcwarden_mode,
+                sigui_mode,
                 escalation_available,
                 agent_profile,
             )
@@ -690,9 +690,9 @@ class DecisionEngine:
             reason=reason,
             action_hash=action_hash,
             arc_tx_log=arc_tx,
-            arcwarden_mode=arcwarden_mode.value,
+            sigui_mode=sigui_mode.value,
             escalation_available=escalation_available,
-            escalation_cost_usdc=settings.arcwarden_escalate_price_usdc,
+            escalation_cost_usdc=settings.sigui_escalate_price_usdc,
             policy_source=policy_source,
             processing_time_ms=total_ms,
             timestamp=datetime.now(timezone.utc).isoformat(),

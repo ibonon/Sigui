@@ -44,7 +44,7 @@ class EvaluationResult:
         reason:         Human-readable explanation.
         action_hash:    Unique identifier for this evaluation.
         arc_tx_log:     On-chain proof tx hash (if applicable).
-        arcwarden_mode: Operating mode — NORMAL, DEGRADED, or EMERGENCY.
+        sigui_mode: Operating mode — NORMAL, DEGRADED, or EMERGENCY.
         escalation_available: True if escalation endpoint is open.
         escalation_cost_usdc: Cost of calling /escalate.
         policy_source:  Which decision layer made the call.
@@ -61,7 +61,7 @@ class EvaluationResult:
     reason: str
     action_hash: str
     arc_tx_log: str = ""
-    arcwarden_mode: str = "NORMAL"
+    sigui_mode: str = "NORMAL"
     escalation_available: bool = False
     escalation_cost_usdc: float = 0.003
     policy_source: str = "unknown"
@@ -122,7 +122,7 @@ class EscalationResult:
     cap_amount_usdc: float
     analysis: str
     confidence: float
-    paid_by_arcwarden: bool = False
+    paid_by_sigui: bool = False
     claude_cost_usdc: float = 0.0
     arc_tx_log: str = ""
     fallback_used: bool = False

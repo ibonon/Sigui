@@ -1,5 +1,5 @@
 """
-ArcWarden v3.0 — Service Registry
+Sigui v3.0 — Service Registry
 Reputation layer for payment destinations (APIs, contracts, services).
 Prevents agents from paying known-malicious or unvetted services.
 """

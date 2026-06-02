@@ -116,7 +116,7 @@ class BaseAutonomousAgent(abc.ABC):
         async def _do_transfer():
             try:
                 await circle_client.transfer_usdc(
-                    destination_address=settings.arcwarden_wallet_address,
+                    destination_address=settings.sigui_wallet_address,
                     amount_usdc=amount_usdc,
                     description=f"{self.agent_id}_x402_payment_{intent_id[:8]}",
                     source_wallet_id=self.wallet_id,
@@ -128,7 +128,7 @@ class BaseAutonomousAgent(abc.ABC):
         asyncio.create_task(_do_transfer())
         return intent_id
 
-    async def pay_arcwarden(self, amount_usdc: float) -> str | None:
+    async def pay_sigui(self, amount_usdc: float) -> str | None:
         if self.state.observe_only:
             return None
         if self.state.balance_usdc < amount_usdc:
@@ -142,7 +142,7 @@ class BaseAutonomousAgent(abc.ABC):
     async def call_evaluate(self, action: dict[str, Any]) -> dict[str, Any]:
         if self._client is None:
             raise RuntimeError("agent client not initialized")
-        tx_hash = await self.pay_arcwarden(settings.arcwarden_eval_price_usdc)
+        tx_hash = await self.pay_sigui(settings.sigui_eval_price_usdc)
         if not tx_hash:
             return {"decision": "SKIP", "reason": "observe_only_or_no_funds"}
         headers = {"Content-Type": "application/json", "X-Payment": tx_hash}
@@ -158,7 +158,7 @@ class BaseAutonomousAgent(abc.ABC):
     async def call_escalate(self, action: dict[str, Any]) -> dict[str, Any]:
         if self._client is None:
             raise RuntimeError("agent client not initialized")
-        tx_hash = await self.pay_arcwarden(settings.arcwarden_escalate_price_usdc)
+        tx_hash = await self.pay_sigui(settings.sigui_escalate_price_usdc)
         if not tx_hash:
             return {"escalation_result": "SKIP", "analysis": "observe_only_or_no_funds"}
         headers = {"Content-Type": "application/json", "X-Payment": tx_hash}

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ArcWarden v3.0 — ThreatRegistry Deployment Script
+Sigui v3.0 — ThreatRegistry Deployment Script
 Compiles ThreatRegistry.vy with Vyper and deploys to Arc testnet.
 
 Usage:
@@ -223,7 +223,7 @@ def deploy(bytecode: str, abi: list, env: dict[str, str]) -> str:
 def main() -> None:
     print()
     print("=" * 58)
-    print("  ArcWarden - ThreatRegistry Deployment")
+    print("  Sigui - ThreatRegistry Deployment")
     print("=" * 58)
 
     if not CONTRACT_FILE.exists():
@@ -264,7 +264,7 @@ def main() -> None:
     print("  Deployment complete!")
     print()
     print("  Next steps:")
-    print("  1. Restart ArcWarden: uvicorn main:app --reload --port 8000")
+    print("  1. Restart Sigui: uvicorn main:app --reload --port 8000")
     print("  2. Deploy agents:  POST /simulate")
     print("  3. Watch attacks appear in:")
     explorer = env.get("ARC_EXPLORER_URL", "https://testnet.arcscan.app")

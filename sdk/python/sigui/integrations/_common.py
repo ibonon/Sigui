@@ -139,7 +139,7 @@ class SiguiGuard:
             "confidence": result.confidence,
             "reason": result.reason,
             "cap_amount_usdc": result.cap_amount_usdc,
-            "paid_by_arcwarden": result.paid_by_arcwarden,
+            "paid_by_sigui": result.paid_by_sigui,
             "fallback_used": result.fallback_used,
             "degraded_mode": result.degraded_mode,
             "inference_engine": result.inference_engine,

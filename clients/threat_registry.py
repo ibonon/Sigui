@@ -1,5 +1,5 @@
 """
-ArcWarden v3.0 — ThreatRegistry Contract Client
+Sigui v3.0 — ThreatRegistry Contract Client
 Calls the deployed ThreatRegistry Vyper contract on Arc L1.
 
 Every BLOCK decision fires record_attack() as a background asyncio task —
@@ -327,7 +327,7 @@ class ThreatRegistryClient:
                 "guaranty_fund6": fund6,
                 "note": (
                     "Immutable onchain threat intelligence — "
-                    "every BLOCK decision permanently recorded by ArcWarden."
+                    "every BLOCK decision permanently recorded by Sigui."
                 ),
             }
         except Exception as exc:

@@ -1,13 +1,13 @@
 """
-ArcWarden v3.0 — Response Validator
+Sigui v3.0 — Response Validator
 ═══════════════════════════════════
 Post-service validation layer: detects data poisoning, prompt injection, and statistical
 anomalies in responses that autonomous agents receive from Arc ecosystem services.
 
 Called AFTER an agent receives a service response and BEFORE it acts on the data.
 This closes the security loop in both directions:
-  → ArcWarden validates payment BEFORE the service call  (x402 middleware)
-  ← ArcWarden validates the response AFTER the service call (this module)
+  → Sigui validates payment BEFORE the service call  (x402 middleware)
+  ← Sigui validates the response AFTER the service call (this module)
 
 Detection layers:
   1. Prompt injection / jailbreak patterns

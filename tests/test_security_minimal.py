@@ -28,7 +28,7 @@ class SecurityMinimalTests(unittest.IsolatedAsyncioTestCase):
             amount_usdc=action.amount_usdc,
             destination=action.destination,
             risk=risk,
-            arcwarden_mode=AgentMode.NORMAL,
+            sigui_mode=AgentMode.NORMAL,
             escalation_available=True,
             agent_profile=profile,
         )

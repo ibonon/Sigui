@@ -1,5 +1,5 @@
 """
-ArcWarden v3.0 — Configuration
+Sigui v3.0 — Configuration
 Pydantic Settings with dotenv loading
 """
 
@@ -12,12 +12,12 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # ─── Circle ───────────────────────────────────────────────────────────────
     circle_api_key: str = Field(default="demo_key", env="CIRCLE_API_KEY")
-    arcwarden_wallet_id: str = Field(
-        default="demo_wallet_id", env="ARCWARDEN_WALLET_ID"
+    sigui_wallet_id: str = Field(
+        default="demo_wallet_id", env="SIGUI_WALLET_ID"
     )
-    arcwarden_wallet_address: str = Field(
-        default="0xArcWarden000000000000000000000000000000",
-        env="ARCWARDEN_WALLET_ADDRESS",
+    sigui_wallet_address: str = Field(
+        default="0xSigui000000000000000000000000000000",
+        env="SIGUI_WALLET_ADDRESS",
     )
     payer_wallet_id: str = Field(default="demo_payer_wallet_id", env="PAYER_WALLET_ID")
     payer_wallet_address: str = Field(default="", env="PAYER_WALLET_ADDRESS")
@@ -74,12 +74,12 @@ class Settings(BaseSettings):
     decision_ai_timeout_s: int = Field(default=3, env="DECISION_AI_TIMEOUT_S")
     crewai_enabled: bool = Field(default=True, env="CREWAI_ENABLED")
 
-    # ─── ArcWarden Pricing ────────────────────────────────────────────────────
-    arcwarden_eval_price_usdc: float = Field(
-        default=0.001, env="ARCWARDEN_EVAL_PRICE_USDC"
+    # ─── Sigui Pricing ────────────────────────────────────────────────────
+    sigui_eval_price_usdc: float = Field(
+        default=0.001, env="SIGUI_EVAL_PRICE_USDC"
     )
-    arcwarden_escalate_price_usdc: float = Field(
-        default=0.003, env="ARCWARDEN_ESCALATE_PRICE_USDC"
+    sigui_escalate_price_usdc: float = Field(
+        default=0.003, env="SIGUI_ESCALATE_PRICE_USDC"
     )
     claude_cost_per_escalation: float = Field(default=0.0006)
 

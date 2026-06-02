@@ -1,6 +1,6 @@
-# ArcWarden Demo UI
+# Sigui Demo UI
 
-Premium pitch UI (Next.js) for the ArcWarden mission control.
+Premium pitch UI (Next.js) for the Sigui mission control.
 
 ## Run
 

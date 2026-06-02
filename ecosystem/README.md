@@ -1,18 +1,18 @@
-# ArcWarden Autonomous Ecosystem
+# Sigui Autonomous Ecosystem
 
-This module runs 4 real autonomous agents in-process with ArcWarden:
+This module runs 4 real autonomous agents in-process with Sigui:
 
 - `agent_payer`: normal payment behavior, pays `/evaluate`, reacts to `ALLOW/BLOCK/ESCALATE`
 - `agent_attacker`: rotates attack strategies and replays blocked patterns
-- `agent_monitor`: polls ArcWarden endpoints and writes `metrics.json`
+- `agent_monitor`: polls Sigui endpoints and writes `metrics.json`
 - `agent_learner`: warms up with normal behavior, then mimics attacker pattern and tracks detection latency
 
 ## 1) Configure wallets
 
 Set these variables in `.env`:
 
-- `ARCWARDEN_WALLET_ID`
-- `ARCWARDEN_WALLET_ADDRESS`
+- `SIGUI_WALLET_ID`
+- `SIGUI_WALLET_ADDRESS`
 - `PAYER_WALLET_ID`
 - `ATTACKER_WALLET_ID`
 - `MONITOR_WALLET_ID`
@@ -31,7 +31,7 @@ Set these variables in `.env`:
 
 If a wallet has no balance, the corresponding agent enters `observe-only` mode automatically.
 
-## 3) Run ArcWarden + ecosystem
+## 3) Run Sigui + ecosystem
 
 ```bash
 uvicorn main:app --reload --port 8000

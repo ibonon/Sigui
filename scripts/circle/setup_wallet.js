@@ -10,7 +10,7 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_ENV = path.join(__dirname, "..", "..", ".env");
-const WALLET_SET_NAME = "ArcWarden Hackathon Wallet Set";
+const WALLET_SET_NAME = "Sigui Hackathon Wallet Set";
 
 // Load .env manually to grab CIRCLE_API_KEY
 function loadEnv() {
@@ -49,7 +49,7 @@ async function main() {
   }
 
   console.log("==========================================");
-  console.log("🧙 ArcWarden - Création d'un Wallet Circle");
+  console.log("🧙 Sigui - Création d'un Wallet Circle");
   console.log("==========================================\n");
 
   // 1. Register Entity Secret
@@ -84,12 +84,12 @@ async function main() {
 
   // 3. Create wallet set
   console.log("3. Création du Wallet Set...");
-  let walletSetId = envVars["ARCWARDEN_WALLET_SET_ID"];
+  let walletSetId = envVars["SIGUI_WALLET_SET_ID"];
   if (!walletSetId) {
     const wsRes = await client.createWalletSet({ name: WALLET_SET_NAME });
     walletSetId = wsRes.data?.walletSet?.id;
     if (!walletSetId) throw new Error("Échec de la création du Wallet Set.");
-    appendEnvVars("ARCWARDEN_WALLET_SET_ID", walletSetId);
+    appendEnvVars("SIGUI_WALLET_SET_ID", walletSetId);
   }
   console.log(`✅ Wallet Set ID = ${walletSetId}`);
 
@@ -108,8 +108,8 @@ async function main() {
   console.log(`✅ Wallet ID = ${wallet.id}`);
   console.log(`✅ Adresse   = ${wallet.address}`);
 
-  appendEnvVars("ARCWARDEN_WALLET_ID", wallet.id);
-  appendEnvVars("ARCWARDEN_WALLET_ADDRESS", wallet.address);
+  appendEnvVars("SIGUI_WALLET_ID", wallet.id);
+  appendEnvVars("SIGUI_WALLET_ADDRESS", wallet.address);
 
   // Overwrite demo mode if present so it activates real mode!
   appendEnvVars("DEMO_MODE", "false");
