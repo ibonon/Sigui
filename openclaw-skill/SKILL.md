@@ -1,11 +1,11 @@
 ---
 name: sigui-security
-version: "1.0.0"
+version: "2.0.1"
 description: >
-  Evaluate the security of blockchain transactions (EVM, Starknet, Aptos) using
-  the Sigui Protocol AI oracle. Detects drain attacks, mixer chains, Sybil swarms,
-  and flash-loan exploits before they execute. Returns a verdict (ALLOW / BLOCK /
-  ESCALATE) with a risk score and on-chain proof.
+  AI security oracle for blockchain transactions. Evaluates EVM, Starknet, and Aptos
+  transactions in real time using the Sigui Protocol — detecting drain stars, mixer chains,
+  Sybil swarms, and flash-loan exploits before execution. Returns ALLOW / BLOCK / ESCALATE
+  with an on-chain proof. Requires a real Sigui API endpoint; demo mode available for testing.
 author: "Warma Abdoul Ibonon Eric <ericwarma2006@gmail.com>"
 homepage: "https://github.com/ibonon/Sigui"
 license: MIT
@@ -18,159 +18,151 @@ tags:
   - ethereum
   - starknet
   - aptos
-  - multi-chain
+read_when:
+  - The user explicitly asks to evaluate, audit, or check the safety of a specific blockchain transaction before sending it
+  - The user says "check this address", "is this contract safe", or "evaluate this transaction" and provides concrete parameters (address, amount, chain)
+  - The user reports a suspected rug pull, drain attack, phishing approval, or flash-loan exploit they want analyzed
+  - An autonomous agent is about to submit an on-chain transaction and needs security clearance
+install:
+  run: bash install.sh
 requires:
   python: ">=3.10"
   packages:
     - "sigui-sdk>=0.3.1"
     - "rich>=13.0.0"
-read_when:
-  - The user asks to check, verify, audit, or evaluate a blockchain transaction
-  - The user mentions a wallet address, tx hash, or token transfer amount
-  - The user asks whether a DeFi action, NFT mint, or smart contract call is safe
-  - The user mentions "drain", "rug pull", "exploit", "mixer", "Sybil", "flash loan"
-  - The user wants to protect their agent's on-chain actions
-  - The user mentions EVM, Ethereum, Starknet, Aptos, ARC, or any L2 chain
 ---
 
 # Sigui Protocol Security Skill 🛡️
 
-**Sigui** is a multi-chain AI security oracle that evaluates blockchain transactions before they execute. It uses a native Spatio-Temporal Transformer (Trustformer/T-GAT) to detect coordinated attacks in real time — without the 48ms graph-rendering bottleneck of VLM-based approaches.
+**Sigui** is a multi-chain AI security oracle that evaluates blockchain transactions before
+they execute, using a native Spatio-Temporal Transformer (Trustformer/T-GAT) to detect
+coordinated attacks in real time.
 
-## 🧠 Chain of Thought (for OpenClaw Agent)
-
-When a user asks you to verify or execute a blockchain transaction, follow these steps:
-
-1. **Extract Parameters**: Identify the `amount` (in USDC value), the `destination` address, the `chain` (default to `arc`), and the `action` type (`transfer`, `approve`, `swap`, etc.).
-2. **Execute Evaluation**: Run the `evaluate.py` script provided in this skill directory using the `bash` or `python` tool.
-3. **Parse Verdict**:
-   - Exit code `0` (`ALLOW`): Inform the user that the transaction is safe and proceed.
-   - Exit code `1` (`BLOCK`): **DO NOT EXECUTE.** Inform the user of the critical threat detected and provide the reason.
-   - Exit code `2` (`ESCALATE`): Inform the user that the transaction requires a deep analysis. Run the script again with the `--escalate` flag to perform the deep analysis.
-4. **Relay the Result**: Format the output nicely using emojis (✅, 🚫, 🔍) and provide the on-chain proof link if available.
+> [!IMPORTANT]
+> **This skill requires a real Sigui API endpoint for production use.**
+> Set `SIGUI_API_URL` to your node URL. Without it, the script exits safely (fail-closed).
+> A `--demo` flag is available for testing, but MUST NOT be used to authorize real funds.
 
 ---
 
-## Supported Chains
+## 🔐 Security Model
 
-| Chain       | Argument     | Notes                                |
-|-------------|-------------|--------------------------------------|
-| ARC (L2)    | `arc`       | Default; ultra-fast, fee-free        |
-| Ethereum    | `ethereum`  | Mainnet + Sepolia testnet            |
-| Starknet    | `starknet`  | Cairo contracts deployed on Sepolia  |
-| Aptos       | `aptos`     | Move contracts on Testnet            |
-| Solana      | `solana`    | Coming soon                          |
+This skill is designed with a **fail-closed** security policy:
+
+| Situation | Behavior |
+|-----------|----------|
+| No API URL configured | ❌ Exits with error — does NOT simulate |
+| API unreachable | ❌ Exits with error — does NOT simulate |
+| ALLOW verdict | ⏸️ Pauses and asks for **explicit user confirmation** |
+| BLOCK verdict | 🚫 Immediately returns exit code 1 |
+| ESCALATE verdict | 🔍 Requests deep analysis with `--escalate` |
+| `--demo` flag set | ⚠️ Shows prominent warning — heuristic only |
 
 ---
 
-## 🛠️ Usage Examples
+## 🧠 Agent Instructions (Chain of Thought)
 
-### Method 1 — Python Script (Recommended)
+When a user explicitly asks to evaluate a specific transaction, follow these steps:
 
-Run the helper script directly from the skill directory. The script uses the `rich` library to print a beautiful, easy-to-read table.
+### Step 1 — Extract Parameters
+Identify from the user's message:
+- `amount`: transaction value (convert to USDC equivalent if needed)
+- `destination`: the target wallet or contract address
+- `chain`: the blockchain (default `arc`)
+- `action`: the action type (`transfer`, `approve`, `swap`, `bridge`, `mint`)
 
+If any required parameter is missing, **ask the user** before running the evaluation.
+
+### Step 2 — Ask for Explicit Confirmation Before Running
+Before executing the script, show the user:
+> "I'm about to evaluate this transaction with the Sigui security oracle:
+> - Amount: {amount} USDC
+> - Destination: {destination}
+> - Chain: {chain}
+> - Action: {action}
+> Shall I proceed?"
+
+### Step 3 — Run the Evaluation
 ```bash
 python ~/.openclaw/workspace/skills/sigui-security/evaluate.py \
-  --amount 1500.0 \
-  --destination "0xBadActorAddress" \
-  --action "transfer" \
-  --chain "ethereum"
+  --amount {amount} \
+  --destination {destination} \
+  --action {action} \
+  --chain {chain}
 ```
 
-To get raw JSON for programmatic parsing, add the `--json` flag:
+### Step 4 — Interpret the Exit Code
+
+| Exit Code | Verdict | Agent Action |
+|-----------|---------|--------------|
+| `0` | ALLOW | Ask user: *"Sigui approves. Do you confirm the transaction?"* Only proceed if user says yes. |
+| `1` | BLOCK | 🚫 **ABORT.** Tell the user the threat detected. Do NOT proceed. |
+| `2` | ESCALATE | Ask user if they want deep analysis, then re-run with `--escalate`. |
+| `3` | Error | Report the error. Do NOT proceed with the transaction. |
+
+### Step 5 — After ALLOW: Require User Confirmation
+Re-run with `--confirmed` **only after the user explicitly says yes**:
 ```bash
-python ~/.openclaw/workspace/skills/sigui-security/evaluate.py \
-  --amount 1500.0 \
-  --destination "0xBadActorAddress" \
-  --json
-```
-
-### Method 2 — Deep Analysis (Escalation)
-
-If a transaction returns `ESCALATE` (or exit code 2), you can request a deep AI analysis. This uses a heavier model (like Qwen2.5 or Claude) to perform a thorough audit of the contract or address.
-
-```bash
-python ~/.openclaw/workspace/skills/sigui-security/evaluate.py \
-  --amount 1500.0 \
-  --destination "0xUnknownAddress" \
-  --escalate
-```
-
-### Method 3 — Inline Python (if bash is unavailable)
-
-```python
-import asyncio, sys
-sys.path.insert(0, ".")
-
-from sigui import SiguiClient
-from sigui.local import start_mock_server
-
-async def check():
-    server = start_mock_server(port=8765)
-    client = SiguiClient(api_url="http://127.0.0.1:8765")
-    
-    result = await client.evaluate(
-        agent_id="openclaw_agent",
-        amount=500.0,
-        destination="0xRecipientAddress",
-        action_type="transfer",
-        chain="arc",
-    )
-    server.stop()
-    return result
-
-res = asyncio.run(check())
-print(f"Verdict: {res.verdict.value} | Risk: {res.risk_score}")
+python evaluate.py --amount {amount} --destination {destination} \
+  --action {action} --chain {chain} --confirmed
 ```
 
 ---
 
-## 📊 Interpreting the Verdict
+## 🛠️ Setup
 
-| Verdict         | Risk Score   | Agent Action Required                                       |
-|-----------------|-------------|-------------------------------------------------------------|
-| `ALLOW`         | 0.0 – 0.35  | ✅ Safe to proceed. Share the safety score with the user.   |
-| `ALLOW_WITH_CAP`| 0.35 – 0.55 | ⚠️ Safe but enforce the `cap_amount_usdc` spending limit.   |
-| `ESCALATE`      | 0.55 – 0.80 | 🔍 Request deep analysis (`--escalate`) before proceeding.  |
-| `BLOCK`         | 0.80 – 1.0  | 🚫 Abort the transaction immediately. Explain the threat.   |
-
-**Risk score** ranges from `0.0` (completely safe) to `1.0` (critical threat).
-**Safety score** = `(1 - risk_score) × 1000`. Higher is better.
-
----
-
-## 🛡️ Threat Types Detected
-
-Sigui detects the following multi-chain attack patterns in real time:
-
-- **Drain Star** — One orchestrator wallet draining multiple victim wallets simultaneously.
-- **Mixing Chain** — Funds routed through layered mixer hops to obfuscate origin.
-- **Sybil Swarm** — Coordinated fake-identity cluster attacking governance or airdrops.
-- **Flash Loan Exploit** — Manipulating price oracles within a single atomic block.
-- **Honeypot Contract** — Buy-enabled, sell-disabled token contract trap.
-- **Rug Pull** — Liquidity removal by deployer before community exit.
-- **Phishing Signature** — Malicious `eth_sign` / `permit` approval requests.
-
----
-
-## ⚙️ Configuration (Optional)
-
-By default, if the Sigui SDK isn't installed or no backend is running, the script falls back to a **local mock server** for development and testing (no real funds required).
-
-To connect to a live Sigui node, set the environment variables:
+### 1. Install Dependencies (automatic)
+The skill auto-installs `sigui-sdk` when first run. Or run manually:
 ```bash
-export SIGUI_API_URL="https://api.sigui.io"
-export SIGUI_CHAIN="arc"
-export OPENCLAW_AGENT_ID="my_agent_name"
+bash ~/.openclaw/workspace/skills/sigui-security/install.sh
 ```
 
-## 🔒 Privacy & Cost
-- Evaluations on ARC are **free** (gasless L2).
-- Evaluations on Ethereum/Starknet/Aptos cost a micro-fee paid in USDC (~$0.001).
-- **No transaction data is stored** beyond the on-chain proof hash.
-- All sensitive fields (wallet keys, private data) stay local — only the metadata is sent for evaluation.
+### 2. Configure Your Sigui Endpoint (required for production)
+```bash
+export SIGUI_API_URL="https://your-sigui-node.com"
+export SIGUI_CHAIN="arc"           # Optional, default: arc
+export OPENCLAW_AGENT_ID="my_agent"  # Optional
+```
+
+### 3. Test in Demo Mode (non-authoritative)
+```bash
+python evaluate.py --amount 50 --destination 0xYourAddress --demo
+```
+> ⚠️ Demo mode output is a local heuristic simulation, NOT an oracle evaluation.
+> Never use demo results to authorize transactions.
+
+---
+
+## 📊 Verdict Table
+
+| Verdict | Risk Score | Meaning |
+|---------|-----------|---------|
+| `ALLOW` | 0.0–0.35 | Transaction appears safe — **await user confirmation** |
+| `ALLOW_WITH_CAP` | 0.35–0.55 | Safe up to spending cap — **await user confirmation** |
+| `ESCALATE` | 0.55–0.80 | Ambiguous — request deep analysis before deciding |
+| `BLOCK` | 0.80–1.0 | Threat detected — do NOT proceed |
+
+**Safety Score** = `(1 - risk_score) × 1000`. Higher = safer.
+
+---
+
+## 🛡️ Threats Detected
+
+| Attack | Description |
+|--------|-------------|
+| Drain Star | Orchestrator draining multiple wallets simultaneously |
+| Mixing Chain | Layered hops through mixers to obscure fund origin |
+| Sybil Swarm | Fake-identity cluster attacking governance or airdrops |
+| Flash Loan Exploit | Oracle price manipulation within one atomic block |
+| Honeypot Contract | Buy-enabled, sell-disabled token trap |
+| Rug Pull | Liquidity removal by deployer |
+| Phishing Signature | Malicious `eth_sign` / `permit` approval |
+
+---
 
 ## 🔗 Links
-- 📄 GitHub: https://github.com/ibonon/Sigui
-- 📦 PyPI: https://pypi.org/project/sigui-sdk/
-- 📖 Whitepaper: *Trustformer: A Native Spatio-Temporal Transaction Transformer*
+
+- 📄 **GitHub**: https://github.com/ibonon/Sigui
+- 📦 **PyPI**: https://pypi.org/project/sigui-sdk/
+- 🌐 **ClawHub**: https://clawhub.ai/ibonon/sigui-security
+- 📖 **Whitepaper**: *Sigui Protocol: A Real-Time Security Oracle for Autonomous AI Agents*

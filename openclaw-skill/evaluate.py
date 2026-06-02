@@ -1,21 +1,34 @@
 #!/usr/bin/env python3
 """
-sigui-security/evaluate.py — CLI helper for OpenClaw agents
+sigui-security/evaluate.py — Sigui Protocol transaction security evaluator for OpenClaw
 
-This script evaluates the security of a blockchain transaction using the Sigui Protocol.
-It returns an exit code indicating whether the transaction should be blocked, allowed, or escalated.
+SECURITY POLICY:
+  This script is FAIL-CLOSED by default. If the Sigui SDK or a real API endpoint
+  is not available, the script exits with code 3 (error) and does NOT simulate results.
+
+  Mock/demo mode must be explicitly enabled with the --demo flag and is NEVER used
+  to authorize real transactions.
 
 Usage:
-    python evaluate.py --amount <usdc> --destination <address> \\
-                       [--agent <agent_id>] [--action <type>] \\
-                       [--chain arc|ethereum|starknet|aptos|solana] \\
-                       [--escalate] [--json]
+    python evaluate.py --amount <usdc> --destination <address> [options]
 
 Exit codes:
-    0 = ALLOW / ALLOW_WITH_CAP
+    0 = ALLOW / ALLOW_WITH_CAP  (only if --confirmed)
     1 = BLOCK
-    2 = ESCALATE (Deep analysis required)
-    3 = Evaluation Error
+    2 = ESCALATE (deep analysis required)
+    3 = Error / SDK unavailable / No confirmation
+
+Options:
+    --amount        Required. Transaction amount in USDC
+    --destination   Required. Destination wallet or contract address
+    --agent         Agent ID (default: OPENCLAW_AGENT_ID env var)
+    --action        Action type: transfer|approve|swap|bridge|mint|contract_call
+    --chain         Chain: arc|ethereum|starknet|aptos|solana (default: arc)
+    --api-url       Sigui API URL (required unless --demo is set)
+    --escalate      Auto-run deep analysis if verdict is ESCALATE
+    --confirmed     Required to proceed after an ALLOW verdict
+    --demo          Enable local mock mode (FOR TESTING ONLY, never for real funds)
+    --json          Output raw JSON
 """
 from __future__ import annotations
 
@@ -23,264 +36,347 @@ import argparse
 import asyncio
 import json
 import os
+import subprocess
 import sys
-from typing import Dict, Any
+from typing import Any, Dict, Optional
 
-# Optional: rich for beautiful console output
+# ── Auto-install Sigui SDK if missing ─────────────────────────────────────────
+
+def _auto_install_sdk() -> bool:
+    """
+    Attempt to install sigui-sdk automatically if not found.
+    Returns True if SDK is available after the attempt.
+    """
+    try:
+        from sigui import SiguiClient  # noqa: F401
+        return True
+    except ImportError:
+        pass
+
+    print("📦 sigui-sdk not found. Installing automatically...", file=sys.stderr)
+    try:
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "sigui-sdk>=0.3.1", "--quiet"],
+            timeout=120,
+        )
+        # Verify import works after install
+        result = subprocess.run(
+            [sys.executable, "-c", "from sigui import SiguiClient; print('ok')"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if result.returncode == 0:
+            print("✅ sigui-sdk installed successfully.", file=sys.stderr)
+            return True
+        else:
+            print(f"❌ sigui-sdk installed but import failed: {result.stderr}", file=sys.stderr)
+            return False
+    except subprocess.TimeoutExpired:
+        print("❌ Auto-install timed out. Run: pip install sigui-sdk>=0.3.1", file=sys.stderr)
+        return False
+    except Exception as e:
+        print(f"❌ Auto-install failed: {e}", file=sys.stderr)
+        print("   Run manually: pip install sigui-sdk>=0.3.1", file=sys.stderr)
+        return False
+
+
+SIGUI_AVAILABLE = _auto_install_sdk()
+
+# ── Optional: rich for formatted output ───────────────────────────────────────
+
 try:
     from rich.console import Console
     from rich.panel import Panel
-    from rich.text import Text
     from rich.table import Table
-    console = Console()
+    console = Console(stderr=False)
     RICH_AVAILABLE = True
 except ImportError:
     RICH_AVAILABLE = False
     console = None
 
-# ── Try to import Sigui SDK ───────────────────────────────────────────────────
-try:
-    from sigui import SiguiClient
-    from sigui.local import start_mock_server
-    SIGUI_AVAILABLE = True
-except ImportError:
-    SIGUI_AVAILABLE = False
+# ── Import SDK after auto-install attempt ─────────────────────────────────────
+
+if SIGUI_AVAILABLE:
+    try:
+        from sigui import SiguiClient
+        from sigui.models import Verdict
+    except ImportError:
+        SIGUI_AVAILABLE = False
 
 
-def _print_error(msg: str) -> None:
+# ── Output helpers ─────────────────────────────────────────────────────────────
+
+def _err(msg: str) -> None:
     if RICH_AVAILABLE:
-        console.print(f"[bold red]❌ Error:[/bold red] {msg}")
+        console.print(f"[bold red]❌[/bold red] {msg}")
     else:
-        print(f"❌ Error: {msg}", file=sys.stderr)
+        print(f"❌ {msg}", file=sys.stderr)
 
 
-def _print_warning(msg: str) -> None:
+def _warn(msg: str) -> None:
     if RICH_AVAILABLE:
-        console.print(f"[bold yellow]⚠️  Warning:[/bold yellow] {msg}")
+        console.print(f"[bold yellow]⚠️[/bold yellow]  {msg}")
     else:
-        print(f"⚠️  Warning: {msg}", file=sys.stderr)
+        print(f"⚠️  {msg}", file=sys.stderr)
 
 
-def _mock_evaluate(agent_id: str, amount: float, destination: str,
-                   action_type: str, chain: str) -> Dict[str, Any]:
-    """Fallback mock evaluation when sigui-sdk is not installed or unreachable."""
-    import hashlib
-    # Heuristic mock logic
-    risk = 0.05 if amount < 1000 else 0.45 if amount < 5000 else 0.85
-    verdict = "ALLOW" if risk < 0.35 else ("ESCALATE" if risk < 0.80 else "BLOCK")
-    h = hashlib.sha256(f"{agent_id}{destination}{amount}".encode()).hexdigest()
-    
-    return {
+def _info(msg: str) -> None:
+    if RICH_AVAILABLE:
+        console.print(f"[cyan]{msg}[/cyan]")
+    else:
+        print(msg, file=sys.stderr)
+
+
+# ── Core evaluation ────────────────────────────────────────────────────────────
+
+async def _evaluate_real(args: argparse.Namespace) -> Dict[str, Any]:
+    """Call the real Sigui API. Fails closed if unavailable."""
+    api_url = args.api_url or os.environ.get("SIGUI_API_URL", "")
+
+    if not api_url:
+        _err(
+            "No Sigui API URL configured.\n"
+            "  Set SIGUI_API_URL environment variable or use --api-url.\n"
+            "  For testing only, use --demo flag to run in local mock mode."
+        )
+        sys.exit(3)
+
+    client = SiguiClient(api_url=api_url)
+    _info(f"🔗 Connecting to Sigui node: {api_url}")
+
+    result = await client.evaluate(
+        agent_id=args.agent,
+        amount=args.amount,
+        destination=args.destination,
+        action_type=args.action,
+        chain=args.chain,
+    )
+
+    verdict = result.verdict.value
+    data: Dict[str, Any] = {
         "verdict": verdict,
-        "risk_score": risk,
-        "confidence": 0.91,
-        "reason": ("Normal behavioral pattern" if verdict == "ALLOW" 
-                   else "Unusual transaction pattern — deep review required" if verdict == "ESCALATE"
-                   else "High probability of drain attack or mixer usage detected"),
-        "action_hash": f"0x{h[:40]}",
-        "arc_tx_log": f"0xSIM_{h[:16]}",
-        "arcwarden_mode": "NORMAL",
-        "synthetic_score": int((1.0 - risk) * 1000),
-        "chain": chain,
-        "onchain_proof": f"https://testnet.arcscan.app/tx/0xSIM_{h[:16]}",
-        "mock": True,
+        "risk_score": result.risk_score,
+        "confidence": result.confidence,
+        "reason": result.reason,
+        "action_hash": result.action_hash,
+        "arc_tx_log": result.arc_tx_log,
+        "arcwarden_mode": result.arcwarden_mode,
+        "synthetic_score": result.synthetic_score,
+        "chain": result.chain,
+        "onchain_proof": result.onchain_proof,
+        "demo": False,
     }
 
-
-async def _run(args: argparse.Namespace) -> int:
-    result_dict: Dict[str, Any] = {}
-    verdict = "BLOCK"
-
-    if not SIGUI_AVAILABLE:
-        _print_warning("sigui-sdk is not installed. Falling back to heuristic mock evaluation.")
-        _print_warning("To install: pip install sigui-sdk>=0.3.1")
-        result_dict = _mock_evaluate(args.agent, args.amount, args.destination, args.action, args.chain)
-        verdict = result_dict["verdict"]
-    else:
-        server = None
-        api_url = args.api_url or os.environ.get("SIGUI_API_URL", "http://127.0.0.1:8765")
-
-        # Auto-start mock server if using default local URL
-        if api_url == "http://127.0.0.1:8765":
-            try:
-                server = start_mock_server(port=8765, host="127.0.0.1")
-                if not args.json:
-                    _print_warning("Local mock server started on port 8765")
-            except Exception as e:
-                _print_warning(f"Could not start mock server: {e}")
-
-        client = SiguiClient(api_url=api_url)
-
+    # Deep escalation if requested
+    if args.escalate and verdict == "ESCALATE":
+        _warn("ESCALATE verdict received. Requesting deep analysis (may cost ~$0.003 USDC)...")
         try:
-            result = await client.evaluate(
+            esc = await client.escalate(
                 agent_id=args.agent,
                 amount=args.amount,
                 destination=args.destination,
                 action_type=args.action,
-                chain=args.chain,
+                original_verdict=result,
             )
-            
-            verdict = result.verdict.value
-            result_dict = {
-                "verdict": verdict,
-                "risk_score": result.risk_score,
-                "confidence": result.confidence,
-                "reason": result.reason,
-                "action_hash": result.action_hash,
-                "arc_tx_log": result.arc_tx_log,
-                "arcwarden_mode": result.arcwarden_mode,
-                "synthetic_score": result.synthetic_score,
-                "chain": result.chain,
-                "onchain_proof": result.onchain_proof,
-                "mock": False,
+            data["escalation"] = {
+                "verdict": esc.verdict.value,
+                "analysis": esc.analysis,
+                "cap_amount_usdc": esc.cap_amount_usdc,
+                "inference_engine": esc.inference_engine,
             }
-
-            # Deep escalation if requested
-            if args.escalate and verdict == "ESCALATE":
-                try:
-                    if not args.json:
-                        _print_warning("ESCALATE verdict received. Requesting deep analysis...")
-                    
-                    esc = await client.escalate(
-                        agent_id=args.agent,
-                        amount=args.amount,
-                        destination=args.destination,
-                        action_type=args.action,
-                        original_verdict=result,
-                    )
-                    result_dict["escalation"] = {
-                        "verdict": esc.verdict.value,
-                        "analysis": esc.analysis,
-                        "cap_amount_usdc": esc.cap_amount_usdc,
-                        "inference_engine": esc.inference_engine,
-                    }
-                    verdict = esc.verdict.value
-                except Exception as e:
-                    _print_error(f"Deep escalation failed: {e}")
-
+            data["verdict"] = esc.verdict.value
         except Exception as e:
-            _print_error(f"Sigui API evaluation failed: {e}")
-            if server:
-                server.stop()
-            return 3
-        finally:
-            if server:
-                server.stop()
+            _err(f"Deep escalation failed: {e}")
 
-    # ── Output ──────────────────────────────────────────────────────────────
-    if args.json:
-        print(json.dumps(result_dict, indent=2, default=str))
+    return data
+
+
+async def _evaluate_demo(args: argparse.Namespace) -> Dict[str, Any]:
+    """
+    Demo/mock mode — FOR TESTING ONLY.
+    Always prints a prominent warning. Never use for real fund authorization.
+    """
+    import hashlib
+    import random
+
+    _warn("=" * 60)
+    _warn("DEMO MODE — Results are SIMULATED heuristics.")
+    _warn("DO NOT use these verdicts to authorize real transactions.")
+    _warn("=" * 60)
+
+    dest = args.destination.lower().strip()
+    amount = args.amount
+
+    # Simple heuristic
+    _KNOWN_BAD = {"0x000000000000000000000000000000000000dead",
+                  "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"}
+
+    if dest in _KNOWN_BAD:
+        risk = 0.97
+    elif amount > 10_000:
+        risk = min(0.85 + random.gauss(0, 0.03), 0.99)
+    elif amount > 1_000:
+        risk = min(0.45 + random.gauss(0, 0.05), 0.99)
     else:
-        _pretty_print(result_dict, args)
+        risk = max(0.05 + random.gauss(0, 0.03), 0.01)
 
-    # Exit code maps to OpenClaw behavior
+    verdict = "ALLOW" if risk < 0.35 else ("ESCALATE" if risk < 0.80 else "BLOCK")
+    h = hashlib.sha256(f"{dest}{amount}".encode()).hexdigest()
+
+    return {
+        "verdict": verdict,
+        "risk_score": round(risk, 4),
+        "confidence": round(0.60 + random.gauss(0, 0.05), 4),
+        "reason": f"[DEMO] Simulated heuristic result (score={risk:.3f}). NOT oracle-backed.",
+        "action_hash": f"0xDEMO_{h[:32]}",
+        "arc_tx_log": "",
+        "arcwarden_mode": "DEMO",
+        "synthetic_score": int((1.0 - risk) * 1000),
+        "chain": args.chain,
+        "onchain_proof": None,
+        "demo": True,
+    }
+
+
+# ── Display ────────────────────────────────────────────────────────────────────
+
+def _pretty_print(r: Dict[str, Any], args: argparse.Namespace) -> None:
+    verdict = r["verdict"]
+    risk = r["risk_score"]
+    score = r.get("synthetic_score", int((1 - risk) * 1000))
+    demo_tag = "  ⚠️  DEMO MODE — NOT REAL" if r.get("demo") else ""
+
+    if not RICH_AVAILABLE:
+        print(f"\n--- SIGUI EVALUATION{demo_tag} ---")
+        print(f"Verdict      : {verdict}")
+        print(f"Risk Score   : {risk:.4f}")
+        print(f"Safety Score : {score}/1000")
+        print(f"Confidence   : {r.get('confidence', 0):.1%}")
+        print(f"Reason       : {r['reason']}")
+        if r.get("onchain_proof"):
+            print(f"Proof        : {r['onchain_proof']}")
+        if r.get("escalation"):
+            e = r["escalation"]
+            print(f"\n--- DEEP ANALYSIS ---")
+            print(f"Deep Verdict : {e['verdict']}")
+            print(f"Analysis     : {e['analysis']}")
+        print("-" * 50)
+        return
+
+    color = "green" if verdict in ("ALLOW", "ALLOW_WITH_CAP") else "yellow" if verdict == "ESCALATE" else "red"
+    icon  = {"ALLOW": "✅", "ALLOW_WITH_CAP": "⚠️", "ESCALATE": "🔍", "BLOCK": "🚫"}.get(verdict, "❓")
+
+    t = Table(show_header=False, box=None, padding=(0, 2))
+    t.add_column("Field", style="bold cyan", justify="right")
+    t.add_column("Value")
+
+    t.add_row("Verdict",      f"[{color} bold]{icon} {verdict}[/]")
+    rc = "green" if risk < 0.35 else "yellow" if risk < 0.80 else "red"
+    t.add_row("Risk Score",   f"[{rc}]{risk:.4f}[/] (0=safe, 1=critical)")
+    t.add_row("Safety Score", f"{score}/1000")
+    t.add_row("Confidence",   f"{r.get('confidence', 0):.1%}")
+    t.add_row("Reason",       f"[italic]{r['reason']}[/]")
+    t.add_row("Chain",        args.chain.upper())
+    if r.get("onchain_proof"):
+        t.add_row("Proof", f"[link={r['onchain_proof']}]{r['onchain_proof']}[/link]")
+    if r.get("demo"):
+        t.add_row("Mode", "[bold red]⚠️  DEMO (heuristic only, NOT oracle)[/bold red]")
+
+    title = f"[bold]Sigui Evaluation — {args.amount} USDC → {args.destination[:12]}...[/bold]"
+    console.print(Panel(t, title=title, border_style=color, expand=False))
+
+    if r.get("escalation"):
+        e = r["escalation"]
+        ec = "green" if e["verdict"] in ("ALLOW", "ALLOW_WITH_CAP") else "red"
+        et = Table(show_header=False, box=None, padding=(0, 2))
+        et.add_column("Field", style="bold magenta", justify="right")
+        et.add_column("Value")
+        et.add_row("Verdict",      f"[{ec} bold]{e['verdict']}[/]")
+        et.add_row("Spending Cap", f"${e['cap_amount_usdc']:.2f} USDC")
+        et.add_row("Engine",       e["inference_engine"])
+        et.add_row("Analysis",     e["analysis"])
+        console.print(Panel(et, title="[bold magenta]🔍 Deep Analysis[/bold magenta]",
+                            border_style="magenta", expand=False))
+
+
+# ── Main ───────────────────────────────────────────────────────────────────────
+
+async def _run(args: argparse.Namespace) -> int:
+    # 1. SDK must be available (auto-installed above)
+    if not SIGUI_AVAILABLE:
+        _err("sigui-sdk is unavailable and could not be installed automatically.")
+        _err("Please install manually: pip install sigui-sdk>=0.3.1")
+        return 3
+
+    # 2. Evaluate
+    try:
+        if args.demo:
+            result = await _evaluate_demo(args)
+        else:
+            result = await _evaluate_real(args)
+    except SystemExit:
+        raise
+    except Exception as exc:
+        _err(f"Evaluation failed: {exc}")
+        return 3
+
+    # 3. Output
+    if args.json:
+        print(json.dumps(result, indent=2, default=str))
+    else:
+        _pretty_print(result, args)
+
+    verdict = result["verdict"]
+
+    # 4. ALLOW requires explicit --confirmed flag
+    if verdict in ("ALLOW", "ALLOW_WITH_CAP") and not args.confirmed:
+        _warn(
+            "Transaction received an ALLOW verdict.\n"
+            "  ⚠️  USER CONFIRMATION REQUIRED before proceeding.\n"
+            "  Re-run with --confirmed only after the user explicitly approves."
+        )
+        if not args.json:
+            print("\n  Please confirm with the user: 'Do you want to proceed with this transaction?'")
+        return 3  # Block until confirmed
+
+    # 5. Exit codes
     if verdict == "BLOCK":
         return 1
     if verdict == "ESCALATE":
         return 2
-    return 0
-
-
-def _pretty_print(r: Dict[str, Any], args: argparse.Namespace) -> None:
-    if not RICH_AVAILABLE:
-        # Fallback to plain text
-        print("\n--- SIGUI SECURITY EVALUATION ---")
-        print(f"Verdict       : {r['verdict']}")
-        print(f"Risk Score    : {r['risk_score']:.3f}")
-        print(f"Safety Score  : {r['synthetic_score']}/1000")
-        print(f"Confidence    : {r.get('confidence', 0):.1%}")
-        print(f"Reason        : {r['reason']}")
-        print(f"Chain         : {r.get('chain', 'arc')}")
-        if r.get("onchain_proof"):
-            print(f"Proof         : {r['onchain_proof']}")
-        if r.get("escalation"):
-            print("\n--- DEEP ANALYSIS ---")
-            print(f"Deep Verdict  : {r['escalation']['verdict']}")
-            print(f"Analysis      : {r['escalation']['analysis']}")
-        print("---------------------------------\n")
-        return
-
-    # Rich formatted output
-    verdict = r["verdict"]
-    color = "green" if verdict in ["ALLOW", "ALLOW_WITH_CAP"] else "yellow" if verdict == "ESCALATE" else "red"
-    icon = "✅" if verdict == "ALLOW" else "⚠️" if verdict == "ALLOW_WITH_CAP" else "🔍" if verdict == "ESCALATE" else "🚫"
-
-    table = Table(show_header=False, box=None, padding=(0, 2))
-    table.add_column("Field", style="bold cyan", justify="right")
-    table.add_column("Value", style="white")
-
-    table.add_row("Verdict", f"[{color} bold]{icon} {verdict}[/]")
-    
-    risk = r['risk_score']
-    risk_color = "green" if risk < 0.35 else "yellow" if risk < 0.8 else "red"
-    table.add_row("Risk Score", f"[{risk_color}]{risk:.3f}[/] (0=safe, 1=critical)")
-    table.add_row("Safety Score", f"{r['synthetic_score']}/1000")
-    table.add_row("Confidence", f"{r.get('confidence', 0):.1%}")
-    table.add_row("Reason", f"[italic]{r['reason']}[/]")
-    table.add_row("Chain", f"{r.get('chain', 'arc').upper()}")
-    
-    if r.get("onchain_proof"):
-        table.add_row("Proof", f"[link={r['onchain_proof']}]{r['onchain_proof']}[/link]")
-
-    if r.get("mock"):
-        table.add_row("Engine", "[magenta]Local Heuristic Mock (No SDK)[/]")
-
-    panel = Panel(
-        table,
-        title=f"[bold]Sigui Evaluation for {args.amount} USDC[/bold]",
-        border_style=color,
-        expand=False
-    )
-    console.print(panel)
-
-    if r.get("escalation"):
-        esc = r["escalation"]
-        esc_color = "green" if esc["verdict"] in ["ALLOW", "ALLOW_WITH_CAP"] else "red"
-        
-        esc_table = Table(show_header=False, box=None, padding=(0, 2))
-        esc_table.add_column("Field", style="bold magenta", justify="right")
-        esc_table.add_column("Value", style="white")
-        
-        esc_table.add_row("Verdict", f"[{esc_color} bold]{esc['verdict']}[/]")
-        esc_table.add_row("Spending Cap", f"${esc['cap_amount_usdc']:.2f} USDC")
-        esc_table.add_row("Engine", f"{esc['inference_engine']}")
-        esc_table.add_row("Analysis", f"{esc['analysis']}")
-
-        esc_panel = Panel(
-            esc_table,
-            title="[bold magenta]🔍 Deep Analysis (Escalation)[/bold magenta]",
-            border_style="magenta",
-            expand=False
-        )
-        console.print(esc_panel)
+    return 0  # ALLOW + confirmed
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Sigui Protocol — AI Blockchain Security Oracle for Agents"
+    p = argparse.ArgumentParser(
+        description="Sigui Protocol — Blockchain AI Security Oracle for OpenClaw agents",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
     )
-    parser.add_argument("--amount",      required=True, type=float,
-                        help="Transaction amount in USDC value")
-    parser.add_argument("--destination", required=True,
-                        help="Destination wallet, contract, or ENS address")
-    parser.add_argument("--agent",       default=os.environ.get("OPENCLAW_AGENT_ID", "openclaw_default"),
-                        help="Agent ID (default: OPENCLAW_AGENT_ID env var)")
-    parser.add_argument("--action",      default="transfer",
-                        choices=["transfer", "contract_call", "approve", "mint", "swap", "bridge"],
-                        help="Type of action (default: transfer)")
-    parser.add_argument("--chain",       default=os.environ.get("SIGUI_CHAIN", "arc"),
-                        choices=["arc", "ethereum", "starknet", "aptos", "solana"],
-                        help="Target blockchain (default: arc or SIGUI_CHAIN env var)")
-    parser.add_argument("--api-url",     default=None,
-                        help="Sigui API URL (default: SIGUI_API_URL or http://127.0.0.1:8765)")
-    parser.add_argument("--escalate",    action="store_true",
-                        help="Automatically run deep analysis if verdict is ESCALATE")
-    parser.add_argument("--json",        action="store_true",
-                        help="Output raw JSON for programmatic parsing")
-    
-    args = parser.parse_args()
-    exit_code = asyncio.run(_run(args))
-    sys.exit(exit_code)
+    p.add_argument("--amount",      required=True, type=float,
+                   help="Transaction amount in USDC equivalent")
+    p.add_argument("--destination", required=True,
+                   help="Destination wallet, contract, or ENS/domain address")
+    p.add_argument("--agent",       default=os.environ.get("OPENCLAW_AGENT_ID", "openclaw"),
+                   help="Calling agent ID (default: OPENCLAW_AGENT_ID env var)")
+    p.add_argument("--action",      default="transfer",
+                   choices=["transfer", "approve", "swap", "bridge", "mint", "contract_call"],
+                   help="Transaction action type (default: transfer)")
+    p.add_argument("--chain",       default=os.environ.get("SIGUI_CHAIN", "arc"),
+                   choices=["arc", "ethereum", "starknet", "aptos", "solana"],
+                   help="Target blockchain (default: arc or SIGUI_CHAIN env var)")
+    p.add_argument("--api-url",     default=None,
+                   help="Sigui API URL (or set SIGUI_API_URL env var)")
+    p.add_argument("--escalate",    action="store_true",
+                   help="Auto-run deep analysis if verdict is ESCALATE")
+    p.add_argument("--confirmed",   action="store_true",
+                   help="Indicate user has explicitly confirmed an ALLOW verdict")
+    p.add_argument("--demo",        action="store_true",
+                   help="⚠️  DEMO/TEST MODE: heuristic mock only. Never use for real funds.")
+    p.add_argument("--json",        action="store_true",
+                   help="Output raw JSON")
+
+    args = p.parse_args()
+    sys.exit(asyncio.run(_run(args)))
 
 
 if __name__ == "__main__":
