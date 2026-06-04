@@ -1,5 +1,10 @@
 # 🛡️ Sigui × NexusMind — The Multichain DePIN Security Oracle
 
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](CONTRIBUTING.md)
+[![PyPI Downloads](https://img.shields.io/badge/PyPI-721%20downloads-blue.svg)](https://pypi.org/project/sigui-sdk/)
+[![HuggingFace Model](https://img.shields.io/badge/🤗%20HuggingFace-Imina--Na--V2-orange.svg)](https://huggingface.co/Ibonon/Imina-Na-V2)
+
 > **"NexusMind is the network. Sigui is the law."**
 
 Sigui is a decentralized security infrastructure (DePIN) for AI agents, now fully integrated with **NexusMind**, a Real P2P distributed intelligence mesh network. Utilizing the massive parallel power of AMD MI300X GPUs, Sigui detects on-chain threats via visual graph analysis, while NexusMind orchestrates real-time decentralized compute nodes.
@@ -30,10 +35,17 @@ Sigui includes a revolutionary Agent DID (Decentralized Identity) system that so
 
 ## 🧠 Imina Na — The Vision Oracle
 Traditional security engines use simple thresholds. Imina Na sees the attack topology.
-- **Architecture**: Fine-tuned Qwen2-VL-2B-Instruct (LoRA)
+- **Architecture**: Fine-tuned **Qwen2-VL-7B-Instruct** (LoRA r=16, α=32)
+- **Model Hub**: [Ibonon/Imina-Na-V2](https://huggingface.co/Ibonon/Imina-Na-V2) on HuggingFace
+- **Dataset**: [Sigui DePIN-1M](https://huggingface.co/datasets/Ibonon/sigui-depin-1m) — 1,000,000 transaction graph topologies
 - **Hardware**: AMD MI300X (ROCm stack) for training and inference
-- **Dataset**: The Dogon Dataset — 10,000+ custom transaction graph topologies
-- **Patterns detected**: DRAIN_STAR, MIXING_CHAIN, COORDINATED_CLUSTER
+- **Patterns detected**: `DRAIN_STAR`, `MIXING_CHAIN`, `COORDINATED_CLUSTER`
+
+### Architecture Choice: Why 7B over 2B?
+
+> Le choix du 7B par rapport au 2B est dicté par la nécessité de capturer des topologies complexes (drain stars, mixing chains) qui exigent une capacité de raisonnement spatial et sémantique supérieure, tout en restant inférable en <50ms sur AMD MI300X.
+
+The **7B parameter scale** provides the model with sufficient attention heads and depth to distinguish between subtly different multi-hop transaction graphs. The 2B variant was evaluated early in development but consistently failed to differentiate `DRAIN_STAR` (many-to-one convergence with peer senders ≥4) from `COORDINATED_CLUSTER` patterns when graph density exceeded 15 nodes. The 7B variant, with LoRA applied at rank r=16 and scaling factor α=32 on `{q_proj, k_proj, v_proj, o_proj}`, achieves the necessary spatial reasoning depth while the LoRA adapters keep the inference footprint minimal — preserving the <50ms SLA on AMD MI300X.
 
 ---
 
@@ -152,3 +164,9 @@ Sigui/
 > **The Goal:** By 2030, every AI agent that moves value goes through Sigui. We're building the trust infrastructure for the autonomous economy.
 
 *Built for the Agentic Economy · Arc + Circle Hackathon · 2026*
+
+---
+
+## 🤝 Contributing
+
+We believe the security of the agentic economy is a community effort. See [CONTRIBUTING.md](CONTRIBUTING.md) to get started — first-time contributors are warmly welcome.

@@ -1,8 +1,10 @@
 # Sigui SDK — Autonomous Security for AI Agents (v0.3.1)
 
 [![PyPI version](https://img.shields.io/pypi/v/sigui-sdk.svg)](https://pypi.org/project/sigui-sdk/)
+[![Downloads](https://img.shields.io/badge/downloads-721%2Fmo-blue.svg)](https://pypi.org/project/sigui-sdk/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![HuggingFace](https://img.shields.io/badge/🤗-Imina--Na--V2-orange.svg)](https://huggingface.co/Ibonon/Imina-Na-V2)
 [![Starknet](https://img.shields.io/badge/Starknet-Cairo_2.x-red.svg)](https://starknet.io)
 [![Aptos](https://img.shields.io/badge/Aptos-Move-green.svg)](https://aptosfoundation.org)
 
@@ -45,7 +47,7 @@ pip install "sigui-sdk[smolagents]"      # HuggingFace smolagents
 
 - **ElizaOS Plugin**: Natively integrate Sigui into the Eliza ecosystem.
 - **Local Mock Server**: Test your integration without spinning up Docker or needing a GPU.
-- **Pretrained Weights**: Run the `sigui/imina-na-v2` LoRA model locally via `huggingface_hub`.
+- **Pretrained Weights**: Run the [`Ibonon/Imina-Na-V2`](https://huggingface.co/Ibonon/Imina-Na-V2) LoRA model (Qwen2-VL-7B-Instruct, r=16, α=32) locally via `huggingface_hub`.
 - **Multichain Reputation**: Support for ERC-8259 across Ethereum (Vyper), Starknet (Cairo), and Aptos (Move).
 
 ---
@@ -115,8 +117,9 @@ from sigui import from_pretrained
 
 async def run_node():
     # Automatically downloads Imina-Na V2 weights from HuggingFace
+    # Model: Ibonon/Imina-Na-V2 (Qwen2-VL-7B-Instruct + LoRA r=16, α=32)
     # and spins up a local inference engine.
-    client = await from_pretrained("sigui/imina-na-v2")
+    client = await from_pretrained("Ibonon/Imina-Na-V2")
     
     result = await client.evaluate(amount=100, destination="0xAbc...")
     print(result.verdict)

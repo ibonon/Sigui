@@ -18,8 +18,9 @@ Quickstart:
 
 Links:
     Documentation: https://docs.sigui.io
-    GitHub:        https://github.com/diass/Sigui
-    HuggingFace:   https://huggingface.co/datasets/sigui/dogon-threats
+    GitHub:        https://github.com/Ibonon/Sigui
+    HuggingFace:   https://huggingface.co/Ibonon/Imina-Na-V2
+    Dataset:       https://huggingface.co/datasets/Ibonon/sigui-depin-1m
 """
 
 from .client import SiguiClient, SiguiClientSync

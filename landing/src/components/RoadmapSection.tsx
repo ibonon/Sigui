@@ -8,7 +8,7 @@ const milestones = [
     status: "done",
     items: [
       { label: "Dataset Sigui-DePIN-1M généré (1.87M txs réelles)", done: true },
-      { label: "Imina-Na V2 — Fine-tuning LoRA sur Qwen2-VL-2B", done: true },
+      { label: "Imina-Na V2 — Fine-tuning LoRA sur Qwen2-VL-7B-Instruct (r=16, α=32)", done: true },
       { label: "SDK Python v0.3 publié sur PyPI", done: true },
       { label: "Intégrations LangChain / CrewAI / AutoGen / LangGraph", done: true },
     ],

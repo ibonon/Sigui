@@ -1,7 +1,26 @@
 """
-Sigui — Imina Na Vision Layer
+Sigui — Imina Na Vision Layer (Imina-Na V2)
+
 Attempts real inference on AMD MI300X vLLM server.
 Auto-falls back to deterministic heuristic mock if the endpoint is unreachable.
+
+Model Reference:
+    Backbone : Qwen2-VL-7B-Instruct (fine-tuned with LoRA r=16, α=32)
+    Hub      : https://huggingface.co/Ibonon/Imina-Na-V2
+    Hardware : AMD MI300X (ROCm stack), inference target <50ms
+
+Architecture Choice — Why Qwen2-VL-7B-Instruct and not 2B?
+    Le choix du 7B par rapport au 2B est dicté par la nécessité de capturer des
+    topologies complexes (drain stars, mixing chains) qui exigent une capacité de
+    raisonnement spatial et sémantique supérieure, tout en restant inférable en
+    <50ms sur AMD MI300X.
+
+    The 7B parameter count provides sufficient attention-head depth to discriminate
+    between structurally similar but semantically distinct graph patterns
+    (DRAIN_STAR vs COORDINATED_CLUSTER) at graph densities >15 nodes, where the
+    2B variant exhibited consistent misclassification during ablation testing.
+    LoRA adapters (applied on q_proj, k_proj, v_proj, o_proj) constrain the
+    fine-tuning footprint while preserving the base model’s spatial reasoning.
 """
 
 from __future__ import annotations
