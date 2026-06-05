@@ -6,6 +6,7 @@
 [![HuggingFace Model](https://img.shields.io/badge/🤗%20HuggingFace-Imina--Na--V2-orange.svg)](https://huggingface.co/Ibonon/Imina-Na-V2)
 [![ERC-8259 Live](https://img.shields.io/badge/ERC--8259-Live%20on%20Sepolia-blueviolet.svg)](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29)
 [![Contract Verified](https://img.shields.io/badge/Contract-0x3806...3b29-success.svg)](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29)
+[![Vision](https://img.shields.io/badge/🔮%20Vision-5%20Pillars-ff6b35.svg)](VISION.md)
 
 > **"NexusMind is the network. Sigui is the law."**
 
@@ -171,6 +172,8 @@ Sigui/
   - **TEE Optimization**: Running pruned security oracles inside Trusted Execution Environments for cryptographically proven, zero-tamper AI inference.
 
 > **The Goal:** By 2030, every AI agent that moves value goes through Sigui. We're building the trust infrastructure for the autonomous economy.
+
+📌 **See the full strategic roadmap → [VISION.md](VISION.md)**
 
 *Built for the Agentic Economy · Arc + Circle Hackathon · 2026*
 
