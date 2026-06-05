@@ -23,7 +23,28 @@ Sigui's network layer has been completely overhauled with **NexusMind**. Instead
 - **Real P2P Nodes (`nexus_worker.py`)**: Individual Python processes act as compute nodes, running actual asynchronous Proof-of-Work hashing and Matrix/Prime calculations.
 - **Tracker & Gossip Protocol**: The Sigui Gateway doubles as a Bootstrap Tracker. Nodes announce their ports, receive the peer list, and gossip tasks to one another.
 - **Scientific Network Telemetry**: The UI visualizes real-time network health, monitoring **Spectral Radius**, **Information Entropy (nats)**, and **Variance** to predict and prevent informational collapse.
-- **Cinematic CRT Dashboard**: The Next.js dashboard features a new "P2P Network" view with an Echarts Force-Directed Map, live WebSockets terminal feed, and a hacker-style CRT overlay.
+- **Cinematic CRT Dashboard**: The Next.js dashboard features a new "Network" view with an Echarts Force-Directed Map, live WebSockets terminal feed, and a hacker-style CRT overlay.
+
+---
+
+## 🛠️ Recent Updates (2026-06-05)
+
+### ⛓️ Multichain Smart Contracts
+- **Starknet (Cairo 2.8.4)**:
+    - Complete refactor of `agent_reputation.cairo` with enhanced event structures.
+    - Implementation of robust saturating math for reputation delta calculations.
+    - Updated `Scarb.toml` to use `audited` libfuncs for production readiness.
+- **Aptos (Move)**:
+    - Optimized `threat_registry.move` by streamlining oracle validation.
+    - Standardized naming conventions in `reputation_tests.move` (e.g., `total_agents`).
+
+### 🖥️ Dashboard & UI (Next.js)
+- **New Modules**: Added "Swarm Multi-Agent Intelligence" and "System Logs" live streaming panels.
+- **UX Overhaul**: Improved layout density with 48px grid spacing and refined typography.
+- **Navigation**: Renamed "P2P Network" to "Network" to reflect the broader Sigui × NexusMind integration.
+
+### 🔌 Ecosystem
+- **OpenClaw Plugin**: Released version `1.0.0` of the Sigui Security skill, enabling AI agents to query the risk engine directly.
 
 ---
 
