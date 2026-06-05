@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sigui War Room - Commandement Cross-Chain</title>
+    <link rel="stylesheet" href="/static/css/war_room.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <style>
+        /* Styles supplémentaires pour la page */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0a0a1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(0, 255, 255, 0.1);
+            border-top: 4px solid #00ffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #8888aa;
+        }
+        
+        .voice-command-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 200;
+            display: none;
+        }
+        
+        .voice-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(0, 255, 255, 0.1);
+            border: 3px solid #00ffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: voicePulse 1.5s infinite;
+        }
+        
+        @keyframes voicePulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .voice-icon {
+            font-size: 32px;
+            color: #00ffff;
+        }
+        
+        .voice-text {
+            position: absolute;
+            bottom: -30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 14px;
+            color: #00ffff;
+        }
+    </style>
+</head>
+<body>
+    <!-- Écran de chargement -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Initialisation du War Room...</div>
+    </div>
+    
+    <!-- Indicateur de commande vocale -->
+    <div class="voice-command-indicator" id="voice-command-indicator">
+        <div class="voice-circle">
+            <div class="voice-icon">🎤</div>
+        </div>
+        <div class="voice-text">Écoute en cours...</div>
+    </div>
+    
+    <!-- Conteneur principal -->
+    <div class="war-room-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Logo -->
+            <div class="logo">
+                <div class="logo-icon">🛡️</div>
+                <div class="logo-text">SIGUI WAR ROOM</div>
+            </div>
+            
+            <!-- Contrôles -->
+            <div class="controls-section">
+                <div class="section-title">Contrôles 3D</div>
+                
+                <div class="control-group">
+                    <div class="toggle-control">
+                        <span class="toggle-label">Auto-rotation</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="auto-rotate-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="slider-control">
+                        <div class="slider-label">
+                            <span>Vitesse d'animation</span>
+                            <span class="slider-value" id="speed-value">1.0x</span>
+                        </div>
+                        <input type="range" id="animation-speed-slider" min="0.1" max="3.0" step="0.1" value="1.0" class="slider-input">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="toggle-control">
+                        <span class="toggle-label">Labels</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="labels-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="button-control">
+                        <button class="control-btn" id="reset-view-btn">Réinitialiser vue</button>
+                        <button class="control-btn" id="fullscreen-btn">Plein écran</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Statistiques -->
+            <div class="stats-section">
+                <div class="section-title">Statistiques système</div>
+                <div class="stats-grid" id="system-stats">
+                    <!-- Rempli dynamiquement -->
+                </div>
+            </div>
+            
+            <!-- Activité -->
+            <div class="activity-section">
+                <div class="section-title">Activité en temps réel</div>
+                <div class="activity-list" id="agent-activity-panel">
+                    <!-- Rempli dynamiquement -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Vue 3D principale -->
+        <div class="main-view">
+            <div id="war-room-container"></div>
+            
+            <!-- Overlay pour les alertes -->
+            <div class="overlay">
+                <div class="alert-container" id="alert-container">
+                    <!-- Alertes dynamiques -->
+                </div>
+                
+                <!-- Détails des transactions -->
+                <div class="transaction-details-panel" id="transaction-details-panel">
+                    <!-- Détails dynamiques -->
+                </div>
+                
+                <!-- Statut des chaînes -->
+                <div class="chain-status-container" id="chain-status-container">
+                    <!-- Statuts dynamiques -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="/static/js/war_room.js"></script>
+    
+    <script>
+        // Gestion du chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cacher l'écran de chargement après un délai
+            setTimeout(() => {
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = '0';
+                    loadingScreen.style.transition = 'opacity 0.5s ease';
+                    
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }
+            }, 2000);
+            
+            // Commandes vocales
+            setupVoiceCommands();
+        });
+        
+        function setupVoiceCommands() {
+            const voiceIndicator = document.getElementById('voice-command-indicator');
+            let recognition = null;
+            
+            // Vérifier la compatibilité
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = 'fr-FR';
+                
+                recognition.onstart = () => {
+                    if (voiceIndicator) {
+                        voiceIndicator.style.display = 'block';
+                    }
+                };
+                
+                recognition.onresult = (event) => {
+                    let finalTranscript = '';
+                    let interimTranscript = '';
+                    
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript;
+                            processVoiceCommand(transcript.trim().toLowerCase());
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+                };
+                
+                recognition.onerror = (event) => {
+                    console.error('Erreur reconnaissance vocale:', event.error);
+                    if (voiceIndicator) {
+                        voiceIndicator.style.display = 'none';
+                    }
+                };
+                
+                recognition.onend = () => {
+                    if (voiceIndicator) {
+                        voiceIndicator.style.display = 'none';
+                    }
+                };
+                
+                // Démarrer la reconnaissance au clic
+                document.addEventListener('click', () => {
+                    if (recognition && recognition.state !== 'listening') {
+                        try {
+                            recognition.start();
+                        } catch (e) {
+                            console.error('Erreur démarrage reconnaissance:', e);
+                        }
+                    }
+                });
+            }
+        }
+        
+        function processVoiceCommand(command) {
+            console.log('Commande vocale reçue:', command);
+            
+            // Commandes de navigation
+            if (command.includes('vue') && command.includes('réinitialiser')) {
+                document.getElementById('reset-view-btn').click();
+                showVoiceFeedback('Vue réinitialisée');
+            }
+            else if (command.includes('plein écran')) {
+                document.getElementById('fullscreen-btn').click();
+                showVoiceFeedback('Mode plein écran activé');
+            }
+            else if (command.includes('rotation') && command.includes('arrêter')) {
+                document.getElementById('auto-rotate-toggle').click();
+                showVoiceFeedback('Auto-rotation désactivée');
+            }
+            else if (command.includes('rotation') && command.includes('démarrer')) {
+                document.getElementById('auto-rotate-toggle').click();
+                showVoiceFeedback('Auto-rotation activée');
+            }
+            else if (command.includes('labels') && command.includes('cacher')) {
+                document.getElementById('labels-toggle').click();
+                showVoiceFeedback('Labels cachés');
+            }
+            else if (command.includes('labels') && command.includes('afficher')) {
+                document.getElementById('labels-toggle').click();
+                showVoiceFeedback('Labels affichés');
+            }
+            
+            // Commandes de surveillance
+            else if (command.includes('statut') && command.includes('système')) {
+                showVoiceFeedback('Statut système affiché dans le panneau');
+                // À implémenter: afficher les détails du système
+            }
+            else if (command.includes('menaces') && command.includes('actives')) {
+                showVoiceFeedback('Affichage des menaces actives');
+                // À implémenter: filtrer les menaces
+            }
+            else if (command.includes('alerte') && command.includes('test')) {
+                simulateAlert();
+                showVoiceFeedback('Alerte de test générée');
+            }
+            
+            // Commandes d'aide
+            else if (command.includes('aide') || command.includes('commandes')) {
+                showVoiceFeedback('Commandes disponibles: vue réinitialiser, plein écran, rotation arrêter, labels cacher, statut système, menaces actives, alerte test');
+            }
+        }
+        
+        function showVoiceFeedback(message) {
+            // Créer un feedback visuel
+            const feedback = document.createElement('div');
+            feedback.className = 'voice-feedback';
+            feedback.textContent = message;
+            feedback.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: rgba(0, 255, 255, 0.1);
+                border: 1px solid #00ffff;
+                color: #00ffff;
+                padding: 10px 15px;
+                border-radius: 5px;
+                font-size: 14px;
+                z-index: 1000;
+                animation: fadeInOut 3s ease;
+            `;
+            
+            document.body.appendChild(feedback);
+            
+            // Supprimer après 3 secondes
+            setTimeout(() => {
+                feedback.remove();
+            }, 3000);
+        }
+        
+        function simulateAlert() {
+            // Simuler une alerte pour le test
+            if (window.warRoom) {
+                const chains = ['ethereum', 'solana', 'cosmos', 'aave', 'compound', 'makerdao', 'uniswap'];
+                const randomChain = chains[Math.floor(Math.random() * chains.length)];
+                const severities = ['low', 'medium', 'high', 'critical'];
+                const randomSeverity = severities[Math.floor(Math.random() * severities.length)];
+                
+                window.warRoom.visualizeThreat({
+                    chain: randomChain,
+                    severity: randomSeverity,
+                    description: `Alerte de test: menace ${randomSeverity} sur ${randomChain}`,
+                    transaction_hash: '0x' + Math.random().toString(16).substring(2, 10),
+                });
+            }
+        }
+        
+        // Ajouter le style pour l'animation de feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateY(10px); }
+                10% { opacity: 1; transform: translateY(0); }
+                90% { opacity: 1; transform: translateY(0); }
+                100% { opacity: 0; transform: translateY(10px); }
+            }
+            
+            .voice-feedback {
+                animation: fadeInOut 3s ease;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
