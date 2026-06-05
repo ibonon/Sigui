@@ -4,6 +4,8 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](CONTRIBUTING.md)
 [![PyPI Downloads](https://img.shields.io/badge/PyPI-721%20downloads-blue.svg)](https://pypi.org/project/sigui-sdk/)
 [![HuggingFace Model](https://img.shields.io/badge/🤗%20HuggingFace-Imina--Na--V2-orange.svg)](https://huggingface.co/Ibonon/Imina-Na-V2)
+[![ERC-8259 Live](https://img.shields.io/badge/ERC--8259-Live%20on%20Sepolia-blueviolet.svg)](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29)
+[![Contract Verified](https://img.shields.io/badge/Contract-0x3806...3b29-success.svg)](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29)
 
 > **"NexusMind is the network. Sigui is the law."**
 
@@ -24,12 +26,19 @@ Sigui's network layer has been completely overhauled with **NexusMind**. Instead
 
 ---
 
-## 🌟 Agent Identity System (ERC-8259 Native)
+## 🌟 Agent Identity System (ERC-8259 — Live on Ethereum Sepolia)
 Sigui includes a revolutionary Agent DID (Decentralized Identity) system that solves the fundamental problem of agent identity verification: reputation is cryptographically bound to identity, not disposable wallets.
 
 - **Portable Reputation**: Reputation follows identity across wallets/chains.
 - **Multi-Tier Verification**: Bronze → Silver → Gold → Platinum verification levels.
 - **6-Factor Scoring**: Identity (25%) + Transactions (30%) + Verification (20%) + Cross-chain (10%) + Threat Intel (10%) + Insurance (5%).
+
+### 📍 Live Contract Deployment
+| Network | Contract | Address |
+|---|---|---|
+| Ethereum Sepolia | ERC-8259 AgentRegistry | [`0x3806aeb76eDD2E22D3cF66A163113c4b24243b29`](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29) |
+
+> **Deployed on 2026-06-05** — Verify on [Sepolia Etherscan](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29). The `ERC8259_REGISTRY_ADDRESS_SEPOLIA` variable in your `.env` points to this live contract.
 
 ---
 
@@ -155,7 +164,7 @@ Sigui/
 - **Phase 1 ✅ Agent Identity System** - Cryptographic identity for AI agents
 - **Phase 2 ✅ NexusMind Integration** - Real P2P compute and topological metrics
 - **Phase 3 🔄 Threat Intelligence Network** - Decentralized marketplace for attack patterns
-- **Phase 4 🔄 Open Protocol Standard** - EIP-8259 Agent Security Standard
+- **Phase 4 ✅ Open Protocol Standard** - ERC-8259 AgentRegistry [deployed live on Ethereum Sepolia](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29) · `0x3806aeb76eDD2E22D3cF66A163113c4b24243b29`
 - **Phase 5 🔮 Edge Security & TinyML** - Pushing security to the absolute edge of the network.
   - **On-Chip Protection**: Ultra-quantized "Sigui Lite" models running directly inside Hardware Wallets (Ledger, Trezor) to proactively block malicious signatures (e.g., hidden `setApprovalForAll` drains) in an air-gapped environment.
   - **Autonomous DePIN & IoT**: Empowering constrained physical infrastructure and sensors to locally validate the security of their own on-chain micro-transactions without cloud latency.
