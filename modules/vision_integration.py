@@ -20,7 +20,7 @@ from modules.database.memory import Memory
 from modules.policy.policy_brain import PolicyBrain
 from modules.threat_intel.threat_registry import ThreatRegistry
 from modules.governance.hogonat_dao import HogonatDAO
-from modules.treasury import Treasury
+from modules.treasury import TreasuryManager as Treasury
 
 
 class AgentTrustLevel(Enum):

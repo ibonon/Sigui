@@ -5,6 +5,6 @@ Re-exports Memory from modules.memory so that imports like
   `from modules.database.memory import Memory`
 resolve correctly.
 """
-from modules.memory import Memory  # noqa: F401
+from modules.memory import MemoClaw as Memory  # noqa: F401
 
 __all__ = ["Memory"]

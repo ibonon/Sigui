@@ -6,6 +6,7 @@ Tests all components: Identity, Threat Marketplace, Insurance, Certification, Pa
 import asyncio
 import json
 import pytest
+import pytest_asyncio
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Dict, Any, List
@@ -22,34 +23,41 @@ from modules.database.memory import Memory
 from modules.policy.policy_brain import PolicyBrain
 from modules.threat_intel.threat_registry import ThreatRegistry
 from modules.governance.hogonat_dao import HogonatDAO
-from modules.treasury import Treasury
+from modules.treasury import TreasuryManager as Treasury
 
 
 class TestSiguiVisionIntegration:
     """Comprehensive test suite for Sigui Vision Integration"""
     
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def setup_test_environment(self):
         """Setup test environment with all components"""
-        
+        print("\n--- Starting setup_test_environment ---")
         # Initialize core components
         self.memory = Memory()
         await self.memory.initialize()
+        print("Memory initialized")
         
         self.arc_client = ArcClient()
         await self.arc_client.initialize()
+        print("Arc client initialized")
         
         self.policy_brain = PolicyBrain()
         await self.policy_brain.initialize()
+        print("Policy brain initialized")
         
         self.threat_registry = ThreatRegistry()
         await self.threat_registry.initialize()
+        print("Threat registry initialized")
         
         self.hogonat_dao = HogonatDAO()
+        print("Hogonat DAO initialized")
         
         self.treasury = Treasury()
         self.treasury.set_db(self.memory)
-        await self.treasury.sync_from_circle()
+        # Skip sync from circle in tests if it hangs
+        # await self.treasury.sync_from_circle()
+        print("Treasury initialized (skipped sync_from_circle)")
         
         # Initialize identity components
         self.did_generator = AgentDIDGenerator(chain_id="test")
@@ -127,7 +135,7 @@ class TestSiguiVisionIntegration:
         agent_address = "0x1234567890123456789012345678901234567890"
         destination_address = "0x0987654321098765432109876543210987654321"
         transaction_value = 50000.0  # $50K - business relevant
-        transaction_data = b"{"protocol": "compound", "action": "borrow", "amount": 50000}"
+        transaction_data = b'{"protocol": "compound", "action": "borrow", "amount": 50000}'
         
         # Evaluate transaction
         result = await self.vision_engine.evaluate_autonomous_transaction(
@@ -162,7 +170,7 @@ class TestSiguiVisionIntegration:
             protocol_name="compound",
             agent_address="0x1234567890123456789012345678901234567890",
             transaction_value=0.01,  # $0.01 - too low
-            transaction_data=b"{"action": "micro_payment"}",
+            transaction_data=b'{"action": "micro_payment"}',
             agent_type=AgentType.INDIVIDUAL
         )
         
@@ -175,7 +183,7 @@ class TestSiguiVisionIntegration:
             protocol_name="compound",
             agent_address="0x1234567890123456789012345678901234567890",
             transaction_value=10000.0,  # $10K - business relevant
-            transaction_data=b"{"action": "borrow", "amount": 10000}",
+            transaction_data=b'{"action": "borrow", "amount": 10000}',
             agent_type=AgentType.ORGANIZATION
         )
         
@@ -274,7 +282,7 @@ class TestSiguiVisionIntegration:
                 agent_address=f"0x{i:040d}",
                 destination_address="0x0987654321098765432109876543210987654321",
                 transaction_value=10000.0,
-                transaction_data=b"{"action": "test", "iteration": i}",
+                transaction_data=f'{{"action": "test", "iteration": {i}}}'.encode(),
                 agent_type=AgentType.ORGANIZATION
             )
             
@@ -420,7 +428,7 @@ class TestSiguiVisionIntegration:
             protocol_name="aave",
             agent_address="0x1234567890123456789012345678901234567890",
             transaction_value=75000.0,  # $75K transaction
-            transaction_data=b"{"action": "borrow", "asset": "USDC", "amount": 75000, "collateral": "ETH"}",
+            transaction_data=b'{"action": "borrow", "asset": "USDC", "amount": 75000, "collateral": "ETH"}',
             agent_type=AgentType.ENTERPRISE
         )
         

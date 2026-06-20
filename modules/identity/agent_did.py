@@ -6,6 +6,7 @@ Implements cryptographic identity generation and management for autonomous agent
 import hashlib
 import secrets
 from typing import Dict, Any, Optional, Tuple
+from enum import Enum, IntEnum
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
@@ -13,6 +14,21 @@ import base58
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.backends import default_backend
+
+
+class AgentType(str, Enum):
+    INDIVIDUAL = "individual"
+    ORGANIZATION = "organization"
+    ENTERPRISE = "enterprise"
+    ANONYMOUS = "anonymous"
+
+
+class VerificationTier(IntEnum):
+    NONE = 0
+    BRONZE = 1
+    SILVER = 2
+    GOLD = 3
+    PLATINUM = 4
 
 
 @dataclass
