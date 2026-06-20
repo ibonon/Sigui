@@ -47,6 +47,28 @@ class SecurityMinimalTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(risk.hard_block)
         self.assertLess(risk.risk_score, 0.35)
 
+    async def test_pedigree_generation(self):
+        action = ActionInput(
+            agent_id="test_pedigree",
+            action_type="transfer",
+            amount_usdc=1.0,
+            destination="0xabc12345678901234567890123456789012345678",
+        )
+        profile = {"trust_score": 0.8, "tx_count": 10, "avg_amount_usdc": 1.0}
+        risk = await risk_engine.score(action, profile)
+        out = await decision_engine.decide(
+            agent_id=action.agent_id,
+            action_type=action.action_type,
+            amount_usdc=action.amount_usdc,
+            destination=action.destination,
+            risk=risk,
+            sigui_mode=AgentMode.NORMAL,
+            agent_profile=profile,
+        )
+        self.assertIsNotNone(out.pedigree)
+        self.assertEqual(out.pedigree.model_version, "Imina-Na-V2-LoRA")
+        self.assertTrue(len(out.pedigree.signature) > 0)
+
     async def test_suspicious_case_reaches_escalate_or_block_zone(self):
         action = ActionInput(
             agent_id="test_suspicious",

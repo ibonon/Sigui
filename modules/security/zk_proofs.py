@@ -68,7 +68,7 @@ class ZKProofSystem:
         self.proofs_db = {}
         
         logger.info("ZK Proof System initialisé")
-    
+
     async def create_statement(self, statement_data: Dict[str, Any]) -> ZKStatement:
         """Crée un nouvel énoncé à prouver."""
         statement_id = hashlib.sha256(
@@ -559,63 +559,7 @@ class ZKProofSystem:
         """Génère une signature ECDSA simulée."""
         # Simplifié pour l'exemple
         return self._hash_value(f"signature_{data}_{random.randint(0, 1000000)}")
-    
-    async def get_proof(self, proof_id: str) -> Optional[ZKProof]:
-        """Récupère une preuve par son ID."""
-        return self.proofs_db.get(proof_id)
-    
-    async def list_proofs(self, filter_by: Optional[Dict] = None) -> List[ZKProof]:
-        """Liste toutes les preuves."""
-        proofs = list(self.proofs_db.values())
-        
-        if filter_by:
-            filtered = []
-            for proof in proofs:
-                match = True
-                
-                if "type" in filter_by:
-                    statement = self.statements_db.get(proof.statement_id)
-                    if statement and statement.type.value != filter_by["type"]:
-                        match = False
-                
-                if "verified" in filter_by and proof.verified != filter_by["verified"]:
-                    match = False
-                
-                if match:
-                    filtered.append(proof)
-            
-            return filtered
-        
-        return proofs
-    
-    async def get_system_metrics(self) -> Dict[str, Any]:
-        """Récupère les métriques du système ZK."""
-        total_proofs = len(self.proofs_db)
-        verified_proofs = sum(1 for p in self.proofs_db.values() if p.verified)
-        
-        # Temps de vérification moyen
-        verification_times = [
-            p.verification_time for p in self.proofs_db.values()
-            if p.verification_time is not None
-        ]
-        avg_verification_time = sum(verification_times) / len(verification_times) if verification_times else 0
-        
-        # Distribution par type
-        type_distribution = {}
-        for proof in self.proofs_db.values():
-            statement = self.statements_db.get(proof.statement_id)
-            if statement:
-                type_name = statement.type.value
-                type_distribution[type_name] = type_distribution.get(type_name, 0) + 1
-        
-        return {
-            "total_proofs": total_proofs,
-            "verified_proofs": verified_proofs,
-            "verification_rate": verified_proofs / total_proofs if total_proofs > 0 else 0,
-            "average_verification_time_seconds": round(avg_verification_time, 3),
-            "type_distribution": type_distribution,
-            "last_proof_generated": max(
-                [p.created_at for p in self.proofs_db.values()],
-                default=None
-            ),
-        }
+
+
+# Global instance
+zk_proof_system = ZKProofSystem()

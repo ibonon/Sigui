@@ -228,61 +228,62 @@ class CrewDecisionBrain:
             f"safe_block={sum(1 for e in recent_for_agent if e.get('outcome_label') == 'safe_block')}"
         )
 
-        planner = Agent(
-            role="Planner",
-            goal="Structure the security decision context.",
-            backstory="Plans what analysis matters most for fast and safe decisions.",
-            allow_delegation=True,
-            verbose=False,
-            llm=crew_llm,
-        )
-        risk_analyst = Agent(
-            role="Risk Analyst",
-            goal="Assess fraud and security risk conservatively.",
-            backstory="Expert in risk scoring, anomaly detection, and attack patterns.",
+        attacker = Agent(
+            role="Red Team Attacker",
+            goal="Identify potential security exploits, fraud patterns, or policy violations.",
+            backstory="Expert in blockchain forensic analysis and exploit detection. Your job is to be paranoid and find any reason why this transaction could be malicious.",
             allow_delegation=False,
             verbose=False,
             llm=crew_llm,
         )
-        treasurer = Agent(
-            role="Treasurer",
-            goal="Protect Sigui treasury and avoid unprofitable risk.",
-            backstory="Balances security quality with escalation cost and service economics.",
+        defender = Agent(
+            role="Blue Team Defender",
+            goal="Identify legitimate use cases and justify why the transaction is benign.",
+            backstory="Expert in blockchain UX and decentralized finance applications. Your job is to find plausible reasons why this transaction is legitimate and safe.",
+            allow_delegation=False,
+            verbose=False,
+            llm=crew_llm,
+        )
+        judge = Agent(
+            role="Tribunal Judge",
+            goal="Synthesize arguments from Attacker and Defender to provide a final balanced verdict.",
+            backstory="Experienced security auditor and supreme judge of the Sigui protocol. You prioritize fund safety but avoid unnecessary friction. You must return strict JSON.",
             allow_delegation=False,
             verbose=False,
             llm=crew_llm,
         )
 
-        planner_task = Task(
+        attack_task = Task(
             description=(
-                "Given this action and state, summarize the 3 most important factors for decision. "
-                f"Input JSON: {json.dumps(payload)}"
+                "Analyze this action for potential threats. Find any reason to BLOCK it. "
+                f"Input JSON: {json.dumps(payload)}. Memory note: {memory_note}"
             ),
-            expected_output="Short bullet-like text summary with key factors.",
-            agent=planner,
+            expected_output="A list of specific security risks and exploit patterns found.",
+            agent=attacker,
         )
-        risk_task = Task(
+        defense_task = Task(
             description=(
-                "Using planner summary, propose decision among ALLOW/BLOCK/ESCALATE with confidence and short reason. "
-                f"Memory note: {memory_note}"
+                "Analyze this action for legitimacy. Find any reason to ALLOW it. "
+                f"Input JSON: {json.dumps(payload)}. Memory note: {memory_note}"
             ),
-            expected_output='JSON: {"decision":"ALLOW|BLOCK|ESCALATE","confidence":0.0,"reason":"..."}',
-            agent=risk_analyst,
-            context=[planner_task],
+            expected_output="A list of reasons why this transaction is likely legitimate or follows safe patterns.",
+            agent=defender,
         )
-        treasury_task = Task(
+        judgment_task = Task(
             description=(
-                "Validate if proposed decision is treasury-safe. Keep fund protection as top priority. "
-                "Return final JSON only."
+                "Evaluate the arguments from the Attacker and Defender. "
+                "Provide a final decision (ALLOW/BLOCK/ESCALATE) with confidence and a short synthesized reason. "
+                "PRIORITIZE FUND SAFETY. Return final JSON only. "
+                "Include the key points from the attacker and defender in the 'tribunal_notes' field."
             ),
-            expected_output='JSON: {"decision":"ALLOW|BLOCK|ESCALATE","confidence":0.0,"reason":"..."}',
-            agent=treasurer,
-            context=[risk_task],
+            expected_output='JSON: {"decision":"ALLOW|BLOCK|ESCALATE","confidence":0.0,"reason":"...", "tribunal_notes": {"attacker": "...", "defender": "..."}}',
+            agent=judge,
+            context=[attack_task, defense_task],
         )
 
         crew = Crew(
-            agents=[planner, risk_analyst, treasurer],
-            tasks=[planner_task, risk_task, treasury_task],
+            agents=[attacker, defender, judge],
+            tasks=[attack_task, defense_task, judgment_task],
             process=Process.sequential,
             verbose=False,
         )
@@ -311,6 +312,7 @@ class CrewDecisionBrain:
                 "reason": str(data.get("reason", "CrewAI final decision"))[:140],
                 "confidence": float(data.get("confidence", 0.7)),
                 "source": "crewai",
+                "tribunal_notes": data.get("tribunal_notes")
             }
         except Exception as exc:
             logger.warning(f"[CREW_BRAIN] execution failed: {exc}")
