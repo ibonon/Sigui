@@ -5,13 +5,11 @@ Automates the loop: Attack -> Block -> Dataset Generation -> Fine-tuning -> Depl
 
 import asyncio
 import json
-import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
+from loguru import logger
 from modules.memory import memory
 from modules.ai_engines import policy_brain
-
-logger = logging.getLogger(__name__)
 
 class SelfHealingFlywheel:
     """
