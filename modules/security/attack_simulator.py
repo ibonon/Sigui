@@ -15,8 +15,8 @@ from enum import Enum
 import docker
 from docker.models.containers import Container
 
-from ..config import settings
-from ..database.threat_repository import ThreatRepository
+from config import settings
+from modules.database.threat_intel.threat_registry import ThreatRegistry as ThreatRepository
 
 logger = logging.getLogger(__name__)
 

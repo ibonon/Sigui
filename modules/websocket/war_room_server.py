@@ -31,6 +31,7 @@ class MessageType(Enum):
     THREAT_DETECTED = "threat_detected"
     AGENT_ACTIVITY = "agent_activity"
     TRANSACTION_ALERT = "transaction_alert"
+    NEXUSMIND_TOPOLOGY = "nexusmind_topology"
     VOICE_COMMAND = "voice_command"
     VOICE_FEEDBACK = "voice_feedback"
     CONTROL_COMMAND = "control_command"
@@ -398,22 +399,71 @@ class WarRoomWebSocketServer:
                 # Mettre à jour les métriques système
                 await self._update_system_metrics()
                 
+                # Mettre à jour la topologie NexusMind
+                topology = await self._get_nexusmind_topology()
+
                 # Diffuser les mises à jour aux abonnés
                 message = WebSocketMessage(
                     type=MessageType.SYSTEM_STATUS,
-                    payload={"system_status": self.system_status},
+                    payload={
+                        "system_status": self.system_status,
+                        "nexusmind_topology": topology
+                    },
                     timestamp=datetime.now(),
                 )
                 
                 await self.connection_manager.broadcast(message)
                 
                 # Attendre avant la prochaine mise à jour
-                await asyncio.sleep(10)
+                await asyncio.sleep(5)
                 
             except Exception as e:
                 logger.error(f"Erreur surveillance système: {e}")
                 await asyncio.sleep(30)  # Attendre plus longtemps en cas d'erreur
     
+    async def _get_nexusmind_topology(self) -> Dict[str, Any]:
+        """Récupère la topologie temps-réel du réseau NexusMind."""
+        from modules.node_registry import node_registry
+
+        nodes = node_registry.get_all_nodes()
+        active_nodes = [n for n in nodes if n.is_online]
+
+        # Simuler des coordonnées 3D pour la galaxie NexusMind
+        import math
+        topology = {
+            "nodes": [],
+            "edges": [],
+            "metrics": node_registry.get_network_stats()
+        }
+
+        for i, node in enumerate(active_nodes):
+            # Calculer une position orbitale
+            angle = (i / len(active_nodes)) * 2 * math.pi if active_nodes else 0
+            radius = 10 + (i % 3) * 5
+
+            topology["nodes"].append({
+                "id": node.node_id,
+                "address": node.address,
+                "position": {
+                    "x": radius * math.cos(angle),
+                    "y": (i % 2 - 0.5) * 10,
+                    "z": radius * math.sin(angle)
+                },
+                "reputation": node.reputation_score,
+                "load": node.current_load,
+                "is_vision": node.capabilities.imina_na
+            })
+
+            # Créer des liens vers quelques autres nœuds pour la visualisation du mesh
+            if i > 0:
+                topology["edges"].append({
+                    "source": node.node_id,
+                    "target": active_nodes[i-1].node_id,
+                    "latency": node.stats.avg_latency_ms
+                })
+
+        return topology
+
     async def _update_system_metrics(self):
         """Met à jour les métriques du système."""
         

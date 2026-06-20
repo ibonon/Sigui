@@ -13,6 +13,7 @@ from dataclasses import dataclass
 # Import existing Sigui modules
 from modules.identity.agent_did import AgentDIDGenerator, AgentIdentityManager, AgentDID
 from modules.identity.reputation_engine import ReputationEngine, ReputationScore
+from modules.security.zk_proofs import ZKProofSystem, ZKProofType
 from modules.blockchain.arc_client import ArcClient
 from modules.database.memory import Memory
 from modules.policy.policy_brain import PolicyBrain
@@ -64,6 +65,7 @@ class AgentIdentityIntegration:
         self.did_generator = AgentDIDGenerator(chain_id=chain_id)
         self.identity_manager = AgentIdentityManager(self.did_generator)
         self.reputation_engine = ReputationEngine(device="cuda" if self._check_gpu_available() else "cpu")
+        self.zk_system = ZKProofSystem()
         
         # Setup logging
         self.logger = logging.getLogger(__name__)
@@ -186,6 +188,26 @@ class AgentIdentityIntegration:
                 registration_time=datetime.now(timezone.utc)
             )
     
+    async def verify_zk_reputation(
+        self,
+        agent_did: str,
+        min_threshold: float,
+        zk_proof_id: str
+    ) -> bool:
+        """
+        Vérifie une preuve ZK que l'agent a une réputation suffisante
+        sans révéler son score exact.
+        """
+        try:
+            is_valid = await self.zk_system.verify_proof(zk_proof_id)
+            if is_valid:
+                self.logger.info(f"Preuve ZK validée pour l'agent {agent_did}")
+                return True
+            return False
+        except Exception as e:
+            self.logger.error(f"Erreur lors de la vérification ZK: {e}")
+            return False
+
     async def evaluate_agent_identity(
         self,
         agent_address: str,

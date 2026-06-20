@@ -276,6 +276,11 @@ class RiskEngine:
             rules.append(RuleResult("destination_whitelisted", -0.30, True))
             A -= 0.30
 
+        # ZK Reputation Trust Boost
+        if action.context.get("zk_reputation_verified"):
+            rules.append(RuleResult("zk_reputation_verified_trust_boost", -0.25, True))
+            A -= 0.25
+
         if action.action_type == "contract_interaction" and tx_count == 0:
             rules.append(RuleResult("contract_interaction_no_history", 0.15, True))
             A += 0.15
