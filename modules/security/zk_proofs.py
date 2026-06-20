@@ -16,7 +16,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.backends import default_backend
 
-from ..config import settings
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ class ZKProofType(Enum):
     EQUALITY = "equality"  # Preuve que deux valeurs sont égales
     KNOWLEDGE = "knowledge"  # Preuve de connaissance d'un secret
     TRANSACTION = "transaction"  # Preuve de transaction valide
+    REPUTATION = "reputation"  # Preuve de réputation seuil
 
 
 @dataclass
@@ -67,7 +68,7 @@ class ZKProofSystem:
         self.proofs_db = {}
         
         logger.info("ZK Proof System initialisé")
-    
+
     async def create_statement(self, statement_data: Dict[str, Any]) -> ZKStatement:
         """Crée un nouvel énoncé à prouver."""
         statement_id = hashlib.sha256(
@@ -140,6 +141,9 @@ class ZKProofSystem:
         elif proof_type == ZKProofType.TRANSACTION:
             return await self._generate_transaction_proof(statement, witness)
         
+        elif proof_type == ZKProofType.REPUTATION:
+            return await self._generate_reputation_proof(statement, witness)
+
         else:
             raise ValueError(f"Type de preuve non supporté: {proof_type}")
     
@@ -169,6 +173,29 @@ class ZKProofSystem:
             "timestamp": datetime.now().isoformat(),
         }
         
+        return proof
+
+    async def _generate_reputation_proof(self, statement: ZKStatement, witness: Optional[Dict]) -> Dict[str, Any]:
+        """Génère une preuve que la réputation dépasse un seuil sans révéler le score exact."""
+        min_reputation = statement.public_inputs.get("min_reputation", 0)
+        actual_reputation = statement.private_inputs.get("actual_reputation")
+        agent_did = statement.public_inputs.get("agent_did")
+
+        if actual_reputation is None:
+            raise ValueError("Réputation réelle manquante")
+
+        if actual_reputation < min_reputation:
+            raise ValueError(f"Réputation insuffisante: {actual_reputation} < {min_reputation}")
+
+        # Preuve de seuil simulée
+        proof = {
+            "type": "reputation",
+            "agent_did": agent_did,
+            "threshold_met": True,
+            "commitment": self._hash_value(f"{agent_did}:{actual_reputation}"),
+            "zk_proof_blob": self._hash_value(f"zk_rep_{agent_did}_{random.random()}"),
+            "timestamp": datetime.now().isoformat(),
+        }
         return proof
     
     async def _generate_range_proof(self, statement: ZKStatement, witness: Optional[Dict]) -> Dict[str, Any]:
@@ -372,6 +399,9 @@ class ZKProofSystem:
         elif proof_type == ZKProofType.TRANSACTION:
             return await self._verify_transaction_proof(statement, proof_data)
         
+        elif proof_type == ZKProofType.REPUTATION:
+            return await self._verify_reputation_proof(statement, proof_data)
+
         else:
             return False
     
@@ -424,6 +454,20 @@ class ZKProofSystem:
         if len(commitments) != 64:
             return False
         
+        return True
+
+    async def _verify_reputation_proof(self, statement: ZKStatement, proof_data: Dict[str, Any]) -> bool:
+        """Vérifie une preuve de réputation seuil."""
+        if not proof_data.get("threshold_met", False):
+            return False
+
+        if proof_data.get("agent_did") != statement.public_inputs.get("agent_did"):
+            return False
+
+        # Vérifier le blob de preuve (simulé)
+        if not proof_data.get("zk_proof_blob"):
+            return False
+
         return True
     
     async def _verify_equality_proof(self, statement: ZKStatement, proof_data: Dict[str, Any]) -> bool:
@@ -515,63 +559,7 @@ class ZKProofSystem:
         """Génère une signature ECDSA simulée."""
         # Simplifié pour l'exemple
         return self._hash_value(f"signature_{data}_{random.randint(0, 1000000)}")
-    
-    async def get_proof(self, proof_id: str) -> Optional[ZKProof]:
-        """Récupère une preuve par son ID."""
-        return self.proofs_db.get(proof_id)
-    
-    async def list_proofs(self, filter_by: Optional[Dict] = None) -> List[ZKProof]:
-        """Liste toutes les preuves."""
-        proofs = list(self.proofs_db.values())
-        
-        if filter_by:
-            filtered = []
-            for proof in proofs:
-                match = True
-                
-                if "type" in filter_by:
-                    statement = self.statements_db.get(proof.statement_id)
-                    if statement and statement.type.value != filter_by["type"]:
-                        match = False
-                
-                if "verified" in filter_by and proof.verified != filter_by["verified"]:
-                    match = False
-                
-                if match:
-                    filtered.append(proof)
-            
-            return filtered
-        
-        return proofs
-    
-    async def get_system_metrics(self) -> Dict[str, Any]:
-        """Récupère les métriques du système ZK."""
-        total_proofs = len(self.proofs_db)
-        verified_proofs = sum(1 for p in self.proofs_db.values() if p.verified)
-        
-        # Temps de vérification moyen
-        verification_times = [
-            p.verification_time for p in self.proofs_db.values()
-            if p.verification_time is not None
-        ]
-        avg_verification_time = sum(verification_times) / len(verification_times) if verification_times else 0
-        
-        # Distribution par type
-        type_distribution = {}
-        for proof in self.proofs_db.values():
-            statement = self.statements_db.get(proof.statement_id)
-            if statement:
-                type_name = statement.type.value
-                type_distribution[type_name] = type_distribution.get(type_name, 0) + 1
-        
-        return {
-            "total_proofs": total_proofs,
-            "verified_proofs": verified_proofs,
-            "verification_rate": verified_proofs / total_proofs if total_proofs > 0 else 0,
-            "average_verification_time_seconds": round(avg_verification_time, 3),
-            "type_distribution": type_distribution,
-            "last_proof_generated": max(
-                [p.created_at for p in self.proofs_db.values()],
-                default=None
-            ),
-        }
+
+
+# Global instance
+zk_proof_system = ZKProofSystem()

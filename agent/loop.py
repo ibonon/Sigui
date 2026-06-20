@@ -111,6 +111,7 @@ class SiguiAgent:
         """Main autonomous loop."""
         from modules.treasury import treasury
         from modules.memory import memory
+        from modules.optimization.flywheel import flywheel
         from modules.ai_engines import policy_brain
 
         while self.running:
@@ -120,6 +121,13 @@ class SiguiAgent:
 
                 if self.cycle % 600 == 0 and self.cycle > 0:
                     await memory.consolidate_patterns()
+
+                # 6. Flywheel learning loop
+                if self.cycle % 100 == 0:
+                    recent_decisions = await memory.get_recent_decisions(limit=20)
+                    for rd in recent_decisions:
+                        if rd.get("decision") == "BLOCK":
+                            await flywheel.process_blocked_transaction(rd)
 
                 # Only critique if specifically requested (avoids credit drain)
                 if self._critique_pending:
