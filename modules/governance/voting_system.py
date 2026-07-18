@@ -473,7 +473,7 @@ class AdvancedVotingSystem:
                 
                 # Récupère le score de réputation si non fourni
                 if reputation_score is None:
-                    reputation_score = self.reputation_oracle.get_trust_score(voter_did)
+                    reputation_score = await self.reputation_oracle.calculate_composite_score(voter_did)
                 
                 # Calcule le pouvoir de vote initial
                 voting_power = self._calculate_voting_power(

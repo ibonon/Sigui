@@ -246,6 +246,7 @@ class ReputationOracle:
             
             # 3. Taux de réussite
             # En production, il faudrait calculer le succès vs échec
+            pass
             
         except Exception as e:
             logger.error(f"Erreur lors de la collecte de service: {e}")

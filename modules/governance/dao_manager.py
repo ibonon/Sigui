@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 import logging
 
 from .governance_config import GovernanceConfig, GovernanceLevel, ProposalType
-from modules.reputation.trust_graph import ReputationOracle
+from modules.reputation.reputation_oracle import ReputationOracle
 from modules.credit.credit_scoring import CreditScoringSystem
 
 logger = logging.getLogger(__name__)
@@ -161,7 +161,7 @@ class DAOManager:
         async with self._lock:
             try:
                 # Vérifie la réputation minimale
-                reputation = self.reputation_oracle.get_trust_score(did)
+                reputation = await self.reputation_oracle.calculate_composite_score(did)
                 if reputation < self.config.min_reputation_for_voting:
                     logger.warning(f"Réputation insuffisante pour {did}: {reputation}")
                     return False

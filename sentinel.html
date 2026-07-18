@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sigui Sentinel | War Room</title>
+    <style>
+        :root {
+            --bg: #0b0c10;
+            --surface: rgba(31, 40, 51, 0.6);
+            --primary: #66fcf1;
+            --secondary: #45a29e;
+            --alert: #ff4b4b;
+            --text: #c5c6c7;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(102, 252, 241, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(69, 162, 158, 0.08) 0%, transparent 50%);
+        }
+        .header {
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(102, 252, 241, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(102, 252, 241, 0.5);
+        }
+        .status-badge {
+            padding: 8px 16px;
+            background: rgba(102, 252, 241, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 20px;
+            color: var(--primary);
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 0 15px rgba(102, 252, 241, 0.2);
+        }
+        .pulse {
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary);
+            animation: pulse 1.5s infinite alternate;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1.2); opacity: 1; }
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px;
+            height: calc(100vh - 100px);
+        }
+        .panel {
+            background: var(--surface);
+            border: 1px solid rgba(102, 252, 241, 0.1);
+            border-radius: 12px;
+            backdrop-filter: blur(16px);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        .panel:hover {
+            transform: translateY(-2px);
+            border-color: rgba(102, 252, 241, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0.5;
+        }
+        .panel h2 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .panel h2::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            flex-grow: 1;
+        }
+        .data-card {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .data-card .label {
+            font-size: 12px;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+        .data-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+        /* Imina-Na Radar Effect */
+        .radar {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: repeating-radial-gradient(
+                circle at center,
+                transparent,
+                transparent 20px,
+                rgba(102, 252, 241, 0.1) 21px
+            );
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        .radar-sweep {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            transform-origin: left center;
+            animation: sweep 4s linear infinite;
+        }
+        @keyframes sweep {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .log-container {
+            flex-grow: 1;
+            background: rgba(0,0,0,0.5);
+            border-radius: 8px;
+            padding: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            border-left: 2px solid var(--secondary);
+            padding-left: 8px;
+        }
+        .log-entry.alert {
+            border-left-color: var(--alert);
+            color: var(--alert);
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>SIGUI SENTINEL <span style="font-size: 12px; color: var(--secondary); vertical-align: top;">V3.0</span></h1>
+    <div class="status-badge">
+        <div class="pulse"></div>
+        SYSTEM ONLINE & SECURE
+    </div>
+</div>
+
+<div class="dashboard">
+    <!-- Panel 1: Imina-Na Vision -->
+    <div class="panel" style="grid-column: span 1; grid-row: span 2;">
+        <h2>Imina-Na Vision Engine</h2>
+        <div class="radar" style="margin: 20px auto;">
+            <div class="radar-sweep"></div>
+            <!-- Simulated threats -->
+            <div style="position: absolute; top: 30%; left: 60%; width: 6px; height: 6px; background: var(--alert); border-radius: 50%; box-shadow: 0 0 10px var(--alert); opacity: 0.8;"></div>
+            <div style="position: absolute; top: 70%; left: 40%; width: 4px; height: 4px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 10px var(--primary); opacity: 0.6;"></div>
+        </div>
+        <div class="data-grid" style="margin-top: 20px;">
+            <div class="data-card">
+                <div class="label">SCAN RATE</div>
+                <div class="value" id="scan-rate">4,281 /s</div>
+            </div>
+            <div class="data-card">
+                <div class="label">THREATS BLOCKED</div>
+                <div class="value" style="color: var(--alert);" id="threats-blocked">142</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 2: Credit & DeFi -->
+    <div class="panel">
+        <h2>Credit & Collateral</h2>
+        <div class="data-grid">
+            <div class="data-card">
+                <div class="label">ACTIVE LOANS</div>
+                <div class="value">24</div>
+            </div>
+            <div class="data-card">
+                <div class="label">TOTAL TVL (USD)</div>
+                <div class="value">$14.2M</div>
+            </div>
+            <div class="data-card">
+                <div class="label">AVG CREDIT SCORE</div>
+                <div class="value">AA</div>
+            </div>
+            <div class="data-card">
+                <div class="label">RISK LEVEL</div>
+                <div class="value" style="color: #f3c623;">LOW</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 3: Governance DAO -->
+    <div class="panel">
+        <h2>Hogonat DAO Status</h2>
+        <div class="data-grid">
+            <div class="data-card">
+                <div class="label">ACTIVE PROPOSALS</div>
+                <div class="value">3</div>
+            </div>
+            <div class="data-card">
+                <div class="label">QUORUM MET</div>
+                <div class="value" style="color: var(--primary);">2</div>
+            </div>
+            <div class="data-card" style="grid-column: span 2;">
+                <div class="label">LATEST PROPOSAL</div>
+                <div style="font-size: 14px; margin-top: 5px;">PROP_83F2: Integrate Aave V3</div>
+                <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); margin-top: 10px; border-radius: 2px;">
+                    <div style="width: 78%; height: 100%; background: var(--primary); border-radius: 2px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 4: Node Swarm & Reputation -->
+    <div class="panel" style="grid-column: span 2;">
+        <h2>Node Swarm & Reputation Oracle</h2>
+        <div style="display: flex; gap: 20px; height: 100%;">
+            <div class="data-grid" style="flex: 1;">
+                <div class="data-card">
+                    <div class="label">ACTIVE NODES</div>
+                    <div class="value">1,024</div>
+                </div>
+                <div class="data-card">
+                    <div class="label">SLASHING EVENTS</div>
+                    <div class="value">0</div>
+                </div>
+                <div class="data-card" style="grid-column: span 2;">
+                    <div class="label">NETWORK LATENCY</div>
+                    <div class="value" style="color: var(--primary);">42ms</div>
+                </div>
+            </div>
+            <div class="log-container" id="log-container">
+                <div class="log-entry">SYSTEM: Connection established.</div>
+                <div class="log-entry">ORACLE: Syncing with Ethereum Mainnet... OK</div>
+                <div class="log-entry">ORACLE: Syncing with Cardano... OK</div>
+                <div class="log-entry alert">SECURITY: Suspicious transaction deflected from Node 0x4a2...</div>
+                <div class="log-entry">CREDIT: Score updated for DID:sigui:7f2...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simulate real-time data
+    setInterval(() => {
+        // Randomize scan rate
+        const rate = 4000 + Math.floor(Math.random() * 500);
+        document.getElementById('scan-rate').innerText = rate.toLocaleString() + ' /s';
+        
+        // Add occasional logs
+        if(Math.random() > 0.7) {
+            const logs = document.getElementById('log-container');
+            const newLog = document.createElement('div');
+            
+            const isAlert = Math.random() > 0.8;
+            newLog.className = isAlert ? 'log-entry alert' : 'log-entry';
+            
+            const msgs = [
+                "DAO: Vote casted on PROP_83F2",
+                "CREDIT: Loan application submitted by DID:sigui:" + Math.random().toString(16).substring(2, 6),
+                "NETWORK: Heartbeat received from Node " + Math.floor(Math.random() * 1000),
+                "REPUTATION: Graph updated via ZK-Proof",
+                "MARKETPLACE: New AI agent registered."
+            ];
+            const alertMsgs = [
+                "SECURITY: Invalid state transition blocked!",
+                "WARNING: High latency on RPC endpoint."
+            ];
+            
+            newLog.innerText = isAlert ? 
+                alertMsgs[Math.floor(Math.random() * alertMsgs.length)] : 
+                msgs[Math.floor(Math.random() * msgs.length)];
+                
+            logs.appendChild(newLog);
+            logs.scrollTop = logs.scrollHeight;
+            
+            if(isAlert) {
+                const threatEl = document.getElementById('threats-blocked');
+                threatEl.innerText = parseInt(threatEl.innerText) + 1;
+            }
+        }
+    }, 2000);
+</script>
+
+</body>
+</html>

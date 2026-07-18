@@ -181,7 +181,7 @@ class CreditScoringSystem:
         
         # 1. Score de réputation
         try:
-            reputation_score = self.reputation_oracle.get_trust_score(applicant_did)
+            reputation_score = await self.reputation_oracle.calculate_composite_score(applicant_did)
             data["reputation_score"] = reputation_score
         except Exception as e:
             logger.error(f"Erreur récupération réputation: {e}")

@@ -40,7 +40,7 @@ class CardanoConfig(BaseModel):
     
     # Configuration de surveillance
     monitor_interval_seconds: int = Field(default=30, description="Intervalle de surveillance en secondes")
-    confirmations_required: int = Field(default(15), description="Nombre de confirmations requis")
+    confirmations_required: int = Field(default=15, description="Nombre de confirmations requis")
     
     # Configuration stake pool
     stake_pool_enabled: bool = Field(default=False, description="Activer la délégation stake pool")
