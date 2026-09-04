@@ -1,0 +1,14 @@
+{
+  "name": "sigui-security-inspector",
+  "version": "3.0.0",
+  "description": "Sigui DePIN AI Security Inspector skill for OpenClaw autonomous agents.",
+  "main": "skill.py",
+  "author": "Sigui Protocol",
+  "repository": "https://github.com/ibonon/Sigui",
+  "license": "MIT",
+  "capabilities": [
+    "risk_evaluation",
+    "zk_verification",
+    "threat_intel"
+  ]
+}
