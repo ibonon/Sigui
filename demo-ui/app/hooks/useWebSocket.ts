@@ -43,6 +43,15 @@ export interface LiveAgents {
   [key: string]: { status: string; transactions: number };
 }
 
+export interface VisionInferenceEvent {
+  pattern: string;
+  confidence: number;
+  inference_source: "gpu_imina_na" | "heuristic_fallback" | "disabled";
+  inference_time_ms: number;
+  model: string;
+  timestamp?: number;
+}
+
 export interface WebSocketState {
   isConnected: boolean;
   feed: FeedItem[];
@@ -51,6 +60,7 @@ export interface WebSocketState {
   agents: LiveAgents;
   graphEdges: GraphEdge[];
   lastTx: FeedItem | null;
+  visionInferences: VisionInferenceEvent[];
 }
 
 const INITIAL_STATS: LiveStats = {
@@ -100,6 +110,7 @@ export function useWebSocket(url: string): WebSocketState {
   const [agents, setAgents] = useState<LiveAgents>({});
   const [graphEdges, setGraphEdges] = useState<GraphEdge[]>([]);
   const [lastTx, setLastTx] = useState<FeedItem | null>(null);
+  const [visionInferences, setVisionInferences] = useState<VisionInferenceEvent[]>([]);
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -155,6 +166,19 @@ export function useWebSocket(url: string): WebSocketState {
           // Update agents
           if (payload.ecosystem?.agents) {
             setAgents(payload.ecosystem.agents);
+          }
+
+          // Handle vision_inference event from backend
+          if (payload.type === "vision_inference") {
+            const event: VisionInferenceEvent = {
+              pattern: payload.pattern,
+              confidence: payload.confidence,
+              inference_source: payload.inference_source,
+              inference_time_ms: payload.inference_time_ms,
+              model: payload.model,
+              timestamp: Date.now(),
+            };
+            setVisionInferences((prev) => [event, ...prev].slice(0, 50));
           }
 
           // Process new transactions from recent_logs
@@ -232,5 +256,5 @@ export function useWebSocket(url: string): WebSocketState {
     };
   }, [connect]);
 
-  return { isConnected, feed, stats, treasury, agents, graphEdges, lastTx };
+  return { isConnected, feed, stats, treasury, agents, graphEdges, lastTx, visionInferences };
 }

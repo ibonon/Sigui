@@ -106,6 +106,15 @@ _OPENAPI_TAGS = [
             "No auth required — designed for jury dashboards."
         ),
     },
+    {
+        "name": "Security v2",
+        "description": (
+            "**Sigui API v2** — Production-grade endpoints with Bearer auth + rate limiting. "
+            "POST `/v2/evaluate` returns `inference_source`, optional `zk_proof` (?zk=true), `threat_intel_matched`. "
+            "GET `/api/threat-intel` returns patterns learned by the Feedback Loop. "
+            "Default dev key: `sigui-dev-key-2026` (set `SIGUI_API_KEYS` env var in production)."
+        ),
+    },
 ]
 
 
@@ -248,9 +257,10 @@ async def lifespan(app: FastAPI):
     #       Replaces the removed @app.on_event("startup") in nexusmind_router.py.
     #       It must be started inside the lifespan to ensure event loops match.
     try:
-        from modules.nexusmind_router import start_tracker_dispatch
+        from modules.nexusmind_router import start_tracker_dispatch, setup_vision_broadcast_hook
         await start_tracker_dispatch()
-        logger.info("[MAIN] ✅ NexusMind tracker dispatch loop started")
+        setup_vision_broadcast_hook()
+        logger.info("[MAIN] ✅ NexusMind tracker dispatch loop started + vision hook wired")
     except Exception as _tracker_e:
         logger.warning(f"[MAIN] NexusMind tracker dispatch failed ({_tracker_e}) — continuing")
 

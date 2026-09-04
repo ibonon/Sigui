@@ -26,15 +26,36 @@ Architecture Choice — Why Qwen2-VL-7B-Instruct and not 2B?
 from __future__ import annotations
 
 import asyncio
+import json
 import time
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
+from typing import Any, Callable, ClassVar, Optional
 
 import httpx
 from loguru import logger
 
 from config import settings
 from ecosystem.address_pool import AddressPool
+
+
+@dataclass
+class _ConsecutiveFailureBreaker:
+    failures: int = 0
+    opened_at: float = 0.0
+    THRESHOLD: ClassVar[int] = 5
+    RECOVERY_S: ClassVar[float] = 60.0
+
+    def record_failure(self):
+        self.failures += 1
+        if self.failures >= self.THRESHOLD:
+            self.opened_at = time.time()
+
+    def record_success(self):
+        self.failures = 0
+        self.opened_at = 0.0
+
+    def is_open(self) -> bool:
+        return self.failures >= self.THRESHOLD and (time.time() - self.opened_at) < self.RECOVERY_S
 
 
 @dataclass
@@ -50,6 +71,14 @@ class VisionOutput:
     inference_source: str = "unknown"  # "vllm_real" | "heuristic_fallback" | "disabled"
 
 
+_vision_broadcast_hook: Optional[Callable] = None
+
+
+def set_vision_broadcast_hook(fn: Callable) -> None:
+    global _vision_broadcast_hook
+    _vision_broadcast_hook = fn
+
+
 class IminaNaVision:
     PATTERN_TO_DELTA = {
         "NORMAL": 0.0,
@@ -57,6 +86,11 @@ class IminaNaVision:
         "MIXING_CHAIN": 0.35,
         "COORDINATED_CLUSTER": 0.40,
     }
+    
+    _last_success_ts: float = 0.0
+
+    def __init__(self):
+        self._breaker = _ConsecutiveFailureBreaker()
 
     def _mock_analyze(
         self,
@@ -163,41 +197,78 @@ class IminaNaVision:
                 },
             ],
         }
+
+        timeout = 8.0 if IminaNaVision._last_success_ts == 0.0 else 2.0
         t0 = asyncio.get_running_loop().time()
-        async with httpx.AsyncClient(timeout=settings.vision_timeout_s) as client:
-            response = await client.post(settings.vision_endpoint, json=payload)
-            response.raise_for_status()
-            data = response.json()
 
-        content = (
-            (((data.get("choices") or [{}])[0]).get("message") or {}).get("content")
-            or "{}"
-        )
-        try:
-            import json
+        for attempt, backoff in enumerate([0.5, 1.0, 0.0]):
+            if self._breaker.is_open():
+                raise RuntimeError("circuit_breaker_open")
+            
+            try:
+                async with httpx.AsyncClient(timeout=timeout) as client:
+                    response = await client.post(settings.vision_endpoint, json=payload)
+                    response.raise_for_status()
+                    data = response.json()
 
-            parsed = json.loads(content)
-        except Exception:
-            logger.warning("[IMINA_NA] invalid JSON from vision endpoint, using NORMAL")
-            parsed = {}
+                # Try standard OpenAI format first
+                parsed = None
+                content = (
+                    (((data.get("choices") or [{}])[0]).get("message") or {}).get("content")
+                )
+                if content:
+                    try:
+                        parsed = json.loads(content)
+                    except Exception:
+                        pass
+                
+                # Fallback to direct modal endpoint format
+                if not parsed or "pattern" not in parsed:
+                    # Retry with direct post format for custom Modal
+                    direct_payload = {"action": action, "graph": graph}
+                    async with httpx.AsyncClient(timeout=timeout) as client:
+                        response = await client.post(settings.vision_endpoint, json=direct_payload)
+                        response.raise_for_status()
+                        parsed = response.json()
+                        if isinstance(parsed, str):
+                            try:
+                                parsed = json.loads(parsed)
+                            except Exception:
+                                pass
 
-        pattern = str(parsed.get("pattern", "NORMAL")).upper()
-        confidence = float(parsed.get("confidence", 0.0) or 0.0)
-        risk_delta = float(
-            parsed.get("risk_delta", self.PATTERN_TO_DELTA.get(pattern, 0.0)) or 0.0
-        )
-        elapsed_ms = int((asyncio.get_running_loop().time() - t0) * 1000)
-        return VisionOutput(
-            pattern=pattern if pattern in self.PATTERN_TO_DELTA else "NORMAL",
-            confidence=max(0.0, min(1.0, confidence)),
-            risk_delta=max(0.0, min(0.7, risk_delta)),
-            visual_evidence=str(parsed.get("visual_evidence", "vision_analysis_done"))[:220],
-            model=str(parsed.get("model", settings.vision_model_name)),
-            inference_device="AMD MI300X" if any(x in settings.vision_endpoint for x in ["localhost", "134.199.201.220"]) else "REMOTE",
-            inference_time_ms=max(1, elapsed_ms),
-            graph_summary=graph.get("summary") or None,
-            inference_source="vllm_real",
-        )
+                if not isinstance(parsed, dict):
+                    parsed = {}
+
+                pattern = str(parsed.get("pattern", "NORMAL")).upper()
+                confidence = float(parsed.get("confidence", 0.0) or 0.0)
+                risk_delta = float(
+                    parsed.get("risk_delta", self.PATTERN_TO_DELTA.get(pattern, 0.0)) or 0.0
+                )
+                elapsed_ms = int((asyncio.get_running_loop().time() - t0) * 1000)
+                
+                self._breaker.record_success()
+                IminaNaVision._last_success_ts = time.time()
+                
+                return VisionOutput(
+                    pattern=pattern if pattern in self.PATTERN_TO_DELTA else "NORMAL",
+                    confidence=max(0.0, min(1.0, confidence)),
+                    risk_delta=max(0.0, min(0.7, risk_delta)),
+                    visual_evidence=str(parsed.get("visual_evidence", "vision_analysis_done"))[:220],
+                    model=str(parsed.get("model", settings.vision_model_name)),
+                    inference_device="AMD MI300X" if any(x in settings.vision_endpoint for x in ["localhost", "134.199.201.220"]) else "REMOTE",
+                    inference_time_ms=max(1, elapsed_ms),
+                    graph_summary=graph.get("summary") or None,
+                    inference_source="vllm_real",
+                )
+            except Exception as exc:
+                self._breaker.record_failure()
+                if attempt < 2:
+                    await asyncio.sleep(backoff)
+                else:
+                    raise exc
+
+        # Should not reach here
+        raise RuntimeError("vllm_analyze failed")
 
     async def analyze(
         self,
@@ -205,26 +276,36 @@ class IminaNaVision:
         graph: dict[str, Any] | None = None,
     ) -> VisionOutput:
         if not settings.vision_enabled:
-            return VisionOutput(inference_source="disabled")
-
-        if settings.vision_mock_mode:
+            result = VisionOutput(inference_source="disabled")
+        elif settings.vision_mock_mode:
             logger.debug("[IMINA_NA] mock_mode=true — using heuristic fallback")
-            return self._mock_analyze(action, graph=graph)
-
-        try:
-            result = await self._vllm_analyze(action, graph=graph)
-            logger.debug(
-                f"[IMINA_NA] ✅ vLLM inference — pattern={result.pattern} "
-                f"conf={result.confidence:.2f} device={result.inference_device} "
-                f"{result.inference_time_ms}ms"
-            )
-            return result
-        except Exception as exc:
-            logger.warning(
-                f"[IMINA_NA] vLLM unreachable ({exc.__class__.__name__}: {exc}) "
-                f"— falling back to heuristic mock"
-            )
-            return self._mock_analyze(action, graph=graph)
+            result = self._mock_analyze(action, graph=graph)
+        else:
+            try:
+                result = await self._vllm_analyze(action, graph=graph)
+                logger.debug(
+                    f"[IMINA_NA] ✅ vLLM inference — pattern={result.pattern} "
+                    f"conf={result.confidence:.2f} device={result.inference_device} "
+                    f"{result.inference_time_ms}ms"
+                )
+            except Exception as exc:
+                logger.warning(
+                    f"[IMINA_NA] vLLM unreachable ({exc.__class__.__name__}: {exc}) "
+                    f"— falling back to heuristic mock"
+                )
+                result = self._mock_analyze(action, graph=graph)
+                
+        if _vision_broadcast_hook is not None:
+            asyncio.create_task(_vision_broadcast_hook({
+                "type": "vision_inference",
+                "pattern": result.pattern,
+                "confidence": result.confidence,
+                "inference_source": result.inference_source,
+                "inference_time_ms": result.inference_time_ms,
+                "model": result.model
+            }))
+            
+        return result
 
 
 imina_na_vision = IminaNaVision()

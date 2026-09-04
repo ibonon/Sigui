@@ -212,6 +212,7 @@ class SiguiClient:
         action_type: str = "transfer",
         chain: Optional[str | Chain] = None,
         context: Optional[dict] = None,
+        require_zk_proof: bool = False,
         raise_on_block: Optional[bool] = None,
         raise_on_escalate: Optional[bool] = None,
     ) -> EvaluationResult:
@@ -277,8 +278,9 @@ class SiguiClient:
             "weights": self.config.weights,
         }
 
+        path = "/v2/evaluate?zk=true" if require_zk_proof else "/evaluate"
         t0 = time.perf_counter()
-        raw = await self._post("/evaluate", body, _chain, amount_hint=amount)
+        raw = await self._post(path, body, _chain, amount_hint=amount)
         elapsed_ms = int((time.perf_counter() - t0) * 1000)
 
         result = EvaluationResult(

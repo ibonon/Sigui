@@ -110,6 +110,29 @@ async def broadcast_decision(
     })
 
 
+async def broadcast_vision_inference(event: dict) -> None:
+    """
+    Broadcast a vision_inference event to all WebSocket clients.
+    Called automatically by imina_na_vision after each real-or-mock inference.
+    """
+    if ws_manager.connection_count:
+        await ws_manager.broadcast(event)
+
+
+def setup_vision_broadcast_hook() -> None:
+    """
+    Wire the broadcast_vision_inference coroutine into the Imina Na vision module
+    so that every inference (GPU or heuristic) is pushed to the live WebSocket feed.
+    Call once from main.py lifespan after routes are registered.
+    """
+    try:
+        from modules.imina_na_vision import set_vision_broadcast_hook
+        set_vision_broadcast_hook(broadcast_vision_inference)
+        logger.info("[NEXUSMIND] ✅ Vision broadcast hook wired to Imina Na")
+    except Exception as exc:
+        logger.warning(f"[NEXUSMIND] Could not wire vision hook: {exc}")
+
+
 # ── Pydantic request models ──────────────────────────────────────────────────
 
 

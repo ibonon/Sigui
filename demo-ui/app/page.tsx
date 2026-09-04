@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useWebSocket } from "./hooks/useWebSocket";
 import { GraphConstellation } from "./components/GraphConstellation";
 import { AttackTheaterLive } from "./components/AttackTheaterLive";
+import { VisionMetricsPanel } from "./components/VisionMetricsPanel";
+import { LandingPage } from "./components/LandingPage";
 
 // Backend renvoie parfois "APPROVE" au lieu de "ALLOW"
 function normalizeDecision(d?: string): "ALLOW" | "BLOCK" | "ESCALATE" {
@@ -45,10 +47,10 @@ export default function App() {
   const [searched, setSearched] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [verdict, setVerdict] = useState<VerdictData | null>(null);
-  const [activeTab, setActiveTab] = useState<"oracle" | "theater">("oracle");
+  const [activeTab, setActiveTab] = useState<"landing" | "oracle" | "theater" | "vision">("landing");
 
   // Live WebSocket data
-  const { isConnected, feed, stats, treasury, agents, graphEdges, lastTx } =
+  const { isConnected, feed, stats, treasury, agents, graphEdges, lastTx, visionInferences } =
     useWebSocket(WS_URL);
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -134,6 +136,12 @@ export default function App() {
       {/* ── Mode Tabs ── */}
       <div className="mode-tabs">
         <button
+          className={`mode-tab ${activeTab === "landing" ? "active" : ""}`}
+          onClick={() => setActiveTab("landing")}
+        >
+          🌐 Landing Page
+        </button>
+        <button
           className={`mode-tab ${activeTab === "oracle" ? "active" : ""}`}
           onClick={() => setActiveTab("oracle")}
         >
@@ -146,9 +154,28 @@ export default function App() {
           ⚡ Attack Theater
           {isConnected && <span className="tab-live-dot" />}
         </button>
+        <button
+          className={`mode-tab ${activeTab === "vision" ? "active" : ""}`}
+          onClick={() => setActiveTab("vision")}
+        >
+          👁️ Vision & ZK
+          {visionInferences.length > 0 && <span className="tab-live-dot" />}
+        </button>
       </div>
 
       <AnimatePresence mode="wait">
+        {activeTab === "landing" && (
+          <motion.div
+            key="landing"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25 }}
+          >
+            <LandingPage onLaunchApp={() => setActiveTab("oracle")} />
+          </motion.div>
+        )}
+
         {activeTab === "oracle" && (
           <motion.div
             key="oracle"
@@ -354,6 +381,19 @@ export default function App() {
                 feed={feed}
               />
             </div>
+          </motion.div>
+        )}
+
+        {activeTab === "vision" && (
+          <motion.div
+            key="vision"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25 }}
+            className="vision-tab-content"
+          >
+            <VisionMetricsPanel visionInferences={visionInferences} />
           </motion.div>
         )}
       </AnimatePresence>

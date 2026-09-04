@@ -1,249 +1,271 @@
 "use client";
 
-import { motion } from "framer-motion";
+import React, { useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-interface VisionMetricsPanelProps {
-  visionMetrics: any;
-  colors: any;
-  styles: any;
+export interface VisionInferenceEvent {
+  pattern: string;
+  confidence: number;
+  inference_source: 'gpu_imina_na' | 'heuristic_fallback' | 'disabled';
+  inference_time_ms: number;
+  model: string;
+  timestamp?: number;
 }
 
-export function VisionMetricsPanel({ visionMetrics, colors, styles }: VisionMetricsPanelProps) {
+export interface VisionMetricsPanelProps {
+  visionInferences?: VisionInferenceEvent[];
+  visionMetrics?: any;
+  colors?: any;
+  styles?: any;
+}
+
+const panelStyle: React.CSSProperties = {
+  background: 'rgba(17, 24, 39, 0.65)',
+  backdropFilter: 'blur(24px)',
+  border: '1px solid rgba(148, 163, 184, 0.1)',
+  borderRadius: '16px',
+  padding: '24px',
+  color: '#fff',
+  fontFamily: '"Inter", sans-serif',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '24px',
+  overflow: 'hidden',
+};
+
+const sectionStyle: React.CSSProperties = {
+  background: 'rgba(255, 255, 255, 0.03)',
+  borderRadius: '12px',
+  padding: '16px',
+  border: '1px solid rgba(148, 163, 184, 0.05)',
+};
+
+const fontMono = '"JetBrains Mono", monospace';
+
+const getPatternColor = (pattern: string) => {
+  if (pattern.includes('DRAIN_STAR')) return 'var(--rose)';
+  if (pattern.includes('MIXING_CHAIN')) return 'var(--amber)';
+  if (pattern.includes('COORDINATED_CLUSTER')) return 'var(--violet)';
+  return 'var(--emerald)';
+};
+
+const getLatencyColor = (ms: number) => {
+  if (ms < 50) return 'var(--emerald)';
+  if (ms <= 150) return 'var(--amber)';
+  return 'var(--rose)';
+};
+
+export function VisionMetricsPanel({
+  visionInferences = [],
+  visionMetrics,
+  colors,
+  styles
+}: VisionMetricsPanelProps) {
+  
+  const stats = useMemo(() => {
+    let gpu = 0;
+    let heuristic = 0;
+    visionInferences.forEach(ev => {
+      if (ev.inference_source === 'gpu_imina_na') gpu++;
+      else if (ev.inference_source === 'heuristic_fallback') heuristic++;
+    });
+    const total = gpu + heuristic;
+    const gpuPercent = total === 0 ? 0 : (gpu / total) * 100;
+    
+    const lastSource = visionInferences.length > 0 ? visionInferences[visionInferences.length - 1].inference_source : null;
+    const isGpuActive = lastSource === 'gpu_imina_na';
+
+    return { gpu, heuristic, total, gpuPercent, isGpuActive, lastSource };
+  }, [visionInferences]);
+
+  const histogramData = useMemo(() => {
+    return visionInferences.slice(-20);
+  }, [visionInferences]);
+
+  const feedData = useMemo(() => {
+    return visionInferences.slice(-10).reverse();
+  }, [visionInferences]);
+
   return (
-    <div className="space-y-6">
-      {/* Vision Progress Overview */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="p-8 rounded-2xl"
-        style={styles.card}
-      >
-        <h2 className="text-3xl font-bold mb-6" style={{ color: colors.gold, fontFamily: "'Cinzel Decorative', serif" }}>
-          🌠 Vision Implementation Progress
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Phase 1: Identity */}
-          <div className="p-6 rounded-xl" style={{ background: colors.gradient.primary }}>
-            <div className="text-2xl mb-2">🔐</div>
-            <h3 className="text-lg font-semibold text-white mb-2">Phase 1: Agent Identity</h3>
-            <div className="text-3xl font-bold text-white mb-1">✅</div>
-            <div className="text-sm text-white opacity-80">Cryptographic DID System</div>
+    <div style={panelStyle}>
+      {/* Top section — GPU vs Heuristic Live Indicator */}
+      <div style={{ ...sectionStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>Vision Engine Status</h3>
+            {stats.isGpuActive ? (
+              <span style={{ 
+                background: 'rgba(16, 185, 129, 0.1)', 
+                color: 'var(--emerald)', 
+                padding: '4px 10px', 
+                borderRadius: '999px',
+                fontSize: '12px',
+                fontWeight: 600,
+                border: '1px solid rgba(16, 185, 129, 0.2)',
+                boxShadow: '0 0 10px rgba(16, 185, 129, 0.2)'
+              }}>🔥 AMD MI300X LIVE</span>
+            ) : (
+              <span style={{ 
+                background: 'rgba(245, 158, 11, 0.1)', 
+                color: 'var(--amber)', 
+                padding: '4px 10px', 
+                borderRadius: '999px',
+                fontSize: '12px',
+                fontWeight: 600,
+                border: '1px solid rgba(245, 158, 11, 0.2)'
+              }}>⚡ Heuristic Mode</span>
+            )}
           </div>
-
-          {/* Phase 2: Threat Intel */}
-          <div className="p-6 rounded-xl" style={{ background: colors.gradient.secondary }}>
-            <div className="text-2xl mb-2">🛡️</div>
-            <h3 className="text-lg font-semibold text-white mb-2">Phase 2: Threat Intel</h3>
-            <div className="text-3xl font-bold text-white mb-1">✅</div>
-            <div className="text-sm text-white opacity-80">Decentralized Marketplace</div>
-          </div>
-
-          {/* Phase 3: Insurance */}
-          <div className="p-6 rounded-xl" style={{ background: colors.gradient.success }}>
-            <div className="text-2xl mb-2">🛡️</div>
-            <h3 className="text-lg font-semibold text-white mb-2">Phase 3: Insurance</h3>
-            <div className="text-3xl font-bold text-white mb-1">🚀</div>
-            <div className="text-sm text-white opacity-80">Risk Coverage Layer</div>
-          </div>
-
-          {/* Phase 4: Standard */}
-          <div className="p-6 rounded-xl" style={{ background: colors.gradient.dark }}>
-            <div className="text-2xl mb-2">📋</div>
-            <h3 className="text-lg font-semibold text-white mb-2">Phase 4: Standard</h3>
-            <div className="text-3xl font-bold text-white mb-1">🎯</div>
-            <div className="text-sm text-white opacity-80">EIP-XXXX Protocol</div>
+          <div style={{ fontFamily: fontMono, fontSize: '14px', color: '#94a3b8' }}>
+            {stats.gpu} GPU / {stats.heuristic} Heuristic
           </div>
         </div>
-      </motion.div>
 
-      {/* Network Effects Visualization */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="p-8 rounded-2xl"
-        style={styles.card}
-      >
-        <h3 className="text-2xl font-bold mb-6" style={{ color: colors.accent }}>
-          🌐 Network Effects Flywheel
-        </h3>
-        
-        <div className="relative">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-6 rounded-xl" style={{ background: colors.primary + "20" }}>
-              <div className="text-4xl mb-4">🤖</div>
-              <h4 className="text-lg font-semibold mb-2" style={{ color: colors.primary }}>More Agents</h4>
-              <p className="text-sm" style={{ color: colors.muted }}>Every new agent strengthens the network</p>
-            </div>
-            
-            <div className="text-center p-6 rounded-xl" style={{ background: colors.secondary + "20" }}>
-              <div className="text-4xl mb-4">📊</div>
-              <h4 className="text-lg font-semibold mb-2" style={{ color: colors.secondary }}>More Threat Data</h4>
-              <p className="text-sm" style={{ color: colors.muted }}>Collective intelligence improves protection</p>
-            </div>
-            
-            <div className="text-center p-6 rounded-xl" style={{ background: colors.accent + "20" }}>
-              <div className="text-4xl mb-4">🛡️</div>
-              <h4 className="text-lg font-semibold mb-2" style={{ color: colors.accent }}>Better Protection</h4>
-              <p className="text-sm" style={{ color: colors.muted }}>Superior security attracts more agents</p>
-            </div>
-          </div>
-          
-          {/* Circular arrows showing the flywheel */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-32 h-32 rounded-full border-2 border-dashed" style={{ borderColor: colors.gold + "40" }}>
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-2xl" style={{ color: colors.gold }}>🔄</div>
-              </div>
-            </div>
+        <div style={{ position: 'relative', width: '64px', height: '64px' }}>
+          <svg width="64" height="64" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="8" />
+            <motion.circle 
+              cx="32" cy="32" r="28" 
+              fill="none" 
+              stroke={stats.isGpuActive ? 'var(--emerald)' : 'var(--amber)'} 
+              strokeWidth="8"
+              strokeDasharray="175.93"
+              initial={{ strokeDashoffset: 175.93 }}
+              animate={{ strokeDashoffset: 175.93 - (175.93 * (stats.gpuPercent || 0)) / 100 }}
+              transition={{ duration: 0.5 }}
+              strokeLinecap="round"
+              style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
+            />
+          </svg>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', fontFamily: fontMono }}>
+            {Math.round(stats.gpuPercent || 0)}%
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* African Excellence Story */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="p-8 rounded-2xl"
-        style={styles.card}
-      >
-        <h3 className="text-2xl font-bold mb-6" style={{ color: colors.gold, fontFamily: "'Cinzel Decorative', serif" }}>
-          🌍 The African Excellence Story
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <h4 className="text-xl font-semibold mb-4" style={{ color: colors.primary }}>Built in Ouagadougou</h4>
-            <p className="mb-4" style={{ color: colors.muted }}>
-              The infrastructure of trust for the autonomous economy was built in Burkina Faso's capital, 
-              proving that world-class blockchain infrastructure can emerge from Africa.
-            </p>
-            
-            <h4 className="text-xl font-semibold mb-4" style={{ color: colors.accent }}>Powered by AMD MI300X</h4>
-            <p className="mb-4" style={{ color: colors.muted }}>
-              Leveraging cutting-edge GPU technology for 10-100x performance improvements over CPU-based competitors, 
-              optimized specifically for the ROCm stack.
-            </p>
-          </div>
-          
-          <div>
-            <h4 className="text-xl font-semibold mb-4" style={{ color: colors.secondary }}>Dogon Cosmology</h4>
-            <p className="mb-4" style={{ color: colors.muted }}>
-              Named after the Dogon tradition of systemic renewal. Just as the historic Sigui festival resets societal structures every 60 years, 
-              our oracle resets trust in the agentic economy every 5ms.
-            </p>
-            
-            <div className="p-6 rounded-xl" style={{ background: colors.gradient.dark }}>
-              <div className="text-center">
-                <div className="text-4xl mb-4">🌠</div>
-                <h5 className="text-lg font-semibold text-white mb-2">Cultural Authenticity</h5>
-                <p className="text-sm text-white opacity-80">
-                  Our African origin story creates emotional connection and differentiation 
-                  that pure tech companies can't replicate.
-                </p>
-              </div>
-            </div>
-          </div>
+      {/* Latency Histogram */}
+      <div style={sectionStyle}>
+        <div style={{ marginBottom: '16px', fontSize: '14px', fontWeight: 600, color: '#e2e8f0' }}>Imina Na V2 — Inference Latency</div>
+        <div style={{ height: '120px', display: 'flex', alignItems: 'flex-end', gap: '4px' }}>
+          {histogramData.length === 0 ? (
+             <div style={{ width: '100%', textAlign: 'center', color: '#64748b', fontSize: '13px' }}>Awaiting data...</div>
+          ) : (
+            histogramData.map((ev, i) => {
+              const maxLatency = Math.max(200, ...histogramData.map(d => d.inference_time_ms));
+              const heightPct = Math.min(100, (ev.inference_time_ms / maxLatency) * 100);
+              return (
+                <motion.div
+                  key={`${ev.timestamp}-${i}`}
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: `${heightPct}%`, opacity: 1 }}
+                  style={{
+                    flex: 1,
+                    background: getLatencyColor(ev.inference_time_ms),
+                    borderRadius: '4px 4px 0 0',
+                    minHeight: '4px'
+                  }}
+                  title={`${ev.inference_time_ms.toFixed(1)} ms`}
+                />
+              )
+            })
+          )}
         </div>
-      </motion.div>
+      </div>
 
-      {/* AMD MI300X Benchmark Results */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="p-8 rounded-2xl relative overflow-hidden"
-        style={{ ...styles.card, border: `1px solid ${colors.gold}50` }}
-      >
-        <div className="absolute top-0 right-0 p-4 opacity-10">
-          <span className="text-8xl font-black italic">AMD</span>
+      {/* Live Inference Feed */}
+      <div style={{ ...sectionStyle, flex: 1, minHeight: '250px' }}>
+        <div style={{ marginBottom: '16px', fontSize: '14px', fontWeight: 600, color: '#e2e8f0' }}>Live Inference Feed</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <AnimatePresence>
+            {feedData.length === 0 ? (
+              <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                style={{ textAlign: 'center', color: '#64748b', padding: '20px 0', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--cyan)' }} />
+                Awaiting Imina Na inferences…
+              </motion.div>
+            ) : (
+              feedData.map((ev, i) => (
+                <motion.div
+                  key={`${ev.timestamp}-${ev.pattern}-${i}`}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  style={{ 
+                    display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 12px', 
+                    background: 'rgba(0,0,0,0.2)', borderRadius: '8px', fontSize: '12px' 
+                  }}
+                >
+                  <span style={{ color: getPatternColor(ev.pattern), fontWeight: 'bold', width: '130px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    {ev.pattern}
+                  </span>
+                  <span style={{ 
+                    padding: '2px 6px', borderRadius: '4px', fontSize: '10px', 
+                    background: ev.inference_source === 'gpu_imina_na' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                    color: ev.inference_source === 'gpu_imina_na' ? 'var(--emerald)' : 'var(--amber)'
+                  }}>
+                    {ev.inference_source === 'gpu_imina_na' ? 'GPU' : 'HEU'}
+                  </span>
+                  <span style={{ fontFamily: fontMono, color: '#cbd5e1' }}>{(ev.confidence * 100).toFixed(1)}%</span>
+                  <span style={{ fontFamily: fontMono, color: getLatencyColor(ev.inference_time_ms), marginLeft: 'auto' }}>
+                    {ev.inference_time_ms.toFixed(1)}ms
+                  </span>
+                  <span style={{ color: '#64748b', maxWidth: '60px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ev.model}>
+                    {ev.model}
+                  </span>
+                </motion.div>
+              ))
+            )}
+          </AnimatePresence>
         </div>
-        
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="text-3xl">🔥</span>
-            <h3 className="text-2xl font-bold" style={{ color: colors.gold }}>
-              Hardware Benchmark: MI300X
-            </h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 rounded-xl border border-gray-800" style={{ background: "rgba(0,0,0,0.4)" }}>
-              <h4 className="text-sm font-semibold mb-1" style={{ color: colors.muted }}>Model</h4>
-              <p className="text-xl font-bold text-white mb-4">Imina-Na V2 (7B)</p>
-              <div className="h-1 w-full bg-gray-800 rounded">
-                <div className="h-full bg-green-500 rounded" style={{ width: "100%" }}></div>
-              </div>
-              <p className="text-xs mt-2 text-green-400">100,000 Real Graphs Trained</p>
-            </div>
-            
-            <div className="p-6 rounded-xl border border-gray-800" style={{ background: "rgba(0,0,0,0.4)" }}>
-              <h4 className="text-sm font-semibold mb-1" style={{ color: colors.muted }}>Vision Latency</h4>
-              <div className="flex items-end gap-2 mb-4">
-                <p className="text-4xl font-bold" style={{ color: colors.accent }}>35.3</p>
-                <span className="text-sm pb-1 text-gray-400">ms / frame</span>
-              </div>
-              <div className="h-1 w-full bg-gray-800 rounded">
-                <div className="h-full bg-purple-500 rounded" style={{ width: "98%" }}></div>
-              </div>
-              <p className="text-xs mt-2 text-purple-400">Time-to-First-Token (TTFT)</p>
-            </div>
-            
-            <div className="p-6 rounded-xl border border-gray-800" style={{ background: "rgba(0,0,0,0.4)" }}>
-              <h4 className="text-sm font-semibold mb-1" style={{ color: colors.muted }}>Throughput</h4>
-              <div className="flex items-end gap-2 mb-4">
-                <p className="text-4xl font-bold" style={{ color: colors.secondary }}>188</p>
-                <span className="text-sm pb-1 text-gray-400">graphs / sec</span>
-              </div>
-              <div className="h-1 w-full bg-gray-800 rounded">
-                <div className="h-full bg-blue-500 rounded" style={{ width: "90%" }}></div>
-              </div>
-              <p className="text-xs mt-2 text-blue-400">Parallel Batch Processing</p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
+      </div>
 
-      {/* Technical Excellence Metrics */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="p-8 rounded-2xl"
-        style={styles.card}
-      >
-        <h3 className="text-2xl font-bold mb-6" style={{ color: colors.success }}>
-          ⚡ Platform Metrics
-        </h3>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="text-center p-6 rounded-xl" style={{ background: colors.primary + "10" }}>
-            <div className="text-3xl font-bold mb-2" style={{ color: colors.primary }}>&lt;50ms</div>
-            <div className="text-sm" style={{ color: colors.muted }}>Risk Engine Latency</div>
-            <div className="text-xs mt-1" style={{ color: colors.success }}>End-to-End Decision</div>
+      {/* Benchmark section */}
+      <div style={{ ...sectionStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>Hardware Benchmark</div>
+          <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--cyan)' }}>AMD MI300X</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '18px', fontWeight: 'bold', fontFamily: fontMono, color: '#fff' }}>35.3<span style={{ fontSize: '14px', color: '#94a3b8' }}>ms</span></div>
+          <div style={{ fontSize: '12px', color: 'var(--emerald)' }}>Avg Latency</div>
+        </div>
+      </div>
+
+      {/* ZK-Sigui Status Card */}
+      <div style={{ ...sectionStyle, display: 'flex', gap: '16px', alignItems: 'center' }}>
+        <div style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="40" height="40" viewBox="0 0 40 40">
+            <motion.path 
+              d="M20 2 L38 12 L38 28 L20 38 L2 28 L2 12 Z" 
+              fill="rgba(139, 92, 246, 0.1)" 
+              stroke="var(--violet)" 
+              strokeWidth="2"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+              style={{ transformOrigin: "50% 50%" }}
+            />
+            <circle cx="20" cy="20" r="4" fill="var(--violet)" />
+          </svg>
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--violet)' }}>🔐 ZK-Sigui PoC Active — Circuit v1</div>
+            <span style={{ fontSize: '10px', background: 'rgba(139, 92, 246, 0.15)', color: 'var(--violet)', padding: '2px 6px', borderRadius: '4px' }}>
+              Circom/Noir Q4 2026
+            </span>
           </div>
-          
-          <div className="text-center p-6 rounded-xl" style={{ background: colors.secondary + "10" }}>
-            <div className="text-3xl font-bold mb-2" style={{ color: colors.secondary }}>&gt;99%</div>
-            <div className="text-sm" style={{ color: colors.muted }}>Threat Detection</div>
-            <div className="text-xs mt-1" style={{ color: colors.success }}>vs 88% baseline</div>
-          </div>
-          
-          <div className="text-center p-6 rounded-xl" style={{ background: colors.accent + "10" }}>
-            <div className="text-3xl font-bold mb-2" style={{ color: colors.accent }}>1000+</div>
-            <div className="text-sm" style={{ color: colors.muted }}>Evaluations/Second</div>
-            <div className="text-xs mt-1" style={{ color: colors.success }}>Async Pipeline</div>
-          </div>
-          
-          <div className="text-center p-6 rounded-xl" style={{ background: colors.success + "10" }}>
-            <div className="text-3xl font-bold mb-2" style={{ color: colors.success }}>1M+</div>
-            <div className="text-sm" style={{ color: colors.muted }}>Training Samples</div>
-            <div className="text-xs mt-1" style={{ color: colors.success }}>VLM Grounding</div>
+          <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#94a3b8', fontFamily: fontMono }}>
+            <span>Size: 64 bytes per proof</span>
+            <span>Status: Groth16-style simulation (BN128)</span>
           </div>
         </div>
-      </motion.div>
+      </div>
+
     </div>
   );
 }
+
+export default VisionMetricsPanel;

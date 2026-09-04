@@ -1,0 +1,54 @@
+name: 'Sigui Shield Action'
+description: 'Automated AI Agent & Smart Contract Security Inspector powered by Sigui DePIN Oracle'
+author: 'Sigui Security'
+branding:
+  icon: 'shield'
+  color: 'green'
+
+inputs:
+  api_key:
+    description: 'Sigui API Key for authentication'
+    required: false
+    default: 'sigui_live_key_alpha'
+  endpoint:
+    description: 'Sigui Gateway URL'
+    required: false
+    default: 'http://127.0.0.1:8000'
+  target_dir:
+    description: 'Target directory or file to scan'
+    required: false
+    default: '.'
+  fail_on_threat:
+    description: 'Fail the GitHub build if a BLOCK verdict or critical threat is detected'
+    required: false
+    default: 'true'
+
+outputs:
+  verdict:
+    description: 'Overall security verdict (ALLOW | BLOCK | ESCALATE)'
+  threat_count:
+    description: 'Number of threats detected'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests httpx loguru
+
+    - name: Run Sigui Security Inspector
+      shell: bash
+      env:
+        SIGUI_API_KEY: ${{ inputs.api_key }}
+        SIGUI_ENDPOINT: ${{ inputs.endpoint }}
+        SIGUI_TARGET_DIR: ${{ inputs.target_dir }}
+        SIGUI_FAIL_ON_THREAT: ${{ inputs.fail_on_threat }}
+      run: |
+        python scripts/sigui_ci_scan.py

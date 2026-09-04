@@ -158,6 +158,13 @@ class Settings(BaseSettings):
     # ─── Database ─────────────────────────────────────────────────────────────
     db_path: str = Field(default="./db/sigui.db", env="DB_PATH")
 
+    # ─── API v2 Security ──────────────────────────────────────────────────────
+    sigui_api_keys: str = Field(
+        default="sigui_live_key_alpha,sigui_live_key_beta,demo_key",
+        env="SIGUI_API_KEYS",
+    )
+    rate_limit_per_min: int = Field(default=120, env="RATE_LIMIT_PER_MIN")
+
     # ─── Demo Mode ────────────────────────────────────────────────────────────
     demo_mode: bool = Field(default=True, env="DEMO_MODE")
     initial_balance_usdc: float = Field(default=0.60, env="INITIAL_BALANCE_USDC")

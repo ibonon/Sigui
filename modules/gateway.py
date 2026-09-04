@@ -5,6 +5,7 @@ FastAPI + x402 middleware — all public endpoints
 
 import asyncio
 import json
+import os
 import time
 from collections import defaultdict as _defaultdict
 from datetime import datetime, timezone
@@ -13,7 +14,51 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, Security
 from loguru import logger
+
+# ── API v2 Bearer Auth ────────────────────────────────────────────────────────
+# Keys are loaded from SIGUI_API_KEYS env var (comma-separated) or a default dev key
+_API_KEYS: set[str] = set(
+    k.strip()
+    for k in os.environ.get("SIGUI_API_KEYS", "sigui-dev-key-2026").split(",")
+    if k.strip()
+)
+_bearer_scheme = HTTPBearer(auto_error=False)
+
+# Per-API-key rate limiting (100 req/min)
+_v2_rate_store: dict[str, list[float]] = _defaultdict(list)
+_V2_RATE_WINDOW_S: float = 60.0
+_V2_RATE_MAX_CALLS: int = 100
+
+
+def _check_v2_rate_limit(api_key: str) -> bool:
+    now = time.time()
+    window = _v2_rate_store[api_key]
+    while window and now - window[0] > _V2_RATE_WINDOW_S:
+        window.pop(0)
+    if len(window) >= _V2_RATE_MAX_CALLS:
+        return False
+    window.append(now)
+    return True
+
+
+def _get_api_key(credentials: Optional[HTTPAuthorizationCredentials] = Security(_bearer_scheme)) -> str:
+    """Dependency: validate Bearer token and return the key."""
+    token = credentials.credentials if credentials else None
+    if not token or token not in _API_KEYS:
+        raise HTTPException(
+            status_code=401,
+            detail={"error": "Invalid or missing API key", "hint": "Pass 'Authorization: Bearer <your-key>' header"},
+        )
+    if not _check_v2_rate_limit(token):
+        raise HTTPException(
+            status_code=429,
+            detail={"error": "Rate limit exceeded", "limit": f"{_V2_RATE_MAX_CALLS} req/min", "retry_after_s": 60},
+            headers={"Retry-After": "60"},
+        )
+    return token
 
 from agent.loop import AgentMode, agent as arc_agent
 from blockchain import get_adapter
@@ -708,6 +753,19 @@ def register_routes(app: FastAPI):
             }
         )
 
+        # ── Feedback Loop: record BLOCK + vision pattern ───────────────────────
+        if dec == "BLOCK" and vision_eval.pattern in ("DRAIN_STAR", "MIXING_CHAIN", "COORDINATED_CLUSTER"):
+            try:
+                from modules.feedback_loop import feedback_loop
+                asyncio.create_task(feedback_loop.record_block(
+                    destination=action.destination,
+                    pattern=vision_eval.pattern,
+                    confidence=vision_eval.confidence,
+                    graph_summary=vision_eval.graph_summary,
+                ))
+            except Exception as _fb_err:
+                logger.warning(f"[GATEWAY] Feedback loop error: {_fb_err}")
+
         # ── NexusMind Integration ──────────────────────────────────────────────
         from modules.nexusmind_router import broadcast_decision
         asyncio.create_task(broadcast_decision(
@@ -718,8 +776,24 @@ def register_routes(app: FastAPI):
             latency_ms=decision_out.processing_time_ms,
             risk_score=risk.risk_score,
             fee_usdc=final_price,
-            node_id="node_001",  # Simulate this node handling the request for now
+            node_id="node_001",
         ))
+
+        # ── Vision inference broadcast (for VisionMetricsPanel live feed) ───────
+        try:
+            from modules.imina_na_vision import _vision_broadcast_hook
+            if _vision_broadcast_hook is not None:
+                asyncio.create_task(_vision_broadcast_hook({
+                    "type": "vision_inference",
+                    "pattern": vision_eval.pattern,
+                    "confidence": vision_eval.confidence,
+                    "inference_source": vision_eval.inference_source,
+                    "inference_time_ms": vision_eval.inference_time_ms,
+                    "model": vision_eval.model,
+                    "timestamp": time.time(),
+                }))
+        except Exception:
+            pass
 
         return payload
 
@@ -1244,3 +1318,210 @@ def register_routes(app: FastAPI):
             pass
         except asyncio.CancelledError:
             pass
+
+    # ── API v2 — /v2/evaluate (Bearer auth, inference_source, ZK proof) ───────
+
+    @app.post("/v2/evaluate", tags=["Security v2"])
+    async def evaluate_v2(request: Request, api_key: str = Depends(_get_api_key)):
+        """
+        **Sigui API v2** — Production security evaluation endpoint.
+
+        - Requires `Authorization: Bearer <api-key>` header
+        - Rate limited: 100 req/min per key
+        - Returns `inference_source` field: `gpu_imina_na` | `heuristic_fallback` | `disabled`
+        - Pass `?zk=true` to include a ZK-Sigui proof in the response
+        - Returns `threat_intel_matched: bool` if address has prior BLOCK history
+        """
+        t_start = time.perf_counter()
+        body = await request.json()
+        zk_requested = request.query_params.get("zk", "").lower() in ("true", "1", "yes")
+
+        chain = _parse_chain(request.headers.get("X-Chain")) or settings.default_chain
+        if "chain" not in body:
+            body["chain"] = chain
+        if "agent_id" not in body:
+            body["agent_id"] = f"v2_api_{api_key[:8]}"
+        action = ActionInput(**body)
+        action.chain = chain
+        action.context["chain"] = chain
+
+        # Treasury health
+        try:
+            mode = treasury.operating_mode
+        except TreasuryEmptyError:
+            raise HTTPException(status_code=503, detail="Sigui treasury empty — service temporarily unavailable")
+
+        await memory.ensure_agent(action.agent_id)
+        agent_profile = await memory.get_agent(action.agent_id)
+
+        # Record revenue (no x402 for v2 — API key is the auth)
+        base_price = await compute_evaluation_price(action.amount_usdc, chain)
+        await treasury.record_revenue(base_price, "v2_api_eval", chain=chain)
+        await hogonat_client.add_fee(base_price * 0.20)
+
+        # Freeze gate
+        if await memory.is_agent_frozen(action.agent_id):
+            return {"decision": "BLOCK", "risk_score": 1.0, "confidence": 0.99,
+                    "reason": "Agent frozen by MemoClaw.", "inference_source": "memoclaw_freeze",
+                    "threat_intel_matched": True, "zk_proof": None, "api_version": "v2"}
+
+        # Pattern + flow context
+        pattern_extra = await memory.check_pattern_fuzzy(action.action_type, action.destination, action.amount_usdc)
+        await memory.record_flow(action.agent_id, action.destination, action.amount_usdc, chain=chain)
+        cumulative = await memory.get_cumulative_flow(action.agent_id, action.destination, window_minutes=10, chain=chain)
+        global_flow = await memory.get_global_flow(action.agent_id, window_minutes=10, all_chains=True)
+        action.context["cumulative_flow"] = cumulative
+        action.context["global_flow"] = global_flow
+
+        # Service + contract
+        svc_eval = await service_registry.evaluate_service(action.destination)
+        action.context["service_eval"] = svc_eval
+        contract_eval = await contract_inspector.analyze(action.destination)
+        action.context["contract_eval"] = {
+            "is_contract": contract_eval.is_contract, "risk_delta": contract_eval.risk_delta,
+            "flags": contract_eval.flags, "reason": contract_eval.reason,
+        }
+
+        # Risk score
+        risk = await risk_engine.score(action, agent_profile, pattern_extra)
+
+        # Vision layer
+        graph_payload = await graph_builder_service.build_for_action(
+            agent_id=action.agent_id, destination=action.destination,
+            chain=chain, amount_usdc=action.amount_usdc,
+        )
+        vision_eval = await imina_na_vision.analyze(
+            {"agent_id": action.agent_id, "action_type": action.action_type,
+             "amount_usdc": action.amount_usdc, "destination": action.destination,
+             "chain": chain, "context": action.context},
+            graph=graph_payload,
+        )
+
+        kanaga_out = kanaga_engine.compute(
+            components=risk.components,
+            deltas={"vision": vision_eval.risk_delta},
+            weights=body.get("weights", {"financial": 1.0, "behavioral": 1.0, "visual_topology": 1.0}),
+        )
+        risk.risk_score = kanaga_out.risk_score
+
+        escalation_available = treasury.should_escalate(risk.risk_score)
+        decision_out = await decision_engine.decide(
+            agent_id=action.agent_id, action_type=action.action_type,
+            amount_usdc=action.amount_usdc, destination=action.destination,
+            risk=risk, sigui_mode=mode, escalation_available=escalation_available,
+            agent_profile=agent_profile, skip_onchain_log=True,
+        )
+
+        dec = decision_out.decision
+
+        # Threat intel match
+        threat_intel_matched = False
+        try:
+            from modules.feedback_loop import feedback_loop
+            tis = feedback_loop.get_threat_intel(limit=1000)
+            threat_intel_matched = any(
+                ti.get("destination", "")[:10] == action.destination[:10] for ti in tis
+            )
+        except Exception:
+            pass
+
+        # Feedback loop
+        if dec == "BLOCK" and vision_eval.pattern in ("DRAIN_STAR", "MIXING_CHAIN", "COORDINATED_CLUSTER"):
+            try:
+                from modules.feedback_loop import feedback_loop
+                asyncio.create_task(feedback_loop.record_block(
+                    destination=action.destination,
+                    pattern=vision_eval.pattern,
+                    confidence=vision_eval.confidence,
+                    graph_summary=vision_eval.graph_summary,
+                ))
+            except Exception:
+                pass
+
+        # ZK proof (optional)
+        zk_proof = None
+        if zk_requested:
+            try:
+                from modules.zk_sigui import zk_sigui
+                zk_result = zk_sigui.prove_and_verify({
+                    "pattern": vision_eval.pattern,
+                    "peer_count": graph_payload.get("summary", {}).get("focus_unique_peer_senders", 0),
+                    "chain_count": graph_payload.get("summary", {}).get("chain_count", 1),
+                })
+                zk_proof = zk_result
+            except Exception as _zk_err:
+                zk_proof = {"error": str(_zk_err)}
+
+        total_ms = int((time.perf_counter() - t_start) * 1000)
+
+        return {
+            "api_version": "v2",
+            "decision": dec,
+            "risk_score": round(risk.risk_score, 4),
+            "confidence": round(risk.confidence, 4),
+            "reason": decision_out.reason,
+            "action_hash": decision_out.action_hash,
+            "processing_time_ms": total_ms,
+            "inference_source": vision_eval.inference_source,
+            "vision_pattern": vision_eval.pattern,
+            "vision_confidence": round(vision_eval.confidence, 4),
+            "vision_evidence": vision_eval.visual_evidence,
+            "threat_intel_matched": threat_intel_matched,
+            "zk_proof": zk_proof,
+            "layers_triggered": {
+                "financial": round(kanaga_out.components.get("action", 0.0), 4),
+                "behavioral": round(kanaga_out.components.get("context", 0.0), 4),
+                "vision": round(vision_eval.risk_delta, 4),
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+    # ── API v2 — Threat Intel ─────────────────────────────────────────────────
+
+    @app.get("/api/threat-intel", tags=["Security v2"])
+    async def get_threat_intel(limit: int = 50):
+        """
+        Returns patterns learned by the Sigui Feedback Loop.
+        Each BLOCK where Imina Na detected a known attack pattern trains the system.
+        Free endpoint — no auth required.
+        """
+        try:
+            from modules.feedback_loop import feedback_loop
+            patterns = feedback_loop.get_threat_intel(limit=min(limit, 200))
+            stats = feedback_loop.get_stats()
+            return {
+                "total_learned": stats["total_learned"],
+                "unique_destinations": stats["unique_destinations"],
+                "pattern_breakdown": stats["pattern_breakdown"],
+                "patterns": patterns,
+                "note": "Addresses in this list are in Sigui's dynamic blacklist. Confidence >= 0.75 required to learn.",
+            }
+        except ImportError:
+            return {"total_learned": 0, "patterns": [], "note": "Feedback loop module not loaded."}
+
+    # ── API v2 — ZK-Sigui Status ──────────────────────────────────────────────
+
+    @app.get("/api/zk-sigui/status", tags=["Security v2"])
+    async def zk_sigui_status():
+        """ZK-Sigui proof-of-concept status and circuit info."""
+        try:
+            from modules.zk_sigui import zk_sigui
+            return zk_sigui.get_status()
+        except ImportError:
+            return {"status": "not_loaded", "note": "ZK-Sigui module not available."}
+
+    @app.post("/api/zk-sigui/prove", tags=["Security v2"])
+    async def zk_prove(request: Request):
+        """
+        Generate a ZK-Sigui proof for a given pattern witness.
+        Body: {"pattern": "NORMAL", "peer_count": 1, "chain_count": 1}
+        """
+        try:
+            from modules.zk_sigui import zk_sigui
+            body = await request.json()
+            result = zk_sigui.prove_and_verify(body)
+            return result
+        except ImportError:
+            raise HTTPException(status_code=503, detail="ZK-Sigui module not available")
+        except Exception as e:
+            raise HTTPException(status_code=422, detail=str(e))
