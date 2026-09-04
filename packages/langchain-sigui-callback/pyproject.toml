@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "langchain-sigui-callback"
+version = "3.0.0"
+description = "Sigui DePIN AI Security Oracle Callback Handler for LangChain & LangGraph agents"
+readme = "README.md"
+authors = [{ name = "Sigui Protocol", email = "contact@sigui.xyz" }]
+license = { text = "MIT" }
+dependencies = [
+    "langchain-core>=0.1.0"
+]
+keywords = ["langchain", "langgraph", "security", "sigui", "oracle", "depin", "ai-security"]
+
+[project.urls]
+Homepage = "https://github.com/ibonon/Sigui"
+Repository = "https://github.com/ibonon/Sigui"

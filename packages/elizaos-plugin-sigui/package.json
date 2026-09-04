@@ -1,27 +1,62 @@
 {
   "name": "@elizaos-plugins/plugin-sigui",
   "version": "3.0.0",
-  "description": "Sigui DePIN AI Security Oracle plugin for ElizaOS agents.",
+  "description": "Sigui DePIN AI Security Oracle plugin for ElizaOS agents. Detects Drain Stars, Mixer Chains & Rug Pulls using Qwen2-VL-7B on AMD MI300X + ZK proofs.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "images"
+  ],
   "scripts": {
-    "build": "tsup",
-    "test": "vitest run"
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
   },
-  "dependencies": {
+  "peerDependencies": {
+    "@elizaos/core": "^0.1.7"
+  },
+  "devDependencies": {
     "@elizaos/core": "^0.1.7",
-    "httpx": "^0.1.0"
+    "tsup": "^8.0.2",
+    "typescript": "^5.5.3",
+    "@types/node": "^22.1.0",
+    "vitest": "^1.6.0"
   },
   "keywords": [
     "elizaos",
     "elizaos-plugin",
+    "elizaos-plugins",
     "sigui",
     "security",
     "oracle",
     "depin",
-    "zk-proofs"
+    "zk-proofs",
+    "ai-security",
+    "blockchain",
+    "drain-star",
+    "rug-pull",
+    "agentic-security"
   ],
-  "author": "Sigui Protocol",
-  "license": "MIT"
+  "author": "Sigui Protocol <contact@sigui.xyz>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ibonon/Sigui.git",
+    "directory": "packages/elizaos-plugin-sigui"
+  },
+  "homepage": "https://github.com/ibonon/Sigui#readme",
+  "bugs": {
+    "url": "https://github.com/ibonon/Sigui/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22"
+  }
 }
