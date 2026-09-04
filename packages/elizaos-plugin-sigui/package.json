@@ -8,24 +8,22 @@
   "type": "module",
   "files": [
     "dist",
-    "README.md",
-    "images"
+    "README.md"
   ],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
     "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
-    "test": "vitest run",
-    "prepublishOnly": "npm run build"
+    "test": "vitest run"
   },
   "peerDependencies": {
     "@elizaos/core": "^0.1.7"
   },
   "devDependencies": {
     "@elizaos/core": "^0.1.7",
-    "tsup": "^8.0.2",
-    "typescript": "^5.5.3",
-    "@types/node": "^22.1.0",
-    "vitest": "^1.6.0"
+    "@types/node": "^22.20.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^1.6.1"
   },
   "keywords": [
     "elizaos",
