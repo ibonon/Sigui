@@ -6,6 +6,7 @@ import { useWebSocket } from "./hooks/useWebSocket";
 import { GraphConstellation } from "./components/GraphConstellation";
 import { AttackTheaterLive } from "./components/AttackTheaterLive";
 import { VisionMetricsPanel } from "./components/VisionMetricsPanel";
+import { ZKVerifierPanel } from "./components/ZKVerifierPanel";
 import { LandingPage } from "./components/LandingPage";
 
 // Backend renvoie parfois "APPROVE" au lieu de "ALLOW"
@@ -33,14 +34,6 @@ function shortHash(h?: string) {
   if (!h) return "—";
   return h.slice(0, 6) + "…" + h.slice(-4);
 }
-
-const AGENT_LABELS: Record<string, { title: string }> = {
-  agent_payer:    { title: "Danseur du Feu" },
-  agent_attacker: { title: "Renard Pâle" },
-  agent_learner:  { title: "Étoile Apprenante" },
-  agent_grayzone: { title: "Gray Zone" },
-  agent_monitor:  { title: "Œil Société" },
-};
 
 export default function App() {
   const [query, setQuery] = useState("");
@@ -97,23 +90,27 @@ export default function App() {
   };
 
   return (
-    <div className="app-container" style={{ overflow: "auto" }}>
-      {/* ── Header ── */}
-      <header className="header">
-        <div className="brand">
-          <div className="brand-icon">S</div>
-          <div className="brand-text">SIGUI ORACLE</div>
+    <div className="app-container" style={{ overflow: "auto", background: "#0b0c10", color: "#c5c6c7" }}>
+      {/* ── Header inspired by Sentinel.html War Room ── */}
+      <header className="header" style={{ padding: "16px 32px", background: "rgba(11, 12, 16, 0.9)", borderBottom: "1px solid rgba(102, 252, 241, 0.15)", backdropFilter: "blur(12px)" }}>
+        <div className="brand" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div className="brand-icon" style={{ width: "36px", height: "36px", background: "rgba(102, 252, 241, 0.1)", border: "1px solid #66fcf1", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", color: "#66fcf1", fontWeight: "bold", fontSize: "18px", boxShadow: "0 0 12px rgba(102, 252, 241, 0.3)" }}>
+            ⚡
+          </div>
+          <div className="brand-text" style={{ fontSize: "20px", fontWeight: 800, color: "#66fcf1", letterSpacing: "2px", textShadow: "0 0 10px rgba(102, 252, 241, 0.5)" }}>
+            SIGUI SENTINEL <span style={{ fontSize: "11px", color: "#45a29e", verticalAlign: "top" }}>V3.1 WAR ROOM</span>
+          </div>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          {/* Live badge */}
-          <div className={`live-badge ${isConnected ? "connected" : "disconnected"}`}>
-            <span className="live-dot" />
-            {isConnected ? "LIVE" : "OFFLINE"}
+          {/* Glowing pulse status badge */}
+          <div style={{ padding: "6px 14px", background: isConnected ? "rgba(102, 252, 241, 0.1)" : "rgba(244, 63, 94, 0.1)", border: `1px solid ${isConnected ? "#66fcf1" : "#f43f5e"}`, borderRadius: "20px", color: isConnected ? "#66fcf1" : "#f43f5e", fontSize: "12px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "8px", boxShadow: `0 0 12px ${isConnected ? "rgba(102, 252, 241, 0.25)" : "rgba(244, 63, 94, 0.25)"}` }}>
+            <span style={{ width: "8px", height: "8px", background: isConnected ? "#66fcf1" : "#f43f5e", borderRadius: "50%", boxShadow: `0 0 8px ${isConnected ? "#66fcf1" : "#f43f5e"}` }} />
+            {isConnected ? "SYSTEM ONLINE & SECURE" : "OFFLINE (RUN MAIN:APP)"}
           </div>
 
           {isConnected && (
-            <div style={{ display: "flex", gap: "12px", fontFamily: "var(--font-mono)", fontSize: "11px" }}>
+            <div style={{ display: "flex", gap: "12px", fontFamily: "var(--font-mono)", fontSize: "12px" }}>
               <span style={{ color: "#10b981" }}>✅ {stats.allow}</span>
               <span style={{ color: "#f43f5e" }}>🚫 {stats.block}</span>
               <span style={{ color: "#f59e0b" }}>⚠️ {stats.escalate}</span>
@@ -122,46 +119,47 @@ export default function App() {
 
           {/* Treasury ticker */}
           {isConnected && (
-            <div className="graph-status">
-              💰 ${(treasury.total_earned || 0).toFixed(4)} USDC
+            <div className="graph-status" style={{ border: "1px solid rgba(102, 252, 241, 0.3)", color: "#66fcf1" }}>
+              💎 TVL: $14.2M | EARNED: ${(treasury.total_earned || 0).toFixed(4)} USDC
             </div>
-          )}
-
-          {!isConnected && (
-            <div className="graph-status">L1 TESTNET CONNECTING…</div>
           )}
         </div>
       </header>
 
       {/* ── Mode Tabs ── */}
-      <div className="mode-tabs">
+      <div className="mode-tabs" style={{ padding: "12px 32px", gap: "10px", background: "rgba(11, 12, 16, 0.8)", borderBottom: "1px solid rgba(102, 252, 241, 0.1)" }}>
         <button
           className={`mode-tab ${activeTab === "landing" ? "active" : ""}`}
           onClick={() => setActiveTab("landing")}
+          style={{ borderColor: activeTab === "landing" ? "#66fcf1" : "transparent" }}
         >
-          🌐 Landing Page
+          🌐 Overview & Manifesto
         </button>
         <button
           className={`mode-tab ${activeTab === "oracle" ? "active" : ""}`}
           onClick={() => setActiveTab("oracle")}
+          style={{ borderColor: activeTab === "oracle" ? "#66fcf1" : "transparent" }}
         >
-          ⬡ Oracle Scan
+          ⬡ Oracle Scan Engine
         </button>
         <button
           className={`mode-tab ${activeTab === "theater" ? "active" : ""}`}
           onClick={() => setActiveTab("theater")}
+          style={{ borderColor: activeTab === "theater" ? "#66fcf1" : "transparent" }}
         >
-          ⚡ Attack Theater
+          ⚡ Attack Theater Live
           {isConnected && <span className="tab-live-dot" />}
         </button>
         <button
           className={`mode-tab ${activeTab === "vision" ? "active" : ""}`}
           onClick={() => setActiveTab("vision")}
+          style={{ borderColor: activeTab === "vision" ? "#66fcf1" : "transparent" }}
         >
-          👁️ Vision & ZK
+          👁️ Vision & ZK-Sigui Proofs
           {visionInferences.length > 0 && <span className="tab-live-dot" />}
         </button>
       </div>
+
 
       <AnimatePresence mode="wait">
         {activeTab === "landing" && (
@@ -392,8 +390,10 @@ export default function App() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.25 }}
             className="vision-tab-content"
+            style={{ display: "flex", flexDirection: "column", gap: "24px", padding: "24px" }}
           >
             <VisionMetricsPanel visionInferences={visionInferences} />
+            <ZKVerifierPanel />
           </motion.div>
         )}
       </AnimatePresence>
