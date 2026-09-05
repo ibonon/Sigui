@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sigui Protocol — DePIN AI Security Oracle</title>
+    <style>
+        :root {
+            --bg: #0b0c10;
+            --primary: #66fcf1;
+            --secondary: #45a29e;
+            --surface: rgba(31, 40, 51, 0.6);
+            --text: #c5c6c7;
+        }
+        body {
+            margin: 0;
+            padding: 40px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            text-align: center;
+        }
+        h1 {
+            color: var(--primary);
+            font-size: 2.8rem;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+        p {
+            max-width: 600px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(102, 252, 241, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+        .card {
+            background: var(--surface);
+            border: 1px solid rgba(102, 252, 241, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: white;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+        }
+        .card h3 {
+            margin: 0 0 8px 0;
+            color: var(--primary);
+        }
+        .card p {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="badge">v3.1 LIVE • DePIN AI SECURITY ORACLE</div>
+    <h1>SIGUI PROTOCOL</h1>
+    <p>Real-time AI security oracle & ZK-shield for autonomous financial agents. Powered by Qwen2-VL-7B on AMD MI300X GPUs and Groth16 ZK-proofs.</p>
+
+    <div class="grid">
+        <a href="sentinel.html" class="card">
+            <h3>⚡ Sentinel War Room</h3>
+            <p>Live threat radar & network status dashboard.</p>
+        </a>
+        <a href="https://github.com/ibonon/Sigui" class="card">
+            <h3>🐙 GitHub Monorepo</h3>
+            <p>100% open-source protocol codebase & contracts.</p>
+        </a>
+        <a href="https://www.npmjs.com/package/sigui-elizaos-plugin" class="card">
+            <h3>📦 NPM Package</h3>
+            <p>Official ElizaOS agent security plugin.</p>
+        </a>
+        <a href="https://github.com/ibonon/Sigui/tree/master/packages/langchain-sigui-callback" class="card">
+            <h3>🔗 LangChain Callback</h3>
+            <p>Callback handler for LangChain & LangGraph agents.</p>
+        </a>
+    </div>
+</body>
+</html>
