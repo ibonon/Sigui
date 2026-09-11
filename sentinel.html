@@ -421,13 +421,66 @@
       const ctx = canvas.getContext('2d');
       let W, H, t = 0;
 
+      // ── Mouse / Touch state ──
+      const mouse = { x: -9999, y: -9999, vx: 0, vy: 0, px: -9999, py: -9999 };
+      let ripples = [];
+      let particles = [];
+
       function resize() {
         W = canvas.width  = window.innerWidth;
         H = canvas.height = window.innerHeight;
+        spawnParticles();
       }
       resize();
       window.addEventListener('resize', resize);
 
+      window.addEventListener('mousemove', e => {
+        mouse.vx = e.clientX - mouse.px;
+        mouse.vy = e.clientY - mouse.py;
+        mouse.px = mouse.x;
+        mouse.py = mouse.y;
+        mouse.x  = e.clientX;
+        mouse.y  = e.clientY;
+      });
+      window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+
+      window.addEventListener('touchmove', e => {
+        const t0 = e.touches[0];
+        mouse.vx = t0.clientX - mouse.px;
+        mouse.vy = t0.clientY - mouse.py;
+        mouse.px = mouse.x;
+        mouse.py = mouse.y;
+        mouse.x  = t0.clientX;
+        mouse.y  = t0.clientY;
+      }, { passive: true });
+
+      // Click → ripple shockwave
+      window.addEventListener('click', e => {
+        ripples.push({ x: e.clientX, y: e.clientY, r: 0, maxR: Math.min(W, H) * 0.55, alpha: 0.6, speed: 6 });
+      });
+      window.addEventListener('touchstart', e => {
+        const t0 = e.touches[0];
+        ripples.push({ x: t0.clientX, y: t0.clientY, r: 0, maxR: Math.min(W, H) * 0.55, alpha: 0.6, speed: 6 });
+      }, { passive: true });
+
+      // ── Particles ──
+      function mkParticle() {
+        return {
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: 0.8 + Math.random() * 2.2,
+          vx: (Math.random() - 0.5) * 0.35,
+          vy: (Math.random() - 0.5) * 0.35,
+          alpha: 0.06 + Math.random() * 0.22,
+          pulse: Math.random() * Math.PI * 2,
+        };
+      }
+      function spawnParticles() {
+        const n = Math.floor((W * H) / 14000);
+        particles = Array.from({ length: n }, mkParticle);
+      }
+
+      // ── Wave config ──
       const WAVES = [
         { amp: 28, freq: 0.012, speed: 0.008, yBase: 0.55, alpha: 0.18, lw: 1.8 },
         { amp: 18, freq: 0.018, speed: 0.013, yBase: 0.58, alpha: 0.12, lw: 1.2 },
@@ -443,21 +496,137 @@
         ctx.clearRect(0, 0, W, H);
         t += 1;
 
+        const MX = mouse.x;
+        const MY = mouse.y;
+        const INFLUENCE_R = 220;
+        const PUSH_STR    = 60;
+
+        // ── Waves (with mouse + ripple distortion) ──
         WAVES.forEach(w => {
           ctx.beginPath();
           ctx.moveTo(0, H * w.yBase);
 
           for (let x = 0; x <= W; x += 3) {
-            const y = H * w.yBase
+            let y = H * w.yBase
               + Math.sin(x * w.freq + t * w.speed) * w.amp
               + Math.sin(x * w.freq * 0.5 + t * w.speed * 1.7) * w.amp * 0.35;
+
+            // Mouse repel / push
+            if (MX !== -9999) {
+              const dx = x - MX;
+              const dy = y - MY;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < INFLUENCE_R) {
+                const factor = 1 - dist / INFLUENCE_R;
+                y += factor * PUSH_STR * Math.sign(dy || 1) * factor;
+              }
+            }
+
+            // Ripple influence
+            ripples.forEach(rp => {
+              const dx = x - rp.x;
+              const dy = y - rp.y;
+              const waveDist = Math.sqrt(dx * dx + dy * dy);
+              const ring = rp.r;
+              const ringW = 70;
+              if (waveDist > ring - ringW && waveDist < ring + ringW) {
+                const strength = (1 - Math.abs(waveDist - ring) / ringW) * rp.alpha * 44;
+                y += Math.sin((waveDist - ring) * 0.08) * strength;
+              }
+            });
+
             ctx.lineTo(x, y);
           }
 
-          ctx.strokeStyle = `rgba(245, 166, 35, ${w.alpha})`;
+          // Boost alpha near cursor
+          let boostAlpha = w.alpha;
+          if (MX !== -9999) {
+            const dc = Math.hypot(MX - W / 2, MY - H / 2);
+            boostAlpha = Math.min(w.alpha * 1.9, w.alpha + 0.14 * (1 - Math.min(1, dc / 500)));
+          }
+
+          ctx.strokeStyle = `rgba(245, 166, 35, ${boostAlpha})`;
           ctx.lineWidth = w.lw;
           ctx.stroke();
         });
+
+        // ── Ripple shockwaves ──
+        ripples = ripples.filter(rp => rp.r < rp.maxR && rp.alpha > 0.005);
+        ripples.forEach(rp => {
+          rp.r    += rp.speed;
+          rp.speed *= 0.984;
+          rp.alpha *= 0.953;
+
+          for (let i = 0; i < 3; i++) {
+            const ro = rp.r - i * 30;
+            if (ro <= 0) continue;
+            ctx.beginPath();
+            ctx.arc(rp.x, rp.y, ro, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(245, 166, 35, ${rp.alpha * (1 - i * 0.28)})`;
+            ctx.lineWidth = 1.4 - i * 0.35;
+            ctx.stroke();
+          }
+          if (rp.r < 90) {
+            const dotA = rp.alpha * (1 - rp.r / 90) * 1.5;
+            ctx.beginPath();
+            ctx.arc(rp.x, rp.y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(245, 166, 35, ${dotA})`;
+            ctx.fill();
+          }
+        });
+
+        // ── Floating particles ──
+        particles.forEach(p => {
+          p.x    += p.vx;
+          p.y    += p.vy;
+          p.pulse += 0.03;
+
+          if (MX !== -9999) {
+            const dx = MX - p.x;
+            const dy = MY - p.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 180) {
+              const pull = 0.012 * (1 - dist / 180);
+              p.vx += dx * pull * 0.1;
+              p.vy += dy * pull * 0.1;
+            }
+          }
+          p.vx *= 0.97;
+          p.vy *= 0.97;
+
+          if (p.x < -10) p.x = W + 10;
+          if (p.x > W + 10) p.x = -10;
+          if (p.y < -10) p.y = H + 10;
+          if (p.y > H + 10) p.y = -10;
+
+          const pr = p.r * (0.7 + 0.3 * Math.sin(p.pulse));
+          const pa = p.alpha * (0.55 + 0.45 * Math.sin(p.pulse * 1.3));
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, pr, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(245, 166, 35, ${pa})`;
+          ctx.fill();
+        });
+
+        // ── Cursor glow halo ──
+        if (MX !== -9999) {
+          const speed  = Math.hypot(mouse.vx, mouse.vy);
+          const glowR  = 65 + speed * 2.5;
+          const haloA  = 0.08 + Math.min(0.1, speed * 0.006);
+          const grad   = ctx.createRadialGradient(MX, MY, 0, MX, MY, glowR);
+          grad.addColorStop(0, `rgba(245, 166, 35, ${haloA})`);
+          grad.addColorStop(0.45, `rgba(245, 166, 35, ${haloA * 0.4})`);
+          grad.addColorStop(1, 'rgba(245, 166, 35, 0)');
+          ctx.beginPath();
+          ctx.arc(MX, MY, glowR, 0, Math.PI * 2);
+          ctx.fillStyle = grad;
+          ctx.fill();
+
+          // Tiny crosshair dot at cursor
+          ctx.beginPath();
+          ctx.arc(MX, MY, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(245, 166, 35, ${0.5 + Math.min(0.3, speed * 0.04)})`;
+          ctx.fill();
+        }
 
         requestAnimationFrame(draw);
       }
