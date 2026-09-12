@@ -82,8 +82,8 @@ export const evaluateTransactionAction: Action = {
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state: State,
-    _options: unknown,
+    state?: State,
+    _options?: Record<string, unknown>,
     callback?: HandlerCallback
   ): Promise<boolean> => {
     const config = await validateSiguiConfig(runtime);
