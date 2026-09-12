@@ -40,7 +40,7 @@ module sigui::threat_registry {
         completely_validated: bool
     }
 
-    public fun initialize(admin: &signer) {
+    public entry fun initialize(admin: &signer) {
         let admin_addr = signer::address_of(admin);
         if (!exists<ThreatRegistry>(admin_addr)) {
             let oracles = vector::empty<address>();
@@ -54,7 +54,7 @@ module sigui::threat_registry {
         }
     }
 
-    public fun add_oracle(admin: &signer, registry_addr: address, new_oracle: address) acquires ThreatRegistry {
+    public entry fun add_oracle(admin: &signer, registry_addr: address, new_oracle: address) acquires ThreatRegistry {
         assert!(signer::address_of(admin) == registry_addr, ENOT_AUTHORIZED);
         let registry = borrow_global_mut<ThreatRegistry>(registry_addr);
         if (!vector::contains(&registry.oracles, &new_oracle)) {
@@ -96,7 +96,16 @@ module sigui::threat_registry {
         id
     }
 
-    public fun validate_threat(
+    public entry fun report_threat_entry(
+        reporter: &signer,
+        registry_addr: address,
+        severity: u8,
+        pattern_hash: vector<u8>
+    ) acquires ThreatRegistry {
+        let _ = report_threat(reporter, registry_addr, severity, pattern_hash);
+    }
+
+    public entry fun validate_threat(
         oracle: &signer,
         registry_addr: address,
         threat_id: u64

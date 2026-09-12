@@ -154,7 +154,7 @@ module sigui::agent_reputation {
     ///
     /// # Aborts
     /// * `EALREADY_INITIALIZED` — if the registry already exists under `admin`.
-    public fun initialize(admin: &signer) {
+    public entry fun initialize(admin: &signer) {
         let admin_addr = signer::address_of(admin);
         assert!(
             !exists<ReputationRegistry>(admin_addr),
@@ -205,7 +205,7 @@ module sigui::agent_reputation {
     /// * `ENOT_INITIALIZED`     — if the registry does not exist under `@sigui`.
     /// * `EAGENT_ALREADY_EXISTS`— if this address is already registered.
     /// * `EDID_EMPTY`           — if `did` is an empty vector.
-    public fun register_agent(
+    public entry fun register_agent(
         account: &signer,
         registry_owner: address,
         did: vector<u8>,
@@ -299,7 +299,7 @@ module sigui::agent_reputation {
     /// * `EAGENT_NOT_FOUND` — `agent` is not registered.
     /// * `EAGENT_INACTIVE`  — `agent` is currently inactive.
     /// * `EZERO_DELTA`      — `delta` is zero.
-    public fun update_reputation(
+    public entry fun update_reputation(
         oracle: &signer,
         registry_owner: address,
         agent: address,
@@ -407,7 +407,7 @@ module sigui::agent_reputation {
     /// * `ENOT_ORACLE`      — caller is not the oracle.
     /// * `EAGENT_NOT_FOUND` — agent is not registered.
     /// * `EAGENT_INACTIVE`  — agent is already inactive.
-    public fun slash_agent(
+    public entry fun slash_agent(
         oracle: &signer,
         registry_owner: address,
         agent: address,
@@ -493,7 +493,7 @@ module sigui::agent_reputation {
 
     /// Re-activate a previously slashed agent. Governance (oracle) is responsible
     /// for performing off-chain review before calling this function.
-    public fun reactivate_agent(
+    public entry fun reactivate_agent(
         oracle: &signer,
         registry_owner: address,
         agent: address,
@@ -538,7 +538,7 @@ module sigui::agent_reputation {
     // ───────────────────────────────────────────────────────────
 
     /// Transfer oracle authority to a new address. Only the current oracle may call this.
-    public fun transfer_oracle(
+    public entry fun transfer_oracle(
         oracle: &signer,
         registry_owner: address,
         new_oracle: address,
