@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Scientific Research | Sigui Protocol AI & ZK Benchmarks</title>
-  <meta name="description" content="Peer-reviewed research and empirical benchmarks for Sigui Protocol: Zenodo DOI 10.5281/zenodo.20550562, AMD MI300X ROCm benchmarks, and 92.9% F1-score." />
+  <title>Scientific Research | Sigui Protocol Empirical Benchmarks</title>
+  <meta name="description" content="Empirical research and benchmarks for Sigui Protocol: Zenodo DOI 10.5281/zenodo.20550562, AMD MI300X ROCm acceleration, and 92.9% F1-score." />
   <link rel="stylesheet" href="css/sigui-theme.css" />
 </head>
 <body>
 
+  <!-- Ambient Visual Atmosphere -->
   <div class="ambient-grid"></div>
   <div class="ambient-vignette"></div>
 
@@ -20,9 +21,9 @@
 
     <ul class="nav-links" id="navLinks">
       <li><a href="index.html" class="nav-link">Overview</a></li>
-      <li><a href="sentinel.html" class="nav-link">Sentinel Oracle</a></li>
+      <li><a href="sentinel.html" class="nav-link">Sentinel</a></li>
       <li><a href="architecture.html" class="nav-link">Architecture</a></li>
-      <li><a href="protocol.html" class="nav-link">Protocol & AIP</a></li>
+      <li><a href="protocol.html" class="nav-link active">Protocol & AIP</a></li>
       <li><a href="security.html" class="nav-link">Threat SOC</a></li>
       <li><a href="research.html" class="nav-link active">Research</a></li>
       <li><a href="dataset.html" class="nav-link">Dataset 1M</a></li>
@@ -39,51 +40,66 @@
     </div>
   </header>
 
+  <!-- Main Container -->
   <main class="sigui-container">
     
-    <!-- Hero Header -->
+    <!-- 01. HERO -->
     <section class="sigui-hero fade-up">
-      <div class="sigil">Empirical Research & Benchmarks</div>
+      <div class="sigil">06 — Scientific Research &amp; Empirical Benchmarks</div>
 
       <h1 class="headline">
-        Scientific Rigor & <span>Hardware Acceleration</span>
+        Empirical Evidence &amp; Performance:<br /><span>Sub-40ms Vision AI on AMD MI300X</span>
       </h1>
 
       <p class="subline">
         Sigui replaces speculative security claims with verified empirical research: 
-        fine-tuned vision transformers running on AMD Instinct™ MI300X accelerators delivering 92.9% F1-score.
+        fine-tuned multimodal vision transformers running on AMD Instinct™ MI300X accelerators delivering 92.9% F1-score.
+        Published with persistent Zenodo DOI.
       </p>
 
-      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px;">
-        <a href="https://doi.org/10.5281/zenodo.20550562" class="btn-primary" target="_blank">📄 Read Research Paper (Zenodo DOI)</a>
-        <a href="https://huggingface.co/datasets/Ibonon/sigui-depin-1m" class="btn-secondary" target="_blank">📊 Open 1M Dataset</a>
-      </div>
-
-      <!-- Telemetry Strip -->
-      <div class="telemetry-bar" style="width: 100%; max-width: 900px;">
-        <div class="tel-item">
-          <span class="k">Published Paper</span>
-          <span class="v gold">Zenodo Open Access</span>
-        </div>
-        <div class="tel-item">
-          <span class="k">Macro F1-Score</span>
-          <span class="v safe">92.9%</span>
-        </div>
-        <div class="tel-item">
-          <span class="k">ROC-AUC Metric</span>
-          <span class="v safe">0.967</span>
-        </div>
-        <div class="tel-item">
-          <span class="k">AMD ROCm Latency</span>
-          <span class="v gold">35.3 ms</span>
-        </div>
+      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
+        <a href="https://doi.org/10.5281/zenodo.20550562" class="btn-primary" target="_blank">📄 Read Research Paper (Zenodo) ↗</a>
+        <a href="dataset.html" class="btn-secondary">📊 Explore 1M Graph Dataset</a>
       </div>
     </section>
 
-    <!-- Benchmark Comparison Table -->
-    <section class="sigui-card" style="margin-bottom: 50px; background: rgba(14, 14, 18, 0.95);">
+    <!-- 02. SCIENTIFIC METRICS DASHBOARD -->
+    <section class="status-dashboard fade-up">
+      <div class="status-cell">
+        <span class="k">Macro F1-Score</span>
+        <span class="v" style="color: var(--safe);">92.9%</span>
+        <span class="sub">10,000 Test Graphs</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">ROC-AUC Score</span>
+        <span class="v" style="color: var(--gold);">0.967</span>
+        <span class="sub">Discriminative Power</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">AMD MI300X Latency</span>
+        <span class="v" style="color: var(--safe);">35.3 ms</span>
+        <span class="sub">ROCm 6.2 + vLLM FP16</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Memory Bandwidth</span>
+        <span class="v" style="color: var(--gold);">5.3 TB/s</span>
+        <span class="sub">192 GB HBM3 On-Chip</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Persistent Archive</span>
+        <span class="v" style="font-size: 13px;">ZENODO</span>
+        <span class="sub">DOI: 10.5281/zenodo.20550562</span>
+      </div>
+    </section>
+
+    <!-- 03. BENCHMARK COMPARISON TABLE -->
+    <section class="sigui-card fade-up" style="margin-bottom: 50px; background: rgba(14, 14, 18, 0.95);">
       <div class="card-header">
-        <span class="card-title">🔬 Detection Accuracy & Hardware Latency Benchmark</span>
+        <span class="card-title">🔬 Detection Accuracy &amp; Hardware Latency Benchmark</span>
         <span class="brand-badge">EVALUATED ON 10,000 TEST GRAPHS</span>
       </div>
 
@@ -91,101 +107,213 @@
         <table style="width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; text-align: left;">
           <thead>
             <tr style="border-bottom: 1px solid var(--border); color: var(--gold);">
-              <th style="padding: 12px 14px;">MODEL / ARCHITECTURE</th>
-              <th style="padding: 12px 14px;">HARDWARE</th>
-              <th style="padding: 12px 14px;">F1-SCORE</th>
-              <th style="padding: 12px 14px;">PRECISION</th>
-              <th style="padding: 12px 14px;">RECALL</th>
-              <th style="padding: 12px 14px;">LATENCY</th>
+              <th style="padding: 14px 16px;">MODEL / ARCHITECTURE</th>
+              <th style="padding: 14px 16px;">HARDWARE ACCELERATOR</th>
+              <th style="padding: 14px 16px;">MACRO F1</th>
+              <th style="padding: 14px 16px;">PRECISION</th>
+              <th style="padding: 14px 16px;">RECALL</th>
+              <th style="padding: 14px 16px;">MEAN LATENCY</th>
             </tr>
           </thead>
           <tbody>
-            <tr style="border-bottom: 1px solid var(--border-light); background: rgba(245, 166, 35, 0.04);">
-              <td style="padding: 12px 14px; font-weight: 600; color: var(--ivory);">⭐ Imina-Na V2 (Qwen2-VL-7B Fine-Tuned)</td>
-              <td style="padding: 12px 14px; color: var(--gold);">AMD Instinct MI300X</td>
-              <td style="padding: 12px 14px; color: var(--safe); font-weight: 600;">92.9%</td>
-              <td style="padding: 12px 14px; color: var(--ivory);">94.2%</td>
-              <td style="padding: 12px 14px; color: var(--ivory);">91.6%</td>
-              <td style="padding: 12px 14px; color: var(--gold); font-weight: 600;">35.3 ms</td>
+            <!-- Winner row -->
+            <tr style="border-bottom: 1px solid var(--border-light); background: rgba(245, 166, 35, 0.08);">
+              <td style="padding: 14px 16px; font-weight: 600; color: var(--ivory);">
+                ⭐ Imina-Na V2 (Qwen2-VL-7B LoRA)
+              </td>
+              <td style="padding: 14px 16px; color: var(--gold); font-weight: 600;">
+                AMD Instinct MI300X (ROCm)
+              </td>
+              <td style="padding: 14px 16px; color: var(--safe); font-weight: 700; font-size: 13px;">92.9%</td>
+              <td style="padding: 14px 16px; color: var(--ivory);">94.2%</td>
+              <td style="padding: 14px 16px; color: var(--ivory);">91.6%</td>
+              <td style="padding: 14px 16px; color: var(--safe); font-weight: 700; font-size: 13px;">35.3 ms</td>
             </tr>
             <tr style="border-bottom: 1px solid var(--border-light);">
-              <td style="padding: 12px 14px; color: var(--muted);">Standard GPT-4o (Text Calldata)</td>
-              <td style="padding: 12px 14px; color: var(--muted);">Cloud API</td>
-              <td style="padding: 12px 14px; color: #fca5a5;">74.1%</td>
-              <td style="padding: 12px 14px; color: var(--muted);">71.8%</td>
-              <td style="padding: 12px 14px; color: var(--muted);">76.5%</td>
-              <td style="padding: 12px 14px; color: var(--danger);">1,420 ms</td>
+              <td style="padding: 14px 16px; color: var(--muted);">Graph Neural Network (GNN Baseline)</td>
+              <td style="padding: 14px 16px; color: var(--muted);">NVIDIA A100 (80GB)</td>
+              <td style="padding: 14px 16px; color: var(--muted);">86.7%</td>
+              <td style="padding: 14px 16px; color: var(--muted);">88.1%</td>
+              <td style="padding: 14px 16px; color: var(--muted);">85.4%</td>
+              <td style="padding: 14px 16px; color: var(--muted);">84.6 ms</td>
             </tr>
             <tr style="border-bottom: 1px solid var(--border-light);">
-              <td style="padding: 12px 14px; color: var(--muted);">Static AST Rule Heuristic</td>
-              <td style="padding: 12px 14px; color: var(--muted);">x86_64 CPU</td>
-              <td style="padding: 12px 14px; color: #fca5a5;">62.4%</td>
-              <td style="padding: 12px 14px; color: var(--muted);">58.0%</td>
-              <td style="padding: 12px 14px; color: var(--muted);">67.3%</td>
-              <td style="padding: 12px 14px; color: var(--safe);">12.1 ms</td>
+              <td style="padding: 14px 16px; color: var(--muted);">Standard GPT-4o (Text Calldata)</td>
+              <td style="padding: 14px 16px; color: var(--muted);">Cloud API (Restricted)</td>
+              <td style="padding: 14px 16px; color: #fca5a5;">74.1%</td>
+              <td style="padding: 14px 16px; color: var(--muted);">71.8%</td>
+              <td style="padding: 14px 16px; color: var(--muted);">76.5%</td>
+              <td style="padding: 14px 16px; color: var(--danger);">1,420 ms</td>
             </tr>
             <tr>
-              <td style="padding: 12px 14px; color: var(--muted);">Graph Neural Network (GNN Baseline)</td>
-              <td style="padding: 12px 14px; color: var(--muted);">NVIDIA A100</td>
-              <td style="padding: 12px 14px; color: var(--muted);">86.7%</td>
-              <td style="padding: 12px 14px; color: var(--muted);">88.1%</td>
-              <td style="padding: 12px 14px; color: var(--muted);">85.4%</td>
-              <td style="padding: 12px 14px; color: var(--muted);">84.6 ms</td>
+              <td style="padding: 14px 16px; color: var(--muted);">Static AST Rule Scanner</td>
+              <td style="padding: 14px 16px; color: var(--muted);">x86_64 Dual Xeon CPU</td>
+              <td style="padding: 14px 16px; color: #fca5a5;">62.4%</td>
+              <td style="padding: 14px 16px; color: var(--muted);">58.0%</td>
+              <td style="padding: 14px 16px; color: var(--muted);">67.3%</td>
+              <td style="padding: 14px 16px; color: var(--safe);">12.1 ms</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <!-- Scientific Key Findings -->
-    <div class="grid-3" style="margin-bottom: 60px;">
+    <!-- 04. THREE RESEARCH PILLARS -->
+    <div style="margin-bottom: 20px;">
+      <div class="sigil">Scientific Foundations</div>
+      <h2 style="font-family: var(--mono); font-size: 20px; color: var(--ivory);">Key Research Findings from the Paper</h2>
+    </div>
+
+    <div class="grid-3" style="margin-bottom: 50px;">
       <div class="sigui-card">
         <div class="card-header">
-          <span class="card-title">Visual Adjacency Encoding</span>
-          <span class="brand-badge">PAPER PILLAR 1</span>
+          <span class="card-title">1. Visual Adjacency Encoding</span>
+          <span class="brand-badge">PILLAR 1</span>
         </div>
         <p class="card-desc">
-          Converting token flows into 2D adjacency visual maps allows multimodal vision transformers to detect topological invariances that survive address randomization and proxy obfuscation.
+          Converting on-chain transaction flows into 2D adjacency visual matrices allows vision transformers to recognize global structural invariants. This bypasses address randomization, proxy upgrades, and bytecode obfuscation that blind static scanners.
         </p>
       </div>
 
       <div class="sigui-card">
         <div class="card-header">
-          <span class="card-title">Hardware Memory Bandwidth</span>
-          <span class="brand-badge">PAPER PILLAR 2</span>
+          <span class="card-title">2. Hardware-Pinned Weights</span>
+          <span class="brand-badge">PILLAR 2</span>
         </div>
         <p class="card-desc">
-          The 192GB HBM3 memory bandwidth on the AMD Instinct MI300X allows full FP16 model weights to remain pinned in memory, eliminating paging overhead and enabling sub-40ms execution.
+          The 192GB HBM3 memory bandwidth on the AMD Instinct MI300X enables full FP16 model weights to remain pinned in memory. This eliminates KV cache page swapping and enables sustained sub-40ms execution under concurrent agent loads.
         </p>
       </div>
 
       <div class="sigui-card">
         <div class="card-header">
-          <span class="card-title">Groth16 Verifier on BN128</span>
-          <span class="brand-badge">PAPER PILLAR 3</span>
+          <span class="card-title">3. Groth16 Verifier Invariant</span>
+          <span class="brand-badge">PILLAR 3</span>
         </div>
         <p class="card-desc">
-          Generating cryptographic witnesses in pure Python over the BN128 prime field enables smart contracts on Aptos and Ethereum to verify model claims in under 5,000 gas units.
+          Generating cryptographic witnesses over the BN128 scalar field allows on-chain smart contracts on Aptos and Ethereum to verify model classifications in under 5,000 gas units, ensuring zero leak of private agent trade parameters.
         </p>
       </div>
     </div>
+
+    <!-- 05. BIBTEX CITATION & OPEN ACCESS ARTIFACTS -->
+    <section class="grid-2" style="margin-bottom: 50px;">
+      <!-- BibTeX Window -->
+      <div class="terminal-window">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <div class="terminal-dot red"></div>
+            <div class="terminal-dot yellow"></div>
+            <div class="terminal-dot green"></div>
+          </div>
+          <span class="terminal-title">BIBTEX CITATION</span>
+          <div style="font-size: 10px; color: var(--gold);">OPEN ACCESS</div>
+        </div>
+        <div class="terminal-body" style="font-size: 11px;">
+<pre><span class="keyword">@article</span>{sigui_protocol_2026,
+  title   = {<span class="str">Sigui: Multimodal Vision Topology Classification &amp; 
+             Zero-Knowledge Proofs for Autonomous Web3 Agent Security</span>},
+  author  = {<span class="str">Sigui Protocol Research Group</span>},
+  journal = {<span class="str">Zenodo Open Science Repository</span>},
+  year    = {<span class="gold">2026</span>},
+  doi     = {<span class="safe">10.5281/zenodo.20550562</span>},
+  url     = {<span class="str">https://doi.org/10.5281/zenodo.20550562</span>}
+}</pre>
+        </div>
+      </div>
+
+      <!-- Verification Links Card -->
+      <div class="sigui-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div class="card-header">
+            <span class="card-title">Open Science Artifacts</span>
+            <span class="verdict-badge verdict-ALLOW">CC BY 4.0</span>
+          </div>
+          <p class="card-desc" style="margin-bottom: 16px;">
+            All benchmark datasets, weights configuration, and evaluation notebooks are published under open licenses for academic reproduction.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <a href="https://doi.org/10.5281/zenodo.20550562" class="btn-secondary" target="_blank" style="font-size: 11px; height: 38px;">
+              📄 Zenodo Paper PDF &amp; Supplementary Data ↗
+            </a>
+            <a href="https://huggingface.co/datasets/Ibonon/sigui-depin-1m" class="btn-secondary" target="_blank" style="font-size: 11px; height: 38px;">
+              📊 Hugging Face Dataset (1M Graphs Parquet) ↗
+            </a>
+          </div>
+        </div>
+        <div style="margin-top: 14px; font-family: var(--mono); font-size: 10px; color: var(--muted);">
+          LICENSE: CREATIVE COMMONS ATTRIBUTION 4.0 INTERNATIONAL
+        </div>
+      </div>
+    </section>
+
+    <!-- 06. NEXT STEP FUNNEL BANNER -->
+    <a href="dataset.html" class="next-page-card">
+      <div class="next-page-meta">
+        <div class="k">07 — DATASET OBSERVATORY</div>
+        <div class="title">Explore the 1,000,000 transaction graph dataset hosted on Hugging Face</div>
+      </div>
+      <div class="next-page-arrow">→</div>
+    </a>
 
   </main>
 
-  <!-- Universal Footer -->
+  <!-- Categorized Multi-Column Master Footer -->
   <footer class="sigui-footer">
-    <div class="footer-nav">
-      <a href="index.html" class="footer-link">Overview</a>
-      <a href="sentinel.html" class="footer-link">Sentinel Oracle</a>
-      <a href="architecture.html" class="footer-link">Architecture</a>
-      <a href="protocol.html" class="footer-link">Protocol & AIP</a>
-      <a href="security.html" class="footer-link">Threat SOC</a>
-      <a href="dataset.html" class="footer-link">Dataset 1M</a>
-      <a href="docs.html" class="footer-link">Docs & API</a>
-      <a href="sdk.html" class="footer-link">SDK & Plugins</a>
-    </div>
-    <div class="footer-copy">
-      SIGUI PROTOCOL © 2026 • OPEN-SOURCE DEPIN AI CYBERSECURITY ORACLE • MIT LICENSE
+    <div class="footer-container">
+      <div class="footer-grid">
+        <div>
+          <div class="nav-brand" style="margin-bottom: 12px;">
+            SIGUI <span class="brand-badge">PROTOCOL</span>
+          </div>
+          <p class="card-desc" style="max-width: 280px; font-size: 12px; margin-bottom: 16px;">
+            The autonomous AI security layer and ZK-shield for Web3 agent treasuries across EVM, Move, and SVM.
+          </p>
+          <div class="status-pill" style="display: inline-flex;">
+            <div class="pulse-dot"></div> ORACLE LIVE
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Product</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="index.html">Overview</a></li>
+            <li class="footer-link-item"><a href="sentinel.html">Sentinel Oracle</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Technology</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="architecture.html">Architecture</a></li>
+            <li class="footer-link-item"><a href="protocol.html">Protocol & AIP</a></li>
+            <li class="footer-link-item"><a href="security.html">Threat SOC</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Research</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="research.html">Research Lab</a></li>
+            <li class="footer-link-item"><a href="dataset.html">Dataset 1M</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Developers</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="docs.html">Docs & API</a></li>
+            <li class="footer-link-item"><a href="sdk.html">SDK & Plugins</a></li>
+            <li class="footer-link-item"><a href="https://github.com/ibonon/Sigui" target="_blank">GitHub ⭐</a></li>
+            <li class="footer-link-item"><a href="https://huggingface.co/datasets/Ibonon/sigui-depin-1m" target="_blank">Hugging Face</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 SIGUI PROTOCOL • OPEN-SOURCE MIT LICENSE</div>
+        <div>ZENODO DOI: 10.5281/ZENODO.20550562 • APTOS TESTNET VERIFIED</div>
+      </div>
     </div>
   </footer>
 

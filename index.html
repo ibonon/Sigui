@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sigui Protocol | DePIN AI Security Oracle for Autonomous Agents</title>
-  <meta name="description" content="Sigui Protocol is the decentralized AI security oracle and ZK-shield for autonomous financial agents on Ethereum, Aptos, Starknet, and Solana. Sub-50ms pre-execution defense." />
+  <title>Sigui Protocol | The Autonomous AI Security Layer</title>
+  <meta name="description" content="Sigui Protocol is the decentralized AI security oracle and ZK-shield for autonomous financial agents. Sub-50ms pre-execution defense." />
   <link rel="stylesheet" href="css/sigui-theme.css" />
 </head>
 <body>
 
-  <!-- Ambient visual layers -->
+  <!-- Ambient visual atmosphere -->
   <div class="ambient-grid"></div>
   <div class="ambient-vignette"></div>
 
-  <!-- Universal Master Navigation -->
+  <!-- Master Navigation -->
   <header class="sigui-nav">
     <a href="index.html" class="nav-brand">
       SIGUI <span class="brand-badge">PROTOCOL</span>
@@ -21,12 +21,12 @@
 
     <ul class="nav-links" id="navLinks">
       <li><a href="index.html" class="nav-link active">Overview</a></li>
-      <li><a href="sentinel.html" class="nav-link">Sentinel Oracle</a></li>
+      <li><a href="sentinel.html" class="nav-link">Sentinel</a></li>
       <li><a href="architecture.html" class="nav-link">Architecture</a></li>
-      <li><a href="protocol.html" class="nav-link">Protocol & AIP</a></li>
+      <li><a href="protocol.html" class="nav-link">Protocol</a></li>
       <li><a href="security.html" class="nav-link">Threat SOC</a></li>
       <li><a href="research.html" class="nav-link">Research</a></li>
-      <li><a href="dataset.html" class="nav-link">Dataset 1M</a></li>
+      <li><a href="dataset.html" class="nav-link">Dataset</a></li>
       <li><a href="docs.html" class="nav-link">Docs & API</a></li>
       <li><a href="sdk.html" class="nav-link">SDK & Plugins</a></li>
     </ul>
@@ -34,7 +34,7 @@
     <div class="nav-right">
       <div class="status-pill">
         <div class="pulse-dot"></div>
-        ORACLE ACTIVE • AMD MI300X
+        ORACLE LIVE • AMD MI300X
       </div>
       <button class="nav-mobile-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
     </div>
@@ -42,228 +42,296 @@
 
   <!-- Main Container -->
   <main class="sigui-container">
-    
-    <!-- Hero Section -->
+
+    <!-- 01. HERO -->
     <section class="sigui-hero fade-up">
-      <div class="sigil">DePIN AI Security Infrastructure</div>
+      <div class="sigil">Autonomous AI Security Infrastructure</div>
 
       <h1 class="headline">
         The Autonomous <span>AI Security Layer</span><br />for Web3 Agent Treasuries.
       </h1>
 
       <p class="subline">
-        Pre-execution multimodal vision inspection (Qwen2-VL on AMD MI300X GPUs) paired with Groth16 ZK-proofs. 
-        Intercepting Drain Stars, Mixer Chains, and Reentrancy attacks in under 50ms before on-chain execution.
+        Pre-execution visual topology inspection and zero-knowledge proofs that intercept 
+        malicious smart contracts and drain topologies in under 50 milliseconds.
       </p>
 
-      <div style="display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-bottom: 40px;">
-        <a href="sentinel.html" class="btn-primary">⚡ Launch Sentinel Oracle</a>
-        <a href="docs.html" class="btn-secondary">🛡️ Zero-Code RPC Proxy</a>
-        <a href="https://github.com/ibonon/Sigui" class="btn-secondary" target="_blank">🐙 GitHub Monorepo</a>
+      <div style="display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-bottom: 36px;">
+        <a href="sentinel.html" class="btn-primary">⚡ Launch Sentinel</a>
+        <a href="architecture.html" class="btn-secondary">📐 Read Architecture</a>
+        <a href="docs.html" class="btn-secondary">🛡️ Integrate Sigui</a>
+      </div>
+    </section>
+
+    <!-- 02. LIVE SYSTEM STATUS DASHBOARD -->
+    <section class="status-dashboard fade-up">
+      <div class="status-cell">
+        <span class="k">Oracle Status</span>
+        <span class="v" style="color: var(--safe);">
+          <span class="pulse-dot" style="background: var(--safe); box-shadow: 0 0 10px var(--safe);"></span> LIVE
+        </span>
+        <span class="sub">Decentralized SOC</span>
       </div>
 
-      <!-- Live Telemetry Strip -->
-      <div class="telemetry-bar" style="width: 100%; max-width: 900px; margin-bottom: 24px;">
-        <div class="tel-item">
-          <span class="k">Classification F1-Score</span>
-          <span class="v gold">92.9% F1</span>
-        </div>
-        <div class="tel-item">
-          <span class="k">Inference Latency</span>
-          <span class="v safe">35.3 ms (ROCm)</span>
-        </div>
-        <div class="tel-item">
-          <span class="k">Pre-trained Dataset</span>
-          <span class="v">1,000,000 Graphs</span>
-        </div>
-        <div class="tel-item">
-          <span class="k">Supported Networks</span>
-          <span class="v gold">10 Blockchains</span>
+      <div class="status-cell">
+        <span class="k">Macro F1 Score</span>
+        <span class="v" style="color: var(--gold);">92.9%</span>
+        <span class="sub">10,000 Test Graphs</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Inference Latency</span>
+        <span class="v" style="color: var(--gold);">35.3 ms</span>
+        <span class="sub">AMD MI300X ROCm</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Training Dataset</span>
+        <span class="v">1M GRAPHS</span>
+        <span class="sub">Open on Hugging Face</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Supported Networks</span>
+        <span class="v">10+ CHAINS</span>
+        <span class="sub">EVM, Move, Cairo, SVM</span>
+      </div>
+    </section>
+
+    <!-- 03. WHAT IS SIGUI? (VISUAL WORKFLOW) -->
+    <section style="margin-bottom: 56px;">
+      <div class="section-header">
+        <div class="sigil">Operational Workflow</div>
+        <h2 class="section-title">What is <span>Sigui Protocol?</span></h2>
+        <p class="card-desc" style="max-width: 680px; margin-top: 8px;">
+          When an AI agent (ElizaOS, AutoGPT, trading bot) initiates a transaction, Sigui intercepts the payload at wire-speed, analyzes the transaction topology with computer vision, verifies the safety invariants in ZK, and aborts before the treasury is drained.
+        </p>
+      </div>
+
+      <div class="pipeline-container">
+        <div class="pipeline-steps">
+          <div class="pipeline-node">
+            <div class="num">01. INGRESS</div>
+            <div class="name">Autonomous Agent</div>
+            <div class="detail">Triggers transfer or contract interaction</div>
+          </div>
+          <div class="pipeline-arrow">→</div>
+
+          <div class="pipeline-node">
+            <div class="num">02. INTERCEPTION</div>
+            <div class="name">Sigui Guard</div>
+            <div class="detail">Wire-speed RPC proxy intercepts calldata (&lt;3ms)</div>
+          </div>
+          <div class="pipeline-arrow">→</div>
+
+          <div class="pipeline-node" style="border-color: rgba(245, 166, 35, 0.4);">
+            <div class="num">03. VISION AUDIT</div>
+            <div class="name">Imina-Na V2</div>
+            <div class="detail">Qwen2-VL classifies graph topology on MI300X (35.3ms)</div>
+          </div>
+          <div class="pipeline-arrow">→</div>
+
+          <div class="pipeline-node">
+            <div class="num">04. PROOF</div>
+            <div class="name">ZK-Sigui</div>
+            <div class="detail">Groth16 BN128 witness generation (64 bytes)</div>
+          </div>
+          <div class="pipeline-arrow">→</div>
+
+          <div class="pipeline-node" style="border-color: rgba(16, 185, 129, 0.4);">
+            <div class="num">05. VERDICT</div>
+            <div class="name">ALLOW / BLOCK</div>
+            <div class="detail">Forward to chain or abort with error -32003</div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Core Architecture Pillars Grid -->
-    <section style="margin-bottom: 60px;">
-      <div class="sigil" style="margin-bottom: 16px;">Ecosystem Pillars</div>
-      <h2 class="headline" style="font-size: 1.8rem; margin-bottom: 24px; text-align: left;">
-        Unified Defense-in-Depth <span>Architecture</span>
-      </h2>
+    <!-- 04. THE 3 PILLARS -->
+    <section style="margin-bottom: 56px;">
+      <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: gap; gap: 12px;">
+        <div>
+          <div class="sigil">Core Capabilities</div>
+          <h2 class="section-title">The Three <span>Architectural Pillars</span></h2>
+        </div>
+        <a href="architecture.html" class="btn-link">Explore Full Architecture →</a>
+      </div>
 
       <div class="grid-3">
-        <!-- Card 1: Sentinel -->
-        <a href="sentinel.html" class="sigui-card">
+        <div class="sigui-card">
           <div class="card-header">
-            <span class="card-title">🔬 Sentinel Live Oracle</span>
-            <span class="verdict-badge verdict-BLOCK">LIVE SOC</span>
+            <span class="card-title">01. VISION RECOGNITION</span>
+            <span class="brand-badge">QWEN2-VL + MI300X</span>
           </div>
           <p class="card-desc">
-            Interactive topological transaction visualizer. Simulates and animates DRAIN_STAR fan-in flows, MIXING_CHAIN obfuscation hops, and verified AMM swaps in real-time.
+            Converts transaction call graphs into visual adjacency matrices. Bypasses smart contract code obfuscation by inspecting flow topologies directly.
           </p>
-        </a>
+        </div>
 
-        <!-- Card 2: Zero-Code Proxy -->
-        <a href="docs.html" class="sigui-card">
+        <div class="sigui-card">
           <div class="card-header">
-            <span class="card-title">🛡️ Sigui Guard (RPC)</span>
-            <span class="verdict-badge verdict-ALLOW">ZERO CODE</span>
+            <span class="card-title">02. CRYPTOGRAPHIC PROOF</span>
+            <span class="brand-badge">GROTH16 ZK</span>
           </div>
           <p class="card-desc">
-            Multichain transparent RPC security proxy. Intercepts raw transactions for EVM, Aptos, Solana, and Starknet with zero SDK installation required.
+            Generates succinct 64-byte non-drain proofs over the BN128 prime field. Proves transaction benignity on-chain without revealing sensitive trading strategies.
           </p>
-        </a>
+        </div>
 
-        <!-- Card 3: Protocol & Standards -->
-        <a href="protocol.html" class="sigui-card">
+        <div class="sigui-card">
           <div class="card-header">
-            <span class="card-title">🏛️ Aptos AIP & Standards</span>
-            <span class="verdict-badge verdict-ESCALATE">MOVE PROVER</span>
+            <span class="card-title">03. TRANSPORT FIREWALL</span>
+            <span class="brand-badge">RPC PROXY</span>
           </div>
           <p class="card-desc">
-            Native Move Objects standard (AIP-XXX) for autonomous agent identity and tiered on-chain reputation (Bronze → Platinum) with formal mathematical proofs.
+            Universal drop-in RPC proxy for EVM, Aptos, Starknet, and Solana. Requires 0 code changes in agent logic — developers update only their RPC endpoint URL.
           </p>
-        </a>
-
-        <!-- Card 4: Threat Intelligence -->
-        <a href="security.html" class="sigui-card">
-          <div class="card-header">
-            <span class="card-title">🚨 Threat Radar & SOC</span>
-            <span class="verdict-badge verdict-BLOCK">DYNAMIC</span>
-          </div>
-          <p class="card-desc">
-            Autonomous threat database and feedback loop. Malicious destinations detected by Imina-Na V2 are instantly blacklisted across all connected agent clusters.
-          </p>
-        </a>
-
-        <!-- Card 5: Research & Science -->
-        <a href="research.html" class="sigui-card">
-          <div class="card-header">
-            <span class="card-title">📈 Scientific Research</span>
-            <span class="verdict-badge verdict-ALLOW">DOI VERIFIED</span>
-          </div>
-          <p class="card-desc">
-            Peer-reviewed scientific whitepaper (Zenodo DOI 10.5281/zenodo.20550562), AMD MI300X hardware benchmarks, ROC curves, and Groth16 ZK circuit metrics.
-          </p>
-        </a>
-
-        <!-- Card 6: Dataset 1M -->
-        <a href="dataset.html" class="sigui-card">
-          <div class="card-header">
-            <span class="card-title">📊 Open DePIN Dataset</span>
-            <span class="verdict-badge verdict-ALLOW">HUGGING FACE</span>
-          </div>
-          <p class="card-desc">
-            1,000,000 synthesized and real-world attack graphs open-sourced on Hugging Face (Ibonon/sigui-depin-1m) for training autonomous agent security models.
-          </p>
-        </a>
+        </div>
       </div>
     </section>
 
-    <!-- Zero-Code Integration Terminal Demonstration -->
-    <section style="margin-bottom: 60px;">
-      <div class="sigil" style="margin-bottom: 16px;">Zero Friction Integration</div>
-      <h2 class="headline" style="font-size: 1.8rem; margin-bottom: 24px; text-align: left;">
-        Protect Any Agent in <span>1 Line of Code</span>
-      </h2>
+    <!-- 05. THREAT COVERAGE (3 ATTACK CLASSES) -->
+    <section style="margin-bottom: 56px;">
+      <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: gap; gap: 12px;">
+        <div>
+          <div class="sigil">Threat Taxonomy</div>
+          <h2 class="section-title">Pre-Execution <span>Threat Coverage</span></h2>
+        </div>
+        <a href="security.html" class="btn-link">Open Threat SOC Radar →</a>
+      </div>
+
+      <div class="grid-3">
+        <div class="sigui-card" style="border-color: rgba(244, 63, 94, 0.4);">
+          <div class="card-header">
+            <span class="card-title" style="color: var(--danger);">🚨 DRAIN_STAR</span>
+            <span class="verdict-badge verdict-BLOCK">CRITICAL</span>
+          </div>
+          <p class="card-desc">
+            High in-degree radial fan-in topology. Malicious sweeper contract rapidly draining funds from multiple victim wallets simultaneously.
+          </p>
+        </div>
+
+        <div class="sigui-card" style="border-color: rgba(245, 158, 11, 0.4);">
+          <div class="card-header">
+            <span class="card-title" style="color: var(--warning);">⚡ MIXING_CHAIN</span>
+            <span class="verdict-badge verdict-ESCALATE">SUSPICIOUS</span>
+          </div>
+          <p class="card-desc">
+            Sequential multi-hop peeling chains routed through unverified relayers and bridges to obfuscate token origin from standard filters.
+          </p>
+        </div>
+
+        <div class="sigui-card">
+          <div class="card-header">
+            <span class="card-title" style="color: var(--gold);">🕸️ COORD_CLUSTER</span>
+            <span class="verdict-badge verdict-ESCALATE">ANOMALY</span>
+          </div>
+          <p class="card-desc">
+            Dense cyclic Sybil clusters executing front-running, sandwiching, or liquidity pool manipulation against automated rebalancers.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06. RESEARCH & DATASET -->
+    <section style="margin-bottom: 56px;">
+      <div class="section-header">
+        <div class="sigil">Open Science Foundation</div>
+        <h2 class="section-title">Peer-Reviewed Research & <span>Open Data</span></h2>
+      </div>
 
       <div class="grid-2">
-        <!-- Terminal 1: Zero-Code Proxy -->
-        <div class="terminal-window">
-          <div class="terminal-header">
-            <div class="terminal-dots">
-              <div class="terminal-dot red"></div>
-              <div class="terminal-dot yellow"></div>
-              <div class="terminal-dot green"></div>
-            </div>
-            <span class="terminal-title">Option A: Zero-Code RPC Proxy (.env)</span>
+        <div class="sigui-card">
+          <div class="card-header">
+            <span class="card-title">📈 Empirical Research Lab</span>
+            <span class="verdict-badge verdict-ALLOW">DOI: 10.5281</span>
           </div>
-          <div class="terminal-body">
-            <pre><span class="comment"># Before (Vulnerable to drainers):</span>
-<span class="keyword">RPC_URL</span>=<span class="str">"https://rpc.ankr.com/eth"</span>
-
-<span class="comment"># After (100% Protected by Sigui Guard — zero install):</span>
-<span class="keyword">RPC_URL</span>=<span class="str">"https://rpc.sigui.io/v1/ethereum"</span>
-
-<span class="comment"># Run local proxy (optional developer mode):</span>
-<span class="cmd">$</span> python -m modules.sigui_guard --port 8545 --network ethereum
-<span class="str">🛡️ Sigui Guard v3.2 LIVE — Intercepting 0x transactions in &lt;30ms</span></pre>
-          </div>
+          <p class="card-desc" style="margin-bottom: 16px;">
+            Scientific validation published with persistent Zenodo DOI. Includes ROC-AUC curves (0.967) and hardware benchmarks on AMD ROCm compute clusters.
+          </p>
+          <a href="research.html" class="btn-secondary" style="font-size: 11px; height: 38px;">Inspect Research Paper & Benchmarks →</a>
         </div>
 
-        <!-- Terminal 2: ElizaOS Plugin -->
-        <div class="terminal-window">
-          <div class="terminal-header">
-            <div class="terminal-dots">
-              <div class="terminal-dot red"></div>
-              <div class="terminal-dot yellow"></div>
-              <div class="terminal-dot green"></div>
-            </div>
-            <span class="terminal-title">Option B: Native ElizaOS Plugin (index.ts)</span>
+        <div class="sigui-card">
+          <div class="card-header">
+            <span class="card-title">📊 Sigui DePIN 1M Dataset</span>
+            <span class="verdict-badge verdict-ALLOW">HUGGING FACE</span>
           </div>
-          <div class="terminal-body">
-            <pre><span class="cmd">$</span> npm install sigui-elizaos-plugin
-
-<span class="keyword">import</span> { siguiPlugin } <span class="keyword">from</span> <span class="str">"sigui-elizaos-plugin"</span>;
-
-<span class="keyword">export const</span> character = {
-  name: <span class="str">"AutonomousTrader"</span>,
-  plugins: [siguiPlugin],
-  <span class="comment">// Threat Intel Provider & Auto-Guard active:</span>
-  settings: {
-    <span class="keyword">SIGUI_API_URL</span>: <span class="str">"https://sigui-oracle.ibonon.github.io"</span>
-  }
-};</pre>
-          </div>
+          <p class="card-desc" style="margin-bottom: 16px;">
+            1,000,000 labeled transaction graph topologies open-sourced under Creative Commons 4.0 for community training and benchmarking.
+          </p>
+          <a href="dataset.html" class="btn-secondary" style="font-size: 11px; height: 38px;">Explore 1M Graph Dataset →</a>
         </div>
       </div>
     </section>
 
-    <!-- Multi-Chain Coverage Strip -->
-    <section class="sigui-card" style="margin-bottom: 40px; background: rgba(14, 14, 18, 0.95);">
-      <div class="card-header">
-        <span class="card-title">🌐 Native Omnichain Interception Layer</span>
-        <span class="brand-badge">EVM + MOVE + CAIRO + SVM</span>
+    <!-- 07. NEXT STEP FUNNEL BANNER -->
+    <a href="sentinel.html" class="next-page-card">
+      <div class="next-page-meta">
+        <div class="k">Live Demonstration</div>
+        <div class="title">Audit any transaction in real-time with Sentinel Oracle</div>
       </div>
-      <p class="card-desc" style="margin-bottom: 20px;">
-        Sigui Protocol inspects payloads across heterogeneous virtual machines before consensus:
-      </p>
-      <div class="grid-4">
-        <div class="metric-box">
-          <span class="metric-label">Ethereum & L2s</span>
-          <span class="metric-value" style="font-size: 15px;">Arbitrum, Base, BSC, Polygon</span>
-        </div>
-        <div class="metric-box">
-          <span class="metric-label">Aptos (Move VM)</span>
-          <span class="metric-value" style="font-size: 15px;">REST /v1/transactions + AIP-XXX</span>
-        </div>
-        <div class="metric-box">
-          <span class="metric-label">Starknet (Cairo)</span>
-          <span class="metric-value" style="font-size: 15px;">starknet_addInvokeTransaction</span>
-        </div>
-        <div class="metric-box">
-          <span class="metric-label">Solana (SVM)</span>
-          <span class="metric-value" style="font-size: 15px;">sendTransaction base58</span>
-        </div>
-      </div>
-    </section>
+      <div class="next-page-arrow">→</div>
+    </a>
 
   </main>
 
-  <!-- Universal Footer -->
+  <!-- Categorized Multi-Column Master Footer -->
   <footer class="sigui-footer">
-    <div class="footer-nav">
-      <a href="sentinel.html" class="footer-link">Sentinel Oracle</a>
-      <a href="architecture.html" class="footer-link">Architecture</a>
-      <a href="protocol.html" class="footer-link">Protocol & AIP</a>
-      <a href="security.html" class="footer-link">Threat SOC</a>
-      <a href="research.html" class="footer-link">Research</a>
-      <a href="dataset.html" class="footer-link">Dataset 1M</a>
-      <a href="docs.html" class="footer-link">Docs & API</a>
-      <a href="sdk.html" class="footer-link">SDK & Plugins</a>
-      <a href="https://github.com/ibonon/Sigui" class="footer-link" target="_blank">GitHub ⭐</a>
-    </div>
-    <div class="footer-copy">
-      SIGUI PROTOCOL © 2026 • OPEN-SOURCE DEPIN AI CYBERSECURITY ORACLE • MIT LICENSE
+    <div class="footer-container">
+      <div class="footer-grid">
+        <div>
+          <div class="nav-brand" style="margin-bottom: 12px;">
+            SIGUI <span class="brand-badge">PROTOCOL</span>
+          </div>
+          <p class="card-desc" style="max-width: 280px; font-size: 12px; margin-bottom: 16px;">
+            The autonomous AI security layer and ZK-shield for Web3 agent treasuries across EVM, Move, and SVM.
+          </p>
+          <div class="status-pill" style="display: inline-flex;">
+            <div class="pulse-dot"></div> ORACLE LIVE
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Product</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="index.html">Overview</a></li>
+            <li class="footer-link-item"><a href="sentinel.html">Sentinel Oracle</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Technology</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="architecture.html">Architecture</a></li>
+            <li class="footer-link-item"><a href="protocol.html">Protocol & AIP</a></li>
+            <li class="footer-link-item"><a href="security.html">Threat SOC</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Research</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="research.html">Research Lab</a></li>
+            <li class="footer-link-item"><a href="dataset.html">Dataset 1M</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Developers</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="docs.html">Docs & API</a></li>
+            <li class="footer-link-item"><a href="sdk.html">SDK & Plugins</a></li>
+            <li class="footer-link-item"><a href="https://github.com/ibonon/Sigui" target="_blank">GitHub ⭐</a></li>
+            <li class="footer-link-item"><a href="https://huggingface.co/datasets/Ibonon/sigui-depin-1m" target="_blank">Hugging Face</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 SIGUI PROTOCOL • OPEN-SOURCE MIT LICENSE</div>
+        <div>ZENODO DOI: 10.5281/ZENODO.20550562 • APTOS TESTNET VERIFIED</div>
+      </div>
     </div>
   </footer>
 

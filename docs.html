@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Documentation & API | Sigui Protocol Developer Hub</title>
-  <meta name="description" content="Official documentation for Sigui Protocol: Zero-Code RPC proxy, REST API endpoints, self-hosting guide, and security integration." />
+  <title>Documentation & API | Sigui Protocol Integration Guide</title>
+  <meta name="description" content="Official developer documentation for Sigui Protocol: Zero-Code RPC proxy, REST API endpoints, self-hosting guide, and JSON-RPC -32003 specs." />
   <link rel="stylesheet" href="css/sigui-theme.css" />
 </head>
 <body>
 
+  <!-- Ambient Visual Atmosphere -->
   <div class="ambient-grid"></div>
   <div class="ambient-vignette"></div>
 
@@ -20,7 +21,7 @@
 
     <ul class="nav-links" id="navLinks">
       <li><a href="index.html" class="nav-link">Overview</a></li>
-      <li><a href="sentinel.html" class="nav-link">Sentinel Oracle</a></li>
+      <li><a href="sentinel.html" class="nav-link">Sentinel</a></li>
       <li><a href="architecture.html" class="nav-link">Architecture</a></li>
       <li><a href="protocol.html" class="nav-link">Protocol & AIP</a></li>
       <li><a href="security.html" class="nav-link">Threat SOC</a></li>
@@ -33,88 +34,128 @@
     <div class="nav-right">
       <div class="status-pill">
         <div class="pulse-dot"></div>
-        API V3.2 • FASTAPI LIVE
+        FASTAPI RPC LIVE
       </div>
       <button class="nav-mobile-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
     </div>
   </header>
 
+  <!-- Main Container -->
   <main class="sigui-container">
     
-    <!-- Hero Header -->
+    <!-- 01. HERO -->
     <section class="sigui-hero fade-up">
-      <div class="sigil">Developer Manual & Specifications</div>
+      <div class="sigil">08 — Developer Manual &amp; API Specifications</div>
 
       <h1 class="headline">
-        Developer <span>Quickstart & API</span>
+        How to Integrate Sigui:<br /><span>Zero-Code RPC Proxy &amp; REST API</span>
       </h1>
 
       <p class="subline">
-        Get started with Sigui in under 60 seconds. Choose between the zero-installation hosted RPC endpoint 
-        or run the lightweight local proxy for your agent infrastructure.
+        Protect agent treasuries in under 60 seconds. Choose between the zero-installation hosted cloud proxy 
+        or deploy a self-hosted local daemon for complete sovereign infrastructure.
       </p>
 
-      <div class="telemetry-bar" style="width: 100%; max-width: 900px;">
-        <div class="tel-item">
-          <span class="k">Hosted Proxy URL</span>
-          <span class="v gold">https://rpc.sigui.io/v1/{chain}</span>
-        </div>
-        <div class="tel-item">
-          <span class="k">Local Default Port</span>
-          <span class="v">http://127.0.0.1:8545</span>
-        </div>
-        <div class="tel-item">
-          <span class="k">Interception Overhead</span>
-          <span class="v safe">&lt; 30 ms</span>
-        </div>
-        <div class="tel-item">
-          <span class="k">Fail-Safe Policy</span>
-          <span class="v gold">Fail-Closed Default</span>
-        </div>
+      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
+        <a href="#quickstart" class="btn-primary">⚡ 60-Second Setup</a>
+        <a href="#endpoints" class="btn-secondary">📡 API Reference Table</a>
       </div>
     </section>
 
-    <!-- Guide: Option 1 vs Option 2 -->
-    <section class="grid-2" style="margin-bottom: 50px;">
+    <!-- 02. DEVELOPER METRICS DASHBOARD -->
+    <section class="status-dashboard fade-up">
+      <div class="status-cell">
+        <span class="k">Hosted Gateway</span>
+        <span class="v" style="font-size: 12px; color: var(--gold);">rpc.sigui.io/v1</span>
+        <span class="sub">Global Anycast Any-Cloud</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Interception Speed</span>
+        <span class="v" style="color: var(--safe);">&lt; 3.0 ms</span>
+        <span class="sub">RLP / BCS Wire Decoder</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Standard Error Code</span>
+        <span class="v" style="color: var(--danger);">-32003</span>
+        <span class="sub">EIP-1474 / JSON-RPC Reject</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Fail-Safe Policy</span>
+        <span class="v" style="color: var(--gold);">FAIL-CLOSED</span>
+        <span class="sub">Treasury Capital Preservation</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Supported Protocols</span>
+        <span class="v" style="color: var(--safe);">10+ CHAINS</span>
+        <span class="sub">EVM, Move, Solana, Starknet</span>
+      </div>
+    </section>
+
+    <!-- 03. MAIN VISUAL: 60-SECOND COMPARATIVE INTEGRATION CARDS -->
+    <div id="quickstart" style="margin-bottom: 20px;">
+      <div class="sigil">Quickstart Guide</div>
+      <h2 style="font-family: var(--mono); font-size: 20px; color: var(--ivory);">Get Protected in 60 Seconds: Choose Your Deployment</h2>
+    </div>
+
+    <section class="grid-2 fade-up" style="margin-bottom: 50px;">
       
-      <!-- Option 1: Hosted Zero Install -->
+      <!-- Option A: Hosted Zero Install -->
       <div class="sigui-card">
         <div class="card-header">
-          <span class="card-title">Option 1: Hosted Zero-Install (Cloud)</span>
-          <span class="verdict-badge verdict-ALLOW">NO CODE</span>
+          <span class="card-title">Option A: Hosted Zero-Install (Cloud)</span>
+          <span class="verdict-badge verdict-ALLOW">ZERO CODE</span>
         </div>
         <p class="card-desc" style="margin-bottom: 16px;">
-          Replace your current node URL in your agent's environment variables. All transactions are intercepted and audited seamlessly before reaching the blockchain.
+          Replace your current blockchain node endpoint in your agent's configuration. All raw transactions are intercepted and audited by the MI300X cluster before consensus broadcast.
         </p>
-        <div class="terminal-window">
+        <div class="terminal-window" style="margin-bottom: 0;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <div class="terminal-dot green"></div>
+              <div class="terminal-dot yellow"></div>
+              <div class="terminal-dot red"></div>
+            </div>
+            <div class="terminal-title">.env (Agent Configuration)</div>
+          </div>
           <div class="terminal-body">
-<pre><span class="comment"># .env file of your agent:</span>
+<pre><span class="comment"># Update your agent's RPC endpoint:</span>
 <span class="keyword">ETHEREUM_RPC</span>=<span class="str">"https://rpc.sigui.io/v1/ethereum"</span>
 <span class="keyword">ARBITRUM_RPC</span>=<span class="str">"https://rpc.sigui.io/v1/arbitrum"</span>
 <span class="keyword">BASE_RPC</span>=<span class="str">"https://rpc.sigui.io/v1/base"</span>
-<span class="keyword">APTOS_FULLNODE</span>=<span class="str">"https://rpc.sigui.io/v1/aptos"</span>
+<span class="keyword">APTOS_RPC</span>=<span class="str">"https://rpc.sigui.io/v1/aptos"</span>
 <span class="keyword">SOLANA_RPC</span>=<span class="str">"https://rpc.sigui.io/v1/solana"</span></pre>
           </div>
         </div>
       </div>
 
-      <!-- Option 2: Local CLI Proxy -->
+      <!-- Option B: Local Sovereign Daemon -->
       <div class="sigui-card">
         <div class="card-header">
-          <span class="card-title">Option 2: Local Docker / CLI Proxy</span>
-          <span class="verdict-badge verdict-ESCALATE">DEV MODE</span>
+          <span class="card-title">Option B: Self-Hosted Daemon (Local)</span>
+          <span class="verdict-badge verdict-ESCALATE">SOVEREIGN</span>
         </div>
         <p class="card-desc" style="margin-bottom: 16px;">
-          Run the proxy locally alongside your bot or trading script. Requires Python 3.10+ and intercepts all standard JSON-RPC requests.
+          Run the lightweight proxy daemon locally inside your bot's virtual environment or Docker network. Intercepts standard JSON-RPC on localhost port 8545.
         </p>
-        <div class="terminal-window">
+        <div class="terminal-window" style="margin-bottom: 0;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <div class="terminal-dot green"></div>
+              <div class="terminal-dot yellow"></div>
+              <div class="terminal-dot red"></div>
+            </div>
+            <div class="terminal-title">terminal / bash</div>
+          </div>
           <div class="terminal-body">
-<pre><span class="comment"># Clone and start proxy:</span>
+<pre><span class="comment"># 1. Run local Sigui Guard daemon:</span>
 <span class="cmd">$</span> git clone https://github.com/ibonon/Sigui.git
-<span class="cmd">$</span> cd Sigui
-<span class="cmd">$</span> python -m modules.sigui_guard --port 8545 --network ethereum
+<span class="cmd">$</span> cd Sigui &amp;&amp; python launch_all.py --port 8545
 
-<span class="comment"># Connect your Python Web3 agent:</span>
+<span class="comment"># 2. Point your Web3 agent to localhost:</span>
 <span class="keyword">w3</span> = Web3(Web3.HTTPProvider(<span class="str">"http://127.0.0.1:8545"</span>))</pre>
           </div>
         </div>
@@ -122,11 +163,11 @@
 
     </section>
 
-    <!-- API Reference Grid -->
-    <section class="sigui-card" style="margin-bottom: 60px; background: rgba(14, 14, 18, 0.95);">
+    <!-- 04. API SPECIFICATION TABLE -->
+    <section id="endpoints" class="sigui-card fade-up" style="margin-bottom: 50px; background: rgba(14, 14, 18, 0.95);">
       <div class="card-header">
-        <span class="card-title">📡 Core HTTP & JSON-RPC Endpoints</span>
-        <span class="brand-badge">REST API SPECIFICATION</span>
+        <span class="card-title">📡 Core HTTP &amp; JSON-RPC Endpoints</span>
+        <span class="brand-badge">REST &amp; RPC SPECIFICATION</span>
       </div>
 
       <div style="overflow-x: auto;">
@@ -135,33 +176,39 @@
             <tr style="border-bottom: 1px solid var(--border); color: var(--gold);">
               <th style="padding: 12px 14px;">ENDPOINT</th>
               <th style="padding: 12px 14px;">METHOD</th>
-              <th style="padding: 12px 14px;">DESCRIPTION</th>
-              <th style="padding: 12px 14px;">RESPONSE</th>
+              <th style="padding: 12px 14px;">PURPOSE</th>
+              <th style="padding: 12px 14px;">EXPECTED RESPONSE</th>
             </tr>
           </thead>
           <tbody>
             <tr style="border-bottom: 1px solid var(--border-light);">
-              <td style="padding: 12px 14px; color: var(--gold);">/v1/{chain}</td>
+              <td style="padding: 12px 14px; color: var(--gold); font-weight: 600;">/v1/{chain}</td>
               <td style="padding: 12px 14px;"><span class="verdict-badge verdict-ALLOW" style="font-size: 9px;">POST</span></td>
-              <td style="padding: 12px 14px; color: var(--ivory);">Intercepts eth_sendRawTransaction, sendTransaction</td>
-              <td style="padding: 12px 14px; color: var(--muted);">JSON-RPC result or Error -32003 (BLOCK)</td>
+              <td style="padding: 12px 14px; color: var(--ivory);">Transparent reverse proxy for eth_sendRawTransaction</td>
+              <td style="padding: 12px 14px; color: var(--muted);">Node consensus response OR Error -32003 (BLOCK)</td>
             </tr>
             <tr style="border-bottom: 1px solid var(--border-light);">
-              <td style="padding: 12px 14px; color: var(--gold);">/v1/aptos/transactions</td>
+              <td style="padding: 12px 14px; color: var(--gold); font-weight: 600;">/v1/aptos/transactions</td>
               <td style="padding: 12px 14px;"><span class="verdict-badge verdict-ALLOW" style="font-size: 9px;">POST</span></td>
-              <td style="padding: 12px 14px; color: var(--ivory);">Intercepts Aptos REST transaction payload</td>
-              <td style="padding: 12px 14px; color: var(--muted);">HTTP 200 (Forwarded) or HTTP 403 (BLOCKED)</td>
+              <td style="padding: 12px 14px; color: var(--ivory);">Intercepts Aptos REST transaction submission payloads</td>
+              <td style="padding: 12px 14px; color: var(--muted);">HTTP 200 (Forwarded) OR HTTP 403 (BLOCKED)</td>
             </tr>
             <tr style="border-bottom: 1px solid var(--border-light);">
-              <td style="padding: 12px 14px; color: var(--gold);">/api/evaluate</td>
+              <td style="padding: 12px 14px; color: var(--gold); font-weight: 600;">/api/evaluate</td>
               <td style="padding: 12px 14px;"><span class="verdict-badge verdict-ALLOW" style="font-size: 9px;">POST</span></td>
-              <td style="padding: 12px 14px; color: var(--ivory);">Direct audit of a contract address or transaction graph</td>
+              <td style="padding: 12px 14px; color: var(--ivory);">Direct programmatic audit of an address or adjacency graph</td>
               <td style="padding: 12px 14px; color: var(--muted);">{ decision: "ALLOW"|"BLOCK", risk_score, pattern }</td>
             </tr>
-            <tr>
-              <td style="padding: 12px 14px; color: var(--gold);">/health</td>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 12px 14px; color: var(--gold); font-weight: 600;">/api/threat-intel</td>
               <td style="padding: 12px 14px;"><span class="verdict-badge verdict-ESCALATE" style="font-size: 9px;">GET</span></td>
-              <td style="padding: 12px 14px; color: var(--ivory);">Proxy and vision model health check</td>
+              <td style="padding: 12px 14px; color: var(--ivory);">Fetches dynamic blacklist of learned threat addresses</td>
+              <td style="padding: 12px 14px; color: var(--muted);">{ total_learned, patterns: [...] }</td>
+            </tr>
+            <tr>
+              <td style="padding: 12px 14px; color: var(--gold); font-weight: 600;">/health</td>
+              <td style="padding: 12px 14px;"><span class="verdict-badge verdict-ESCALATE" style="font-size: 9px;">GET</span></td>
+              <td style="padding: 12px 14px; color: var(--ivory);">Cluster liveness, ROCm GPU memory, and latency health check</td>
               <td style="padding: 12px 14px; color: var(--muted);">{ status: "healthy", version: "3.2.0" }</td>
             </tr>
           </tbody>
@@ -169,22 +216,131 @@
       </div>
     </section>
 
+    <!-- 05. TECHNICAL EVIDENCE: JSON-RPC ERROR REJECTION SPEC -->
+    <section class="grid-2" style="margin-bottom: 50px;">
+      <!-- Error Response Payload -->
+      <div class="terminal-window">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <div class="terminal-dot red"></div>
+            <div class="terminal-dot yellow"></div>
+            <div class="terminal-dot green"></div>
+          </div>
+          <span class="terminal-title">INTERCEPTED EXPLOIT RESPONSE (JSON-RPC -32003)</span>
+        </div>
+        <div class="terminal-body" style="font-size: 11px;">
+<pre>{
+  <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>,
+  <span class="str">"id"</span>: <span class="gold">1</span>,
+  <span class="str">"error"</span>: {
+    <span class="str">"code"</span>: <span class="danger">-32003</span>,
+    <span class="str">"message"</span>: <span class="danger">"SIGUI_ORACLE_EXECUTION_BLOCKED"</span>,
+    <span class="str">"data"</span>: {
+      <span class="str">"verdict"</span>: <span class="danger">"BLOCK"</span>,
+      <span class="str">"pattern"</span>: <span class="danger">"DRAIN_STAR"</span>,
+      <span class="str">"risk_score"</span>: <span class="safe">0.984</span>,
+      <span class="str">"target"</span>: <span class="str">"0x3806aeb76eDD2E22D3cF66A163113c4b24243b29"</span>,
+      <span class="str">"zk_proof"</span>: <span class="str">"groth16_bn128_invalid_drain_invariant"</span>,
+      <span class="str">"latency_ms"</span>: <span class="gold">35.3</span>
+    }
+  }
+}</pre>
+        </div>
+      </div>
+
+      <!-- Error Handling Explanation -->
+      <div class="sigui-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div class="card-header">
+            <span class="card-title">Standard Agent Rejection Handling</span>
+            <span class="verdict-badge verdict-BLOCK">EIP-1474</span>
+          </div>
+          <p class="card-desc" style="margin-bottom: 16px;">
+            By adhering to EIP-1474 custom server error code <code>-32003</code>, popular agent libraries like Ethers.js, Web3.py, and Viem automatically catch the exception:
+          </p>
+          <div class="terminal-window" style="margin-bottom: 0;">
+            <div class="terminal-body" style="font-size: 10px;">
+<pre><span class="keyword">try</span>:
+    tx_hash = w3.eth.send_raw_transaction(signed_tx)
+<span class="keyword">except</span> ContractLogicError <span class="keyword">as</span> e:
+    <span class="keyword">if</span> e.code == <span class="danger">-32003</span>:
+        logger.error(f<span class="str">"🚨 Treasury protected: {e.message}"</span>)</pre>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 14px; font-family: var(--mono); font-size: 10px; color: var(--safe);">
+          ZERO TRANSACTION FEES SPENT • TREASURY INTACT
+        </div>
+      </div>
+    </section>
+
+    <!-- 06. NEXT STEP FUNNEL BANNER -->
+    <a href="sdk.html" class="next-page-card">
+      <div class="next-page-meta">
+        <div class="k">09 — SDK &amp; AGENT FRAMEWORK PLUGINS</div>
+        <div class="title">Connect Sigui directly to ElizaOS v2, LangChain, OpenClaw, or custom Python agents</div>
+      </div>
+      <div class="next-page-arrow">→</div>
+    </a>
+
   </main>
 
-  <!-- Universal Footer -->
+  <!-- Categorized Multi-Column Master Footer -->
   <footer class="sigui-footer">
-    <div class="footer-nav">
-      <a href="index.html" class="footer-link">Overview</a>
-      <a href="sentinel.html" class="footer-link">Sentinel Oracle</a>
-      <a href="architecture.html" class="footer-link">Architecture</a>
-      <a href="protocol.html" class="footer-link">Protocol & AIP</a>
-      <a href="security.html" class="footer-link">Threat SOC</a>
-      <a href="research.html" class="footer-link">Research</a>
-      <a href="dataset.html" class="footer-link">Dataset 1M</a>
-      <a href="sdk.html" class="footer-link">SDK & Plugins</a>
-    </div>
-    <div class="footer-copy">
-      SIGUI PROTOCOL © 2026 • OPEN-SOURCE DEPIN AI CYBERSECURITY ORACLE • MIT LICENSE
+    <div class="footer-container">
+      <div class="footer-grid">
+        <div>
+          <div class="nav-brand" style="margin-bottom: 12px;">
+            SIGUI <span class="brand-badge">PROTOCOL</span>
+          </div>
+          <p class="card-desc" style="max-width: 280px; font-size: 12px; margin-bottom: 16px;">
+            The autonomous AI security layer and ZK-shield for Web3 agent treasuries across EVM, Move, and SVM.
+          </p>
+          <div class="status-pill" style="display: inline-flex;">
+            <div class="pulse-dot"></div> ORACLE LIVE
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Product</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="index.html">Overview</a></li>
+            <li class="footer-link-item"><a href="sentinel.html">Sentinel Oracle</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Technology</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="architecture.html">Architecture</a></li>
+            <li class="footer-link-item"><a href="protocol.html">Protocol & AIP</a></li>
+            <li class="footer-link-item"><a href="security.html">Threat SOC</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Research</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="research.html">Research Lab</a></li>
+            <li class="footer-link-item"><a href="dataset.html">Dataset 1M</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Developers</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="docs.html">Docs & API</a></li>
+            <li class="footer-link-item"><a href="sdk.html">SDK & Plugins</a></li>
+            <li class="footer-link-item"><a href="https://github.com/ibonon/Sigui" target="_blank">GitHub ⭐</a></li>
+            <li class="footer-link-item"><a href="https://huggingface.co/datasets/Ibonon/sigui-depin-1m" target="_blank">Hugging Face</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 SIGUI PROTOCOL • OPEN-SOURCE MIT LICENSE</div>
+        <div>ZENODO DOI: 10.5281/ZENODO.20550562 • APTOS TESTNET VERIFIED</div>
+      </div>
     </div>
   </footer>
 

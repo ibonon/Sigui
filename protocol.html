@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Protocol & Standards | Sigui Protocol Move & Cairo Standards</title>
-  <meta name="description" content="On-Chain Autonomous Agent Identity & Tiered Reputation Standards for Aptos (Move Objects AIP-XXX) and Starknet Cairo." />
+  <title>Protocol & Standards | Sigui Move & Cairo On-Chain Architecture</title>
+  <meta name="description" content="On-Chain Autonomous Agent Identity & Tiered Reputation Standards for Aptos (Move Objects AIP-XX) and Starknet Cairo." />
   <link rel="stylesheet" href="css/sigui-theme.css" />
 </head>
 <body>
 
+  <!-- Ambient Visual Atmosphere -->
   <div class="ambient-grid"></div>
   <div class="ambient-vignette"></div>
 
@@ -20,7 +21,7 @@
 
     <ul class="nav-links" id="navLinks">
       <li><a href="index.html" class="nav-link">Overview</a></li>
-      <li><a href="sentinel.html" class="nav-link">Sentinel Oracle</a></li>
+      <li><a href="sentinel.html" class="nav-link">Sentinel</a></li>
       <li><a href="architecture.html" class="nav-link">Architecture</a></li>
       <li><a href="protocol.html" class="nav-link active">Protocol & AIP</a></li>
       <li><a href="security.html" class="nav-link">Threat SOC</a></li>
@@ -33,101 +34,185 @@
     <div class="nav-right">
       <div class="status-pill">
         <div class="pulse-dot"></div>
-        APTOS TESTNET LIVE
+        APTOS TESTNET VERIFIED
       </div>
       <button class="nav-mobile-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
     </div>
   </header>
 
+  <!-- Main Container -->
   <main class="sigui-container">
     
-    <!-- Hero Header -->
+    <!-- 01. HERO -->
     <section class="sigui-hero fade-up">
-      <div class="sigil">On-Chain Smart Contract Standards</div>
+      <div class="sigil">04 — On-Chain Smart Contract Standards</div>
 
       <h1 class="headline">
-        Native Agent Identity & <span>Tiered Reputation</span>
+        How Sigui Establishes On-Chain Trust:<br /><span>Move Objects &amp; Tiered Reputation</span>
       </h1>
 
       <p class="subline">
-        Formalizing on-chain trust for autonomous agents. Integrating Move Objects on Aptos and Cairo contracts on Starknet 
-        to empower DeFi protocols with verifiable agent risk scoring.
+        Formalizing on-chain identity and verifiable creditworthiness for autonomous financial agents.
+        Implemented via native Move Objects on Aptos (AIP-XX) and formally proven with the Move Prover.
       </p>
 
-      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px;">
+      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
         <a href="https://github.com/ibonon/Sigui/blob/master/contracts/aptos/AIP_PROPOSAL.md" class="btn-primary" target="_blank">📜 View Official Aptos AIP</a>
-        <a href="https://explorer.aptoslabs.com/account/0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828?network=testnet" class="btn-secondary" target="_blank">🔍 Aptos Testnet Explorer</a>
+        <a href="https://explorer.aptoslabs.com/account/0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828?network=testnet" class="btn-secondary" target="_blank">🔍 Aptos Testnet Explorer ↗</a>
+      </div>
+    </section>
+
+    <!-- 02. ON-CHAIN METRICS DASHBOARD -->
+    <section class="status-dashboard fade-up">
+      <div class="status-cell">
+        <span class="k">Aptos Standard</span>
+        <span class="v" style="color: var(--gold);">AIP-XX</span>
+        <span class="sub">Move Objects Architecture</span>
       </div>
 
-      <!-- Telemetry Strip -->
-      <div class="telemetry-bar" style="width: 100%; max-width: 900px;">
-        <div class="tel-item">
-          <span class="k">Aptos Standard</span>
-          <span class="v gold">AIP-XXX (Move Objects)</span>
+      <div class="status-cell">
+        <span class="k">Formal Verification</span>
+        <span class="v" style="color: var(--safe);">100% PROVEN</span>
+        <span class="sub">Move Prover Invariants</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Testnet Package</span>
+        <span class="v" style="font-size: 13px;">0x8332…c828</span>
+        <span class="sub">Active on Aptos Testnet</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Score Saturation</span>
+        <span class="v" style="color: var(--gold);">0 – 1000</span>
+        <span class="sub">Dynamic Bayesian Scoring</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Slashing Latency</span>
+        <span class="v" style="color: var(--safe);">&lt; 1 BLOCK</span>
+        <span class="sub">Immediate Quarantining</span>
+      </div>
+    </section>
+
+    <!-- 03. MAIN VISUAL: CONCEPTUAL PIPELINE & HORIZONTAL TIER LADDER -->
+    <div style="margin-bottom: 20px;">
+      <div class="sigil">Trust Lifecycle Pipeline</div>
+      <h2 style="font-family: var(--mono); font-size: 20px; color: var(--ivory);">From Autonomous Agent to On-Chain Reputation Tier</h2>
+    </div>
+
+    <!-- Identity Lifecycle Steps -->
+    <section class="pipeline-container fade-up" style="margin-bottom: 40px;">
+      <div class="pipeline-steps">
+        <div class="pipeline-step">
+          <div class="pipeline-num">STEP 01</div>
+          <div class="pipeline-title">Agent Minting</div>
+          <div class="pipeline-desc">Agent registers via Move Object factory, generating a globally unique DID.</div>
         </div>
-        <div class="tel-item">
-          <span class="k">Formal Verification</span>
-          <span class="v safe">Move Prover Verified ✓</span>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-num">STEP 02</div>
+          <div class="pipeline-title">Genesis Baseline</div>
+          <div class="pipeline-desc">Initial score calibrated at 500 (Silver baseline) with bonded stake.</div>
         </div>
-        <div class="tel-item">
-          <span class="k">Deployer Contract</span>
-          <span class="v" style="font-size: 10px;">0x8332…c828</span>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-num">STEP 03</div>
+          <div class="pipeline-title">Oracle Continuous Audit</div>
+          <div class="pipeline-desc">Every transaction audited by Imina-Na V2 before consensus inclusion.</div>
         </div>
-        <div class="tel-item">
-          <span class="k">Reputation Engine</span>
-          <span class="v gold">Bronze → Platinum</span>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-num">STEP 04</div>
+          <div class="pipeline-title">Dynamic Tier Promotion</div>
+          <div class="pipeline-desc">Benign volume elevates score to Gold/Platinum; attacks trigger instant slashing.</div>
         </div>
       </div>
     </section>
 
-    <!-- Four Tiers Grid -->
+    <!-- Horizontal Tier Progression Ladder -->
     <section style="margin-bottom: 50px;">
-      <div class="sigil" style="margin-bottom: 16px;">Verifiable Standing</div>
-      <h2 class="headline" style="font-size: 1.8rem; margin-bottom: 24px; text-align: left;">
-        The 4-Tier On-Chain <span>Reputation Model</span>
-      </h2>
-
-      <div class="grid-4">
-        <div class="sigui-card">
-          <div class="card-header">
-            <span class="card-title">Bronze Tier</span>
-            <span class="verdict-badge verdict-BLOCK">TIER 0</span>
+      <div class="sigil">Hierarchical Reputation Ladder</div>
+      <h3 style="font-family: var(--mono); font-size: 16px; color: var(--gold); margin-bottom: 16px;">The 4-Tier On-Chain Permission Matrix</h3>
+      
+      <div class="tier-ladder">
+        <!-- Bronze -->
+        <div class="tier-step">
+          <div class="tier-step-header">
+            <span class="tier-name" style="color: var(--danger);">BRONZE</span>
+            <span class="tier-score">0 – 249 PTS</span>
           </div>
-          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: #fca5a5; margin-bottom: 8px;">Score 0 – 249</div>
-          <p class="card-desc">New or unverified agents. Highly restricted transaction limits and mandatory secondary multisig approval for DeFi liquidity interactions.</p>
+          <p class="tier-desc">Untrusted or quarantined agents. Transaction volume capped at $1,000 equivalent; secondary multisig signature required for all DeFi operations.</p>
+          <div style="font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 8px;">PERMISSIONS: RESTRICTED EXECUTION</div>
         </div>
 
-        <div class="sigui-card">
-          <div class="card-header">
-            <span class="card-title">Silver Tier</span>
-            <span class="verdict-badge verdict-ESCALATE">TIER 1</span>
+        <!-- Silver -->
+        <div class="tier-step">
+          <div class="tier-step-header">
+            <span class="tier-name" style="color: var(--gold);">SILVER</span>
+            <span class="tier-score">250 – 499 PTS</span>
           </div>
-          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: #fde68a; margin-bottom: 8px;">Score 250 – 499</div>
-          <p class="card-desc">Standard autonomous agent baseline. Initial registration tier (Score 500 genesis). Normal transaction processing with active oracle auditing.</p>
+          <p class="tier-desc">Baseline autonomous agent status. Standard transaction throughput with continuous real-time oracle inspection and automated anomaly checks.</p>
+          <div style="font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 8px;">PERMISSIONS: STANDARD THROUGHPUT</div>
         </div>
 
-        <div class="sigui-card">
-          <div class="card-header">
-            <span class="card-title">Gold Tier</span>
-            <span class="verdict-badge verdict-ALLOW">TIER 2</span>
+        <!-- Gold -->
+        <div class="tier-step">
+          <div class="tier-step-header">
+            <span class="tier-name" style="color: var(--safe);">GOLD</span>
+            <span class="tier-score">500 – 749 PTS</span>
           </div>
-          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: #a7f3d0; margin-bottom: 8px;">Score 500 – 749</div>
-          <p class="card-desc">High reliability standing. Proven audit history over 500+ benign transactions. Qualified for preferential DEX trading fee tiers.</p>
+          <p class="tier-desc">Demonstrated operational integrity. Requires &gt;500 audited benign transactions. Unlocks preferential AMM fees and fast-path execution routing.</p>
+          <div style="font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 8px;">PERMISSIONS: FAST-PATH DEFI</div>
         </div>
 
-        <div class="sigui-card">
-          <div class="card-header">
-            <span class="card-title">Platinum Tier</span>
-            <span class="verdict-badge verdict-ALLOW" style="background: rgba(245,166,35,0.2); color: var(--gold); border-color: var(--gold);">TIER 3</span>
+        <!-- Platinum -->
+        <div class="tier-step">
+          <div class="tier-step-header">
+            <span class="tier-name" style="color: #60A5FA;">PLATINUM</span>
+            <span class="tier-score">750 – 1000 PTS</span>
           </div>
-          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--gold); margin-bottom: 8px;">Score 750 – 1000</div>
-          <p class="card-desc">Institutional grade autonomous operator. Enables under-collateralized borrowing and automated high-frequency liquidity provision.</p>
+          <p class="tier-desc">Institutional autonomous treasury status. Proven multi-month flawless audit history. Unlocks under-collateralized borrowing and automated flash loans.</p>
+          <div style="font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 8px;">PERMISSIONS: UNRESTRICTED INSTITUTIONAL</div>
         </div>
       </div>
     </section>
 
-    <!-- Code Implementation Showcase -->
-    <section class="grid-2" style="margin-bottom: 60px;">
+    <!-- 04. TECHNICAL MOVE OBJECTS & SLASHING ARCHITECTURE -->
+    <div class="grid-2" style="margin-bottom: 50px;">
+      <div class="sigui-card">
+        <div class="card-header">
+          <span class="card-title">Move Objects Paradigm (AIP-XX)</span>
+          <span class="verdict-badge verdict-ALLOW">RESOURCE SAFETY</span>
+        </div>
+        <p class="card-desc">
+          Unlike EVM mapping structures vulnerable to reentrancy, Aptos Move Objects represent agent profiles as unique, non-fungible on-chain entities. Each agent profile object stores cryptographic identity, capabilities, and reputation state directly tied to the agent's controller address.
+        </p>
+        <div style="margin-top: 14px; font-family: var(--mono); font-size: 11px; line-height: 1.6; color: var(--gold);">
+          • Non-fungible linear resource guarantees zero double-registration.<br />
+          • Dynamic capability transfers permit automated custodian delegation.<br />
+          • Interoperable with Aptos Object Transfer and Keyless accounts.
+        </div>
+      </div>
+
+      <div class="sigui-card">
+        <div class="card-header">
+          <span class="card-title">Deterministic Slashing &amp; Quarantine</span>
+          <span class="verdict-badge verdict-BLOCK">ZERO TOLERANCE</span>
+        </div>
+        <p class="card-desc">
+          When Imina-Na V2 detects an agent attempting interaction with a confirmed DRAIN_STAR contract, an oracle slashing proof is dispatched to the contract. The agent's score is slashed by 300 points in one block, immediately demoting them to Bronze and revoking signing rights.
+        </p>
+        <div style="margin-top: 14px; font-family: var(--mono); font-size: 11px; line-height: 1.6; color: var(--danger);">
+          • -300 point penalty for confirmed drain-star ingress interaction.<br />
+          • Bonded stake escrow liquidated to decentralized insurance pool.<br />
+          • Quarantine requires 14-day human governor challenge period.
+        </div>
+      </div>
+    </div>
+
+    <!-- 05. MOVE CODE & TESTNET VERIFICATION EVIDENCE -->
+    <section class="grid-2" style="margin-bottom: 50px;">
       <!-- Move Code Window -->
       <div class="terminal-window">
         <div class="terminal-header">
@@ -137,20 +222,22 @@
             <div class="terminal-dot green"></div>
           </div>
           <span class="terminal-title">Aptos Move: agent_reputation.move</span>
+          <div style="font-size: 10px; color: var(--safe);">MOVE PROVER VERIFIED</div>
         </div>
         <div class="terminal-body">
 <pre><span class="keyword">struct</span> AgentProfile <span class="keyword">has key, store</span> {
-    did: String,          <span class="comment">// "did:sigui:aptos:0x128b..."</span>
-    tier: u8,             <span class="comment">// 0=Bronze, 1=Silver, 2=Gold, 3=Plat</span>
+    did: String,          <span class="comment">// "did:sigui:aptos:0x8332..."</span>
+    tier: u8,             <span class="comment">// 0=Bronze, 1=Silver, 2=Gold, 3=Platinum</span>
     score: u64,           <span class="comment">// 0 to 1000 saturating</span>
     tx_count: u64,        <span class="comment">// Total audited actions</span>
-    blocked_count: u64,   <span class="comment">// Blocked attack attempts</span>
-    slashed_stake: u64,   <span class="comment">// Slashed Octas</span>
-    is_active: bool,      <span class="comment">// Slashing status</span>
+    blocked_count: u64,   <span class="comment">// Intercepted malicious interactions</span>
+    slashed_stake: u64,   <span class="comment">// Slashed Octas deposited to insurance</span>
+    is_active: bool,      <span class="comment">// Active status (false if quarantined)</span>
 }
 
-<span class="comment">// Formally proved with Move Prover:</span>
+<span class="comment">// Formal specification for Move Prover:</span>
 <span class="keyword">spec</span> update_reputation {
+    <span class="keyword">aborts_if</span> !exists&lt;AgentProfile&gt;(agent_addr);
     <span class="keyword">ensures</span> is_positive ==&gt; 
       (old(profile.score) + delta &gt; MAX_SCORE ==&gt; profile.score == MAX_SCORE);
 }</pre>
@@ -162,48 +249,106 @@
         <div>
           <div class="card-header">
             <span class="card-title">Live On-Chain Evidence</span>
-            <span class="verdict-badge verdict-ALLOW">TESTNET VERIFIED</span>
+            <span class="verdict-badge verdict-ALLOW">APTOS TESTNET</span>
           </div>
           <p class="card-desc" style="margin-bottom: 20px;">
-            The Sigui Move modules are compiled, formally verified with the Move Prover, and active on the Aptos Testnet network.
+            The Sigui Move modules are compiled, formally verified with the Move Prover, and active on Aptos Testnet:
           </p>
-          <div class="metric-box" style="margin-bottom: 12px;">
-            <span class="metric-label">Contract Package</span>
-            <span class="metric-value" style="font-size: 13px; word-break: break-all;">0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828</span>
+          <div style="background: rgba(10,10,12,0.8); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px;">
+            <div style="font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase;">Deployed Package Address</div>
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); word-break: break-all; margin-top: 4px;">
+              0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828
+            </div>
           </div>
-          <div class="metric-box" style="margin-bottom: 12px;">
-            <span class="metric-label">Genesis Agent Registered</span>
-            <span class="metric-value" style="font-size: 13px; word-break: break-all;">Tx 0x128bd568c07131b8576dec24e89214a4733654637e60cbb7959405db75650241</span>
+          <div style="background: rgba(10,10,12,0.8); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px;">
+            <div style="font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase;">Genesis Agent Registered</div>
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--ivory); word-break: break-all; margin-top: 4px;">
+              Tx 0x128bd568c07131b8576dec24e89214a4733654637e60cbb7959405db75650241
+            </div>
           </div>
-          <div class="metric-box">
-            <span class="metric-label">First Threat Intercepted</span>
-            <span class="metric-value" style="font-size: 13px; word-break: break-all;">Tx 0x3e3294b1509faae4ecdfbce2e2db699ef796fb35db4ba0be886c5280ee28f415</span>
+          <div style="background: rgba(10,10,12,0.8); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px;">
+            <div style="font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase;">Threat Slashing Intercept Event</div>
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--danger); word-break: break-all; margin-top: 4px;">
+              Tx 0x3e3294b1509faae4ecdfbce2e2db699ef796fb35db4ba0be886c5280ee28f415
+            </div>
           </div>
         </div>
+
         <div style="margin-top: 20px;">
           <a href="https://explorer.aptoslabs.com/account/0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828?network=testnet" class="btn-primary" style="width: 100%;" target="_blank">
-            Open Aptos Explorer Verification →
+            Open Aptos Explorer Verification ↗
           </a>
         </div>
       </div>
     </section>
 
+    <!-- 06. NEXT STEP FUNNEL BANNER -->
+    <a href="security.html" class="next-page-card">
+      <div class="next-page-meta">
+        <div class="k">05 — THREAT SOC &amp; MITIGATION</div>
+        <div class="title">Inspect the live Threat Operations Center: DRAIN_STAR, MIXING_CHAIN, and Sybil detection</div>
+      </div>
+      <div class="next-page-arrow">→</div>
+    </a>
+
   </main>
 
-  <!-- Universal Footer -->
+  <!-- Categorized Multi-Column Master Footer -->
   <footer class="sigui-footer">
-    <div class="footer-nav">
-      <a href="index.html" class="footer-link">Overview</a>
-      <a href="sentinel.html" class="footer-link">Sentinel Oracle</a>
-      <a href="architecture.html" class="footer-link">Architecture</a>
-      <a href="security.html" class="footer-link">Threat SOC</a>
-      <a href="research.html" class="footer-link">Research</a>
-      <a href="dataset.html" class="footer-link">Dataset 1M</a>
-      <a href="docs.html" class="footer-link">Docs & API</a>
-      <a href="sdk.html" class="footer-link">SDK & Plugins</a>
-    </div>
-    <div class="footer-copy">
-      SIGUI PROTOCOL © 2026 • OPEN-SOURCE DEPIN AI CYBERSECURITY ORACLE • MIT LICENSE
+    <div class="footer-container">
+      <div class="footer-grid">
+        <div>
+          <div class="nav-brand" style="margin-bottom: 12px;">
+            SIGUI <span class="brand-badge">PROTOCOL</span>
+          </div>
+          <p class="card-desc" style="max-width: 280px; font-size: 12px; margin-bottom: 16px;">
+            The autonomous AI security layer and ZK-shield for Web3 agent treasuries across EVM, Move, and SVM.
+          </p>
+          <div class="status-pill" style="display: inline-flex;">
+            <div class="pulse-dot"></div> ORACLE LIVE
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Product</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="index.html">Overview</a></li>
+            <li class="footer-link-item"><a href="sentinel.html">Sentinel Oracle</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Technology</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="architecture.html">Architecture</a></li>
+            <li class="footer-link-item"><a href="protocol.html">Protocol & AIP</a></li>
+            <li class="footer-link-item"><a href="security.html">Threat SOC</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Research</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="research.html">Research Lab</a></li>
+            <li class="footer-link-item"><a href="dataset.html">Dataset 1M</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Developers</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="docs.html">Docs & API</a></li>
+            <li class="footer-link-item"><a href="sdk.html">SDK & Plugins</a></li>
+            <li class="footer-link-item"><a href="https://github.com/ibonon/Sigui" target="_blank">GitHub ⭐</a></li>
+            <li class="footer-link-item"><a href="https://huggingface.co/datasets/Ibonon/sigui-depin-1m" target="_blank">Hugging Face</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 SIGUI PROTOCOL • OPEN-SOURCE MIT LICENSE</div>
+        <div>ZENODO DOI: 10.5281/ZENODO.20550562 • APTOS TESTNET VERIFIED</div>
+      </div>
     </div>
   </footer>
 

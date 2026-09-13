@@ -3,24 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Threat SOC | Sigui Protocol Security Center</title>
-  <meta name="description" content="Real-time blockchain threat intelligence and topological attack signatures: DRAIN_STAR, MIXING_CHAIN, and dynamic blacklist feedback loop." />
+  <title>Threat SOC | Sigui Protocol Security Operations Center</title>
+  <meta name="description" content="Real-time blockchain threat operations center, topological attack signatures: DRAIN_STAR, MIXING_CHAIN, and dynamic blacklist feedback loop." />
   <link rel="stylesheet" href="css/sigui-theme.css" />
 </head>
 <body>
 
+  <!-- Ambient Visual Atmosphere -->
   <div class="ambient-grid"></div>
   <div class="ambient-vignette"></div>
 
   <!-- Master Navigation -->
   <header class="sigui-nav">
     <a href="index.html" class="nav-brand">
-      SIGUI <span class="brand-badge">SECURITY SOC</span>
+      SIGUI <span class="brand-badge">THREAT SOC</span>
     </a>
 
     <ul class="nav-links" id="navLinks">
       <li><a href="index.html" class="nav-link">Overview</a></li>
-      <li><a href="sentinel.html" class="nav-link">Sentinel Oracle</a></li>
+      <li><a href="sentinel.html" class="nav-link">Sentinel</a></li>
       <li><a href="architecture.html" class="nav-link">Architecture</a></li>
       <li><a href="protocol.html" class="nav-link">Protocol & AIP</a></li>
       <li><a href="security.html" class="nav-link active">Threat SOC</a></li>
@@ -39,161 +40,296 @@
     </div>
   </header>
 
+  <!-- Main Container -->
   <main class="sigui-container">
     
-    <!-- Hero Header -->
+    <!-- 01. HERO -->
     <section class="sigui-hero fade-up">
-      <div class="sigil">Security Operations Center</div>
+      <div class="sigil">05 — Threat Intelligence Operations Center</div>
 
       <h1 class="headline">
-        Topological <span>Threat Intelligence</span>
+        What Threats Sigui Neutralizes:<br /><span>Topological Attack Signatures &amp; SOC Defense</span>
       </h1>
 
       <p class="subline">
-        Autonomous agents are prime targets for automated exploit networks. 
-        Sigui classifies complex transaction graphs into known adversary topologies, preventing catastrophic treasury drainage.
+        Autonomous agents are prime targets for automated drainers, peel mixers, and front-running swarms.
+        Sigui classifies complex transaction neighborhoods into known adversarial topologies in under 30ms.
       </p>
 
-      <div class="telemetry-bar" style="width: 100%; max-width: 900px;">
-        <div class="tel-item">
-          <span class="k">Identified Topologies</span>
-          <span class="v gold">3 Primary Vector Classes</span>
+      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
+        <a href="sentinel.html" class="btn-primary">⚡ Simulate Threat in Sentinel</a>
+        <a href="#feedback-loop" class="btn-secondary">🧠 Inspect Feedback Engine</a>
+      </div>
+    </section>
+
+    <!-- 02. SOC METRICS DASHBOARD -->
+    <section class="status-dashboard fade-up">
+      <div class="status-cell">
+        <span class="k">Identified Topologies</span>
+        <span class="v" style="color: var(--gold);">3 CLASSES</span>
+        <span class="sub">Primary Threat Vectors</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Drain Star Precision</span>
+        <span class="v" style="color: var(--safe);">98.7%</span>
+        <span class="sub">False Positive Rate &lt; 0.5%</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Mitigation Latency</span>
+        <span class="v" style="color: var(--safe);">&lt; 30 ms</span>
+        <span class="sub">Pre-Execution Interception</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Threat Propagation</span>
+        <span class="v" style="color: var(--gold);">&lt; 5 ms</span>
+        <span class="sub">Real-Time WebSocket Sync</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Blacklist Engine</span>
+        <span class="v" style="color: var(--danger);">AUTONOMOUS</span>
+        <span class="sub">Dynamic Memory Bloom Filter</span>
+      </div>
+    </section>
+
+    <!-- 03. ATTACK TAXONOMY CARDS WITH GRAPH SIGNATURES -->
+    <div style="margin-bottom: 20px;">
+      <div class="sigil">Attack Taxonomy</div>
+      <h2 style="font-family: var(--mono); font-size: 20px; color: var(--ivory);">The 3 Primary Adversarial Graph Topologies</h2>
+    </div>
+
+    <div class="grid-3" style="margin-bottom: 50px;">
+      <!-- Threat 1: DRAIN_STAR -->
+      <div class="sigui-card" style="border-color: rgba(244, 63, 94, 0.4);">
+        <div class="card-header">
+          <span class="card-title" style="color: var(--danger);">🚨 DRAIN_STAR</span>
+          <span class="verdict-badge verdict-BLOCK">CRITICAL / BLOCK</span>
         </div>
-        <div class="tel-item">
-          <span class="k">Interception Accuracy</span>
-          <span class="v safe">98.7% Precision</span>
+        <p class="card-desc" style="margin-bottom: 16px;">
+          A malicious sink contract receives rapid, concurrent fund transfers from multiple victims (agents, treasuries) in a radial fan-in pattern, followed immediately by bridge sweeps.
+        </p>
+        <div style="background: rgba(10,10,12,0.85); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px;">
+          <div style="font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase;">Topological Signature</div>
+          <div style="font-family: var(--mono); font-size: 11px; color: #fca5a5; margin-top: 4px;">
+            High In-Degree (≥5) • Asymmetric Fan-In • High Outflow Dissipation
+          </div>
         </div>
-        <div class="tel-item">
-          <span class="k">Mitigation Speed</span>
-          <span class="v safe">&lt; 30 ms</span>
+        <div style="font-family: var(--mono); font-size: 11px; color: var(--danger);">
+          FIREWALL ACTION: Reject RPC payload (-32003) &amp; blacklist destination.
         </div>
-        <div class="tel-item">
-          <span class="k">Feedback Loop</span>
-          <span class="v gold">Autonomous Blacklist Sync</span>
+      </div>
+
+      <!-- Threat 2: MIXING_CHAIN -->
+      <div class="sigui-card" style="border-color: rgba(245, 158, 11, 0.4);">
+        <div class="card-header">
+          <span class="card-title" style="color: var(--warning);">⚡ MIXING_CHAIN</span>
+          <span class="verdict-badge verdict-ESCALATE">WARNING / ESCALATE</span>
+        </div>
+        <p class="card-desc" style="margin-bottom: 16px;">
+          Sequential multi-hop fund splitting through peeling chains, relay proxies, or unverified cross-chain bridges designed to obfuscate origin funds from linear heuristic filters.
+        </p>
+        <div style="background: rgba(10,10,12,0.85); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px;">
+          <div style="font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase;">Topological Signature</div>
+          <div style="font-family: var(--mono); font-size: 11px; color: #fde68a; margin-top: 4px;">
+            Hop Path Length ≥ 4 • Linear Peeling • Entropy &gt; 0.85
+          </div>
+        </div>
+        <div style="font-family: var(--mono); font-size: 11px; color: var(--warning);">
+          FIREWALL ACTION: Divert to human multisig confirmation before signing.
+        </div>
+      </div>
+
+      <!-- Threat 3: COORD_CLUSTER -->
+      <div class="sigui-card" style="border-color: rgba(245, 166, 35, 0.4);">
+        <div class="card-header">
+          <span class="card-title" style="color: var(--gold);">🕸️ COORD_CLUSTER</span>
+          <span class="verdict-badge verdict-ESCALATE">ANOMALY / ESCALATE</span>
+        </div>
+        <p class="card-desc" style="margin-bottom: 16px;">
+          Sybil clusters executing synchronized front-running, sandwich attacks, or liquidity drain coordination against agent rebalancing trades on decentralized exchanges.
+        </p>
+        <div style="background: rgba(10,10,12,0.85); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px;">
+          <div style="font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase;">Topological Signature</div>
+          <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); margin-top: 4px;">
+            Dense k-clique subgraph • Microsecond synchronized nonce sequences
+          </div>
+        </div>
+        <div style="font-family: var(--mono); font-size: 11px; color: var(--gold);">
+          FIREWALL ACTION: Enforce private mempool relay or delay order inclusion.
+        </div>
+      </div>
+    </div>
+
+    <!-- 04. AUTONOMOUS FEEDBACK LOOP VISUAL PIPELINE -->
+    <div id="feedback-loop" style="margin-bottom: 20px;">
+      <div class="sigil">Autonomous Learning Engine</div>
+      <h2 style="font-family: var(--mono); font-size: 20px; color: var(--ivory);">Real-Time Threat Feedback &amp; Dynamic Immunity</h2>
+    </div>
+
+    <section class="pipeline-container fade-up" style="margin-bottom: 40px;">
+      <div class="pipeline-steps">
+        <div class="pipeline-step">
+          <div class="pipeline-num">STEP 01</div>
+          <div class="pipeline-title">Vision Detection</div>
+          <div class="pipeline-desc">Imina-Na V2 classifies transaction graph as DRAIN_STAR with confidence ≥ 75%.</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-num">STEP 02</div>
+          <div class="pipeline-title">Local Blacklist</div>
+          <div class="pipeline-desc">Destination address injected into RAM Bloom filter in &lt; 0.5ms for instant block.</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-num">STEP 03</div>
+          <div class="pipeline-title">DB Persistence</div>
+          <div class="pipeline-desc">Async SQLite commit stores destination, topological hash, and timestamp.</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-num">STEP 04</div>
+          <div class="pipeline-title">Network Broadcast</div>
+          <div class="pipeline-desc">WebSocket dispatcher pushes threat event to all agent instances in &lt; 5ms.</div>
         </div>
       </div>
     </section>
 
-    <!-- 3 Core Threat Topologies Grid -->
-    <section style="margin-bottom: 50px;">
-      <div class="sigil" style="margin-bottom: 16px;">Attack Taxonomy</div>
-      <h2 class="headline" style="font-size: 1.8rem; margin-bottom: 24px; text-align: left;">
-        The 3 Recognized <span>Adversarial Patterns</span>
-      </h2>
-
-      <div class="grid-3">
-        <!-- Threat 1 -->
-        <div class="sigui-card" style="border-color: rgba(244, 63, 94, 0.4);">
-          <div class="card-header">
-            <span class="card-title" style="color: var(--danger);">🚨 DRAIN_STAR</span>
-            <span class="verdict-badge verdict-BLOCK">HIGH SEVERITY</span>
+    <!-- 05. TECHNICAL EVIDENCE / FEEDBACK LOOP SOURCE CODE & API -->
+    <section class="grid-2" style="margin-bottom: 50px;">
+      <!-- Code Window -->
+      <div class="terminal-window">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <div class="terminal-dot red"></div>
+            <div class="terminal-dot yellow"></div>
+            <div class="terminal-dot green"></div>
           </div>
-          <p class="card-desc" style="margin-bottom: 14px;">
-            A malicious sink contract receives rapid, concurrent fund transfers from multiple victims (agents, treasuries) in a star fan-in pattern, followed by immediate exit sweeps.
-          </p>
-          <div class="metric-box">
-            <span class="metric-label">Graph Signature</span>
-            <span class="metric-value" style="font-size: 12px; color: #fca5a5;">High in-degree, low persistence, rapid dissipation</span>
-          </div>
+          <span class="terminal-title">modules/feedback_loop.py</span>
+          <div style="font-size: 10px; color: var(--safe);">ASYNC SQLITE &amp; WEBSOCKET</div>
         </div>
-
-        <!-- Threat 2 -->
-        <div class="sigui-card" style="border-color: rgba(245, 158, 11, 0.4);">
-          <div class="card-header">
-            <span class="card-title" style="color: var(--warning);">⚡ MIXING_CHAIN</span>
-            <span class="verdict-badge verdict-ESCALATE">SUSPICIOUS</span>
-          </div>
-          <p class="card-desc" style="margin-bottom: 14px;">
-            Sequential multi-hop fund splitting through intermediary relay contracts or unverified cross-chain bridges designed to obfuscate origin ownership from rule-based filters.
-          </p>
-          <div class="metric-box">
-            <span class="metric-label">Graph Signature</span>
-            <span class="metric-value" style="font-size: 12px; color: #fde68a;">Path length &gt;= 4, peeling chain, entropy &gt; 0.85</span>
-          </div>
-        </div>
-
-        <!-- Threat 3 -->
-        <div class="sigui-card">
-          <div class="card-header">
-            <span class="card-title" style="color: var(--gold);">🕸️ COORD_CLUSTER</span>
-            <span class="verdict-badge verdict-ESCALATE">ANOMALY</span>
-          </div>
-          <p class="card-desc" style="margin-bottom: 14px;">
-            Sybil swarms executing front-running, sandwich attacks, or liquidity drain coordination against agent rebalancing orders across decentralized exchanges.
-          </p>
-          <div class="metric-box">
-            <span class="metric-label">Graph Signature</span>
-            <span class="metric-value" style="font-size: 12px; color: var(--gold);">Dense k-clique clustering, microsecond clustering</span>
-          </div>
+        <div class="terminal-body">
+<pre><span class="keyword">class</span> <span class="cmd">FeedbackLoop</span>:
+    <span class="str">"""Autonomous learning engine: converts blocks into network immunity."""</span>
+    
+    <span class="keyword">async def</span> <span class="cmd">record_block</span>(self, destination: <span class="keyword">str</span>, pattern: <span class="keyword">str</span>, confidence: <span class="keyword">float</span>):
+        <span class="keyword">if</span> pattern <span class="keyword">in</span> [<span class="str">"DRAIN_STAR"</span>, <span class="str">"MIXING_CHAIN"</span>] <span class="keyword">and</span> confidence &gt;= <span class="safe">0.75</span>:
+            <span class="comment"># 1. Update in-memory firewall blacklist</span>
+            add_to_blacklist(destination)
+            
+            <span class="comment"># 2. Persist to SQLite threat store</span>
+            <span class="keyword">await</span> self._persist_to_db(destination, pattern, confidence)
+            
+            <span class="comment"># 3. Propagate to connected agent fleet via WebSocket</span>
+            <span class="keyword">await</span> self._broadcast_intel(destination, pattern, confidence)</pre>
         </div>
       </div>
-    </section>
 
-    <!-- Autonomous Feedback Loop Box -->
-    <section class="sigui-card" style="margin-bottom: 60px; background: rgba(14, 14, 18, 0.95);">
-      <div class="card-header">
-        <span class="card-title">🧠 Autonomous Feedback Loop & Dynamic Blacklist</span>
-        <span class="brand-badge">CONTINUOUS LEARNING</span>
-      </div>
-      <p class="card-desc" style="margin-bottom: 20px;">
-        When Imina-Na V2 detects a DRAIN_STAR or malicious topology with &gt;= 75% confidence, Sigui's feedback engine automatically persists the contract address to SQLite, propagates the threat to connected agents via WebSocket, and triggers on-chain slashing.
-      </p>
-      
-      <div class="grid-2">
-        <div class="terminal-window">
-          <div class="terminal-header">
-            <div class="terminal-dots">
-              <div class="terminal-dot red"></div>
-              <div class="terminal-dot yellow"></div>
-              <div class="terminal-dot green"></div>
+      <!-- Live Threat API Card -->
+      <div class="sigui-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div class="card-header">
+            <span class="card-title">Threat Intel API Interface</span>
+            <span class="verdict-badge verdict-ALLOW">REST / JSON</span>
+          </div>
+          <p class="card-desc" style="margin-bottom: 16px;">
+            Agents and security researchers can query the global dynamic blacklist and learned patterns via the Sigui Guard REST API:
+          </p>
+          <div class="terminal-window" style="margin-bottom: 0;">
+            <div class="terminal-body" style="font-size: 10px; line-height: 1.4;">
+<pre><span class="comment"># Fetch top 50 recent topological threats</span>
+GET /api/threat-intel?limit=50
+Response:
+{
+  <span class="str">"status"</span>: <span class="str">"ok"</span>,
+  <span class="str">"total_learned"</span>: <span class="gold">142</span>,
+  <span class="str">"patterns"</span>: [
+    {
+      <span class="str">"destination"</span>: <span class="str">"0x3806aeb76eDD...3b29"</span>,
+      <span class="str">"pattern"</span>: <span class="danger">"DRAIN_STAR"</span>,
+      <span class="str">"confidence"</span>: <span class="safe">0.984</span>,
+      <span class="str">"times_seen"</span>: <span class="gold">7</span>
+    }
+  ]
+}</pre>
             </div>
-            <span class="terminal-title">modules/feedback_loop.py</span>
-          </div>
-          <div class="terminal-body">
-<pre><span class="keyword">async def</span> record_block(destination, pattern, confidence):
-    <span class="keyword">if</span> pattern <span class="keyword">in</span> [<span class="str">"DRAIN_STAR"</span>, <span class="str">"MIXING_CHAIN"</span>] <span class="keyword">and</span> confidence &gt;= <span class="cmd">0.75</span>:
-        <span class="comment"># 1. Update memory blacklist</span>
-        add_to_blacklist(destination)
-        <span class="comment"># 2. Persist to SQLite threat store</span>
-        <span class="keyword">await</span> db.execute(<span class="str">"INSERT OR REPLACE INTO threats..."</span>)
-        <span class="comment"># 3. Broadcast to all agent proxies</span>
-        <span class="keyword">await</span> broadcast_threat_intel(destination, pattern)</pre>
           </div>
         </div>
-
-        <div style="display: flex; flex-direction: column; justify-content: space-around; gap: 12px;">
-          <div class="metric-box">
-            <span class="metric-label">Propagation Latency</span>
-            <span class="metric-value safe">&lt; 5 ms (WebSocket)</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-label">Network-Wide Immunity</span>
-            <span class="metric-value">Instant for 100% of Agents</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-label">On-Chain Evidence</span>
-            <span class="metric-value gold">Aptos threat_registry.move</span>
-          </div>
+        <div style="margin-top: 14px;">
+          <a href="docs.html" class="btn-secondary" style="width: 100%; text-align: center;">View API Documentation →</a>
         </div>
       </div>
     </section>
+
+    <!-- 06. NEXT STEP FUNNEL BANNER -->
+    <a href="research.html" class="next-page-card">
+      <div class="next-page-meta">
+        <div class="k">06 — SCIENTIFIC RESEARCH &amp; BENCHMARKS</div>
+        <div class="title">Review empirical performance data: 92.9% F1-score, ROC-AUC 0.967, and AMD MI300X benchmarks</div>
+      </div>
+      <div class="next-page-arrow">→</div>
+    </a>
 
   </main>
 
-  <!-- Universal Footer -->
+  <!-- Categorized Multi-Column Master Footer -->
   <footer class="sigui-footer">
-    <div class="footer-nav">
-      <a href="index.html" class="footer-link">Overview</a>
-      <a href="sentinel.html" class="footer-link">Sentinel Oracle</a>
-      <a href="architecture.html" class="footer-link">Architecture</a>
-      <a href="protocol.html" class="footer-link">Protocol & AIP</a>
-      <a href="research.html" class="footer-link">Research</a>
-      <a href="dataset.html" class="footer-link">Dataset 1M</a>
-      <a href="docs.html" class="footer-link">Docs & API</a>
-      <a href="sdk.html" class="footer-link">SDK & Plugins</a>
-    </div>
-    <div class="footer-copy">
-      SIGUI PROTOCOL © 2026 • OPEN-SOURCE DEPIN AI CYBERSECURITY ORACLE • MIT LICENSE
+    <div class="footer-container">
+      <div class="footer-grid">
+        <div>
+          <div class="nav-brand" style="margin-bottom: 12px;">
+            SIGUI <span class="brand-badge">PROTOCOL</span>
+          </div>
+          <p class="card-desc" style="max-width: 280px; font-size: 12px; margin-bottom: 16px;">
+            The autonomous AI security layer and ZK-shield for Web3 agent treasuries across EVM, Move, and SVM.
+          </p>
+          <div class="status-pill" style="display: inline-flex;">
+            <div class="pulse-dot"></div> ORACLE LIVE
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Product</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="index.html">Overview</a></li>
+            <li class="footer-link-item"><a href="sentinel.html">Sentinel Oracle</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Technology</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="architecture.html">Architecture</a></li>
+            <li class="footer-link-item"><a href="protocol.html">Protocol & AIP</a></li>
+            <li class="footer-link-item"><a href="security.html">Threat SOC</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Research</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="research.html">Research Lab</a></li>
+            <li class="footer-link-item"><a href="dataset.html">Dataset 1M</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Developers</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="docs.html">Docs & API</a></li>
+            <li class="footer-link-item"><a href="sdk.html">SDK & Plugins</a></li>
+            <li class="footer-link-item"><a href="https://github.com/ibonon/Sigui" target="_blank">GitHub ⭐</a></li>
+            <li class="footer-link-item"><a href="https://huggingface.co/datasets/Ibonon/sigui-depin-1m" target="_blank">Hugging Face</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 SIGUI PROTOCOL • OPEN-SOURCE MIT LICENSE</div>
+        <div>ZENODO DOI: 10.5281/ZENODO.20550562 • APTOS TESTNET VERIFIED</div>
+      </div>
     </div>
   </footer>
 

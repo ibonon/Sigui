@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dataset 1M | Sigui Protocol Open DePIN Benchmark</title>
-  <meta name="description" content="Sigui DePIN 1M: 1,000,000 labeled blockchain transaction graphs on Hugging Face for autonomous agent security research." />
+  <title>Dataset 1M | Sigui Protocol Open Benchmark Observatory</title>
+  <meta name="description" content="Sigui DePIN 1M: 1,000,000 labeled blockchain transaction topology graphs on Hugging Face for autonomous agent cybersecurity research." />
   <link rel="stylesheet" href="css/sigui-theme.css" />
 </head>
 <body>
 
+  <!-- Ambient Visual Atmosphere -->
   <div class="ambient-grid"></div>
   <div class="ambient-vignette"></div>
 
@@ -20,7 +21,7 @@
 
     <ul class="nav-links" id="navLinks">
       <li><a href="index.html" class="nav-link">Overview</a></li>
-      <li><a href="sentinel.html" class="nav-link">Sentinel Oracle</a></li>
+      <li><a href="sentinel.html" class="nav-link">Sentinel</a></li>
       <li><a href="architecture.html" class="nav-link">Architecture</a></li>
       <li><a href="protocol.html" class="nav-link">Protocol & AIP</a></li>
       <li><a href="security.html" class="nav-link">Threat SOC</a></li>
@@ -33,107 +34,208 @@
     <div class="nav-right">
       <div class="status-pill">
         <div class="pulse-dot"></div>
-        HUGGING FACE DATASET ACTIVE
+        HUGGING FACE OPEN ACCESS
       </div>
       <button class="nav-mobile-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
     </div>
   </header>
 
+  <!-- Main Container -->
   <main class="sigui-container">
     
-    <!-- Hero Header -->
+    <!-- 01. HERO -->
     <section class="sigui-hero fade-up">
-      <div class="sigil">Open Science Asset</div>
+      <div class="sigil">07 — Open Science Benchmark Observatory</div>
 
       <h1 class="headline">
-        Sigui DePIN <span>1,000,000 Graphs</span>
+        Sigui DePIN 1,000,000 Graphs:<br /><span>The Open Multimodal Security Benchmark</span>
       </h1>
 
       <p class="subline">
-        The largest open multimodal blockchain security benchmark. 1 Million labeled transaction topology graphs 
-        curated across EVM and Move chains, open-sourced on Hugging Face.
+        The largest open-source multimodal blockchain dataset for AI security.
+        1 Million labeled transaction topology graphs curated across EVM and Move chains, open on Hugging Face under CC BY 4.0.
       </p>
 
-      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px;">
-        <a href="https://huggingface.co/datasets/Ibonon/sigui-depin-1m" class="btn-primary" target="_blank">🤗 View on Hugging Face</a>
-        <a href="https://doi.org/10.5281/zenodo.20550562" class="btn-secondary" target="_blank">📄 Dataset Documentation (DOI)</a>
+      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
+        <a href="https://huggingface.co/datasets/Ibonon/sigui-depin-1m" class="btn-primary" target="_blank">🤗 Explore on Hugging Face ↗</a>
+        <a href="https://doi.org/10.5281/zenodo.20550562" class="btn-secondary" target="_blank">📄 Dataset Documentation (DOI) ↗</a>
+      </div>
+    </section>
+
+    <!-- 02. DATASET METRICS DASHBOARD -->
+    <section class="status-dashboard fade-up">
+      <div class="status-cell">
+        <span class="k">Dataset Volume</span>
+        <span class="v" style="color: var(--gold);">1,000,000</span>
+        <span class="sub">Labeled Graph Samples</span>
       </div>
 
-      <!-- Telemetry Strip -->
-      <div class="telemetry-bar" style="width: 100%; max-width: 900px;">
-        <div class="tel-item">
-          <span class="k">Dataset Size</span>
-          <span class="v gold">1,000,000 Graphs</span>
+      <div class="status-cell">
+        <span class="k">Storage Format</span>
+        <span class="v" style="color: var(--safe);">PARQUET</span>
+        <span class="sub">Arrow Zero-Copy Stream</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Target Chains</span>
+        <span class="v">EVM + MOVE</span>
+        <span class="sub">Ethereum, Arbitrum, Aptos</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Open License</span>
+        <span class="v" style="color: var(--gold);">CC BY 4.0</span>
+        <span class="sub">Commercial &amp; Research</span>
+      </div>
+
+      <div class="status-cell">
+        <span class="k">Adjacency Resolution</span>
+        <span class="v" style="color: var(--safe);">64 × 64</span>
+        <span class="sub">Normalized Float Tensor</span>
+      </div>
+    </section>
+
+    <!-- 03. MAIN VISUAL: SEGMENTED DISTRIBUTION BAR & BREAKDOWN -->
+    <div style="margin-bottom: 20px;">
+      <div class="sigil">Dataset Distribution</div>
+      <h2 style="font-family: var(--mono); font-size: 20px; color: var(--ivory);">Class Balance &amp; Sample Breakdown</h2>
+    </div>
+
+    <!-- Segmented Distribution Track -->
+    <section class="fade-up" style="margin-bottom: 30px;">
+      <div class="dist-track">
+        <div class="dist-seg" style="width: 65%; background: var(--safe);" title="Benign Transfers: 65%"></div>
+        <div class="dist-seg" style="width: 18%; background: var(--danger);" title="Drain Stars: 18%"></div>
+        <div class="dist-seg" style="width: 11%; background: var(--warning);" title="Mixing Chains: 11%"></div>
+        <div class="dist-seg" style="width: 6%; background: var(--gold);" title="Sybil Clusters: 6%"></div>
+      </div>
+
+      <div class="dist-legend">
+        <div style="display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px;">
+          <span style="width: 10px; height: 10px; border-radius: 2px; background: var(--safe); display: inline-block;"></span>
+          <span style="color: var(--ivory);">BENIGN: 65% (650k)</span>
         </div>
-        <div class="tel-item">
-          <span class="k">Storage Format</span>
-          <span class="v safe">Apache Parquet / Arrow</span>
+        <div style="display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px;">
+          <span style="width: 10px; height: 10px; border-radius: 2px; background: var(--danger); display: inline-block;"></span>
+          <span style="color: var(--ivory);">DRAIN_STAR: 18% (180k)</span>
         </div>
-        <div class="tel-item">
-          <span class="k">License</span>
-          <span class="v">Creative Commons 4.0</span>
+        <div style="display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px;">
+          <span style="width: 10px; height: 10px; border-radius: 2px; background: var(--warning); display: inline-block;"></span>
+          <span style="color: var(--ivory);">MIXING_CHAIN: 11% (110k)</span>
         </div>
-        <div class="tel-item">
-          <span class="k">Target Virtual Machines</span>
-          <span class="v gold">EVM + Move VM</span>
+        <div style="display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px;">
+          <span style="width: 10px; height: 10px; border-radius: 2px; background: var(--gold); display: inline-block;"></span>
+          <span style="color: var(--ivory);">COORD_CLUSTER: 6% (60k)</span>
         </div>
       </div>
     </section>
 
-    <!-- Class Breakdown Grid -->
-    <section style="margin-bottom: 50px;">
-      <div class="sigil" style="margin-bottom: 16px;">Distribution</div>
-      <h2 class="headline" style="font-size: 1.8rem; margin-bottom: 24px; text-align: left;">
-        Class Topology <span>Distribution</span>
-      </h2>
-
-      <div class="grid-4">
-        <div class="sigui-card">
-          <div class="card-header">
-            <span class="card-title">Benign Transfers</span>
-            <span class="verdict-badge verdict-ALLOW">65%</span>
-          </div>
-          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: #a7f3d0; margin-bottom: 8px;">650,000 Samples</div>
-          <p class="card-desc">Standard P2P transfers, DEX swaps, NFT mints, and staking deposits without anomalous outflow characteristics.</p>
+    <!-- Four Class Topology Cards -->
+    <div class="grid-4" style="margin-bottom: 50px;">
+      <div class="sigui-card">
+        <div class="card-header">
+          <span class="card-title">Benign Transfers</span>
+          <span class="verdict-badge verdict-ALLOW">65%</span>
         </div>
+        <div style="font-family: var(--mono); font-size: 18px; font-weight: 600; color: #a7f3d0; margin-bottom: 6px;">650,000 Samples</div>
+        <p class="card-desc">Standard P2P transfers, Uniswap/Pancake/Liquidswap AMM swaps, staking locks, and multisig actions without anomalous outflow signatures.</p>
+      </div>
 
-        <div class="sigui-card">
-          <div class="card-header">
-            <span class="card-title">Drain Stars</span>
-            <span class="verdict-badge verdict-BLOCK">18%</span>
-          </div>
-          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: #fca5a5; margin-bottom: 8px;">180,000 Samples</div>
-          <p class="card-desc">Sweeper contracts, phishing drainers, and malicious approve traps displaying rapid multi-source fan-in topology.</p>
+      <div class="sigui-card">
+        <div class="card-header">
+          <span class="card-title">Drain Stars</span>
+          <span class="verdict-badge verdict-BLOCK">18%</span>
         </div>
+        <div style="font-family: var(--mono); font-size: 18px; font-weight: 600; color: #fca5a5; margin-bottom: 6px;">180,000 Samples</div>
+        <p class="card-desc">Sweeper contracts, phishing traps, and compromised treasury drainers displaying rapid radial fan-in inflows and immediate dissipations.</p>
+      </div>
 
-        <div class="sigui-card">
-          <div class="card-header">
-            <span class="card-title">Mixing Chains</span>
-            <span class="verdict-badge verdict-ESCALATE">11%</span>
-          </div>
-          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: #fde68a; margin-bottom: 8px;">110,000 Samples</div>
-          <p class="card-desc">Multi-hop obfuscation peeling chains mimicking Tornado Cash, Railgun, and unverified relayer sequences.</p>
+      <div class="sigui-card">
+        <div class="card-header">
+          <span class="card-title">Mixing Chains</span>
+          <span class="verdict-badge verdict-ESCALATE">11%</span>
         </div>
+        <div style="font-family: var(--mono); font-size: 18px; font-weight: 600; color: #fde68a; margin-bottom: 6px;">110,000 Samples</div>
+        <p class="card-desc">Multi-hop peeling chains mimicking Tornado Cash, Railgun, and unverified cross-chain relayer sequence obfuscations.</p>
+      </div>
 
-        <div class="sigui-card">
-          <div class="card-header">
-            <span class="card-title">Sybil Clusters</span>
-            <span class="verdict-badge verdict-ESCALATE">6%</span>
-          </div>
-          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--gold); margin-bottom: 8px;">60,000 Samples</div>
-          <p class="card-desc">Coordinated wash-trading networks and front-running sandwich bots executing tight cyclic topologies.</p>
+      <div class="sigui-card">
+        <div class="card-header">
+          <span class="card-title">Sybil Clusters</span>
+          <span class="verdict-badge verdict-ESCALATE">6%</span>
         </div>
+        <div style="font-family: var(--mono); font-size: 18px; font-weight: 600; color: var(--gold); margin-bottom: 6px;">60,000 Samples</div>
+        <p class="card-desc">Coordinated wash-trading rings, sandwich bots, and synchronized arbitrage swarms executing tight cyclic subgraph topologies.</p>
+      </div>
+    </div>
+
+    <!-- 04. DATA SCHEMA SPECIFICATION TABLE -->
+    <section class="sigui-card fade-up" style="margin-bottom: 50px;">
+      <div class="card-header">
+        <span class="card-title">📋 Parquet Record Schema Specification</span>
+        <span class="brand-badge">APACHE ARROW SCHEMA</span>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border); color: var(--gold);">
+              <th style="padding: 12px 14px;">FIELD</th>
+              <th style="padding: 12px 14px;">TYPE</th>
+              <th style="padding: 12px 14px;">DESCRIPTION</th>
+              <th style="padding: 12px 14px;">EXAMPLE</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 12px 14px; color: var(--ivory); font-weight: 600;">graph_id</td>
+              <td style="padding: 12px 14px; color: var(--gold);">string</td>
+              <td style="padding: 12px 14px; color: var(--muted);">Unique deterministic hash of the audited neighborhood</td>
+              <td style="padding: 12px 14px; color: var(--muted);">"0x3806_drain_sample_42"</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 12px 14px; color: var(--ivory); font-weight: 600;">nodes_count</td>
+              <td style="padding: 12px 14px; color: var(--gold);">int32</td>
+              <td style="padding: 12px 14px; color: var(--muted);">Total unique wallet and contract vertices in the 2-hop graph</td>
+              <td style="padding: 12px 14px; color: var(--safe);">8</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 12px 14px; color: var(--ivory); font-weight: 600;">edges_count</td>
+              <td style="padding: 12px 14px; color: var(--gold);">int32</td>
+              <td style="padding: 12px 14px; color: var(--muted);">Directed transaction transfers and internal call traces</td>
+              <td style="padding: 12px 14px; color: var(--safe);">7</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 12px 14px; color: var(--ivory); font-weight: 600;">topology_label</td>
+              <td style="padding: 12px 14px; color: var(--gold);">string</td>
+              <td style="padding: 12px 14px; color: var(--muted);">Categorical ground-truth classification</td>
+              <td style="padding: 12px 14px; color: var(--danger);">"DRAIN_STAR"</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 12px 14px; color: var(--ivory); font-weight: 600;">visual_matrix</td>
+              <td style="padding: 12px 14px; color: var(--gold);">float32[64][64]</td>
+              <td style="padding: 12px 14px; color: var(--muted);">Normalized 2D adjacency matrix for vision transformers</td>
+              <td style="padding: 12px 14px; color: var(--muted);">[0.0, 0.94, ..., 0.0]</td>
+            </tr>
+            <tr>
+              <td style="padding: 12px 14px; color: var(--ivory); font-weight: 600;">risk_ground_truth</td>
+              <td style="padding: 12px 14px; color: var(--gold);">float32</td>
+              <td style="padding: 12px 14px; color: var(--muted);">Continuous exploit risk score (0.00 benign to 1.00 critical)</td>
+              <td style="padding: 12px 14px; color: var(--danger);">0.984</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
-    <!-- Quickstart Python Code -->
-    <section class="sigui-card" style="margin-bottom: 60px; background: rgba(14, 14, 18, 0.95);">
+    <!-- 05. QUICKSTART PYTHON CODE SNIPPET -->
+    <section class="sigui-card" style="margin-bottom: 50px; background: rgba(14, 14, 18, 0.95);">
       <div class="card-header">
         <span class="card-title">⚡ Quickstart: Load Dataset in Python</span>
         <span class="brand-badge">HUGGING FACE DATASETS</span>
       </div>
 
-      <div class="terminal-window">
+      <div class="terminal-window" style="margin-bottom: 0;">
         <div class="terminal-header">
           <div class="terminal-dots">
             <div class="terminal-dot red"></div>
@@ -141,45 +243,91 @@
             <div class="terminal-dot green"></div>
           </div>
           <span class="terminal-title">load_dataset.py</span>
+          <div style="font-size: 10px; color: var(--safe);">APACHE ARROW COMPATIBLE</div>
         </div>
         <div class="terminal-body">
-<pre><span class="cmd">$</span> pip install datasets torch
+<pre><span class="comment"># 1. Install Hugging Face datasets library:</span>
+<span class="cmd">$</span> pip install datasets pyarrow torch
 
+<span class="comment"># 2. Stream or download the 1M Graph split directly:</span>
 <span class="keyword">from</span> datasets <span class="keyword">import</span> load_dataset
 
-<span class="comment"># Load the 1 Million graph split directly from Hugging Face:</span>
 dataset = load_dataset(<span class="str">"Ibonon/sigui-depin-1m"</span>)
+sample = dataset[<span class="str">"train"</span>][<span class="gold">0</span>]
 
-<span class="keyword">print</span>(dataset[<span class="str">"train"</span>][0])
-<span class="comment"># Output:</span>
-<span class="comment"># {</span>
-<span class="comment">#   "graph_id": "0x3806_drain_sample_42",</span>
-<span class="comment">#   "nodes_count": 8,</span>
-<span class="comment">#   "edges_count": 7,</span>
-<span class="comment">#   "topology_label": "DRAIN_STAR",</span>
-<span class="comment">#   "visual_matrix": [... 64x64 float tensor ...],</span>
-<span class="comment">#   "risk_ground_truth": 0.98</span>
-<span class="comment"># }</span></pre>
+<span class="keyword">print</span>(f<span class="str">"Graph: {sample['graph_id']} | Label: {sample['topology_label']} | Risk: {sample['risk_ground_truth']}"</span>)
+<span class="comment"># Output: Graph: 0x3806_drain_sample_42 | Label: DRAIN_STAR | Risk: 0.984</span></pre>
         </div>
       </div>
     </section>
 
+    <!-- 06. NEXT STEP FUNNEL BANNER -->
+    <a href="docs.html" class="next-page-card">
+      <div class="next-page-meta">
+        <div class="k">08 — DEVELOPER DOCUMENTATION &amp; API</div>
+        <div class="title">Integrate the Sigui RPC Guard proxy into your agent infrastructure in under 60 seconds</div>
+      </div>
+      <div class="next-page-arrow">→</div>
+    </a>
+
   </main>
 
-  <!-- Universal Footer -->
+  <!-- Categorized Multi-Column Master Footer -->
   <footer class="sigui-footer">
-    <div class="footer-nav">
-      <a href="index.html" class="footer-link">Overview</a>
-      <a href="sentinel.html" class="footer-link">Sentinel Oracle</a>
-      <a href="architecture.html" class="footer-link">Architecture</a>
-      <a href="protocol.html" class="footer-link">Protocol & AIP</a>
-      <a href="security.html" class="footer-link">Threat SOC</a>
-      <a href="research.html" class="footer-link">Research</a>
-      <a href="docs.html" class="footer-link">Docs & API</a>
-      <a href="sdk.html" class="footer-link">SDK & Plugins</a>
-    </div>
-    <div class="footer-copy">
-      SIGUI PROTOCOL © 2026 • OPEN-SOURCE DEPIN AI CYBERSECURITY ORACLE • MIT LICENSE
+    <div class="footer-container">
+      <div class="footer-grid">
+        <div>
+          <div class="nav-brand" style="margin-bottom: 12px;">
+            SIGUI <span class="brand-badge">PROTOCOL</span>
+          </div>
+          <p class="card-desc" style="max-width: 280px; font-size: 12px; margin-bottom: 16px;">
+            The autonomous AI security layer and ZK-shield for Web3 agent treasuries across EVM, Move, and SVM.
+          </p>
+          <div class="status-pill" style="display: inline-flex;">
+            <div class="pulse-dot"></div> ORACLE LIVE
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Product</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="index.html">Overview</a></li>
+            <li class="footer-link-item"><a href="sentinel.html">Sentinel Oracle</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Technology</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="architecture.html">Architecture</a></li>
+            <li class="footer-link-item"><a href="protocol.html">Protocol & AIP</a></li>
+            <li class="footer-link-item"><a href="security.html">Threat SOC</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Research</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="research.html">Research Lab</a></li>
+            <li class="footer-link-item"><a href="dataset.html">Dataset 1M</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Developers</div>
+          <ul class="footer-links-list">
+            <li class="footer-link-item"><a href="docs.html">Docs & API</a></li>
+            <li class="footer-link-item"><a href="sdk.html">SDK & Plugins</a></li>
+            <li class="footer-link-item"><a href="https://github.com/ibonon/Sigui" target="_blank">GitHub ⭐</a></li>
+            <li class="footer-link-item"><a href="https://huggingface.co/datasets/Ibonon/sigui-depin-1m" target="_blank">Hugging Face</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 SIGUI PROTOCOL • OPEN-SOURCE MIT LICENSE</div>
+        <div>ZENODO DOI: 10.5281/ZENODO.20550562 • APTOS TESTNET VERIFIED</div>
+      </div>
     </div>
   </footer>
 
