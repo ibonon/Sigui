@@ -738,9 +738,11 @@
     </footer>
   </div>
 
+  <script src="js/sigui-ambient.js"></script>
   <script>
     /* ── Ambient Background Wave Canvas ──────────────────────────────── */
     (function () {
+      window.__sigui_wave_initialized = true;
       const canvas = document.getElementById('wave-canvas');
       const ctx = canvas.getContext('2d');
       let W, H, t = 0;

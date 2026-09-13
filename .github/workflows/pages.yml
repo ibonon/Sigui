@@ -33,6 +33,7 @@ jobs:
           mkdir -p _site
           cp *.html _site/
           if [ -d "css" ]; then cp -r css _site/; fi
+          if [ -d "js" ]; then cp -r js _site/; fi
           if [ -d "static" ]; then cp -r static _site/; fi
           touch _site/.nojekyll
 

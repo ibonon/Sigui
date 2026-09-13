@@ -9,9 +9,10 @@
 </head>
 <body>
 
-  <!-- Ambient Visual Atmosphere -->
+  <!-- Ambient Visual Atmosphere & Sentinel Wave Canvas -->
+  <canvas id="wave-canvas"></canvas>
+  <div class="vignette"></div>
   <div class="ambient-grid"></div>
-  <div class="ambient-vignette"></div>
 
   <!-- Master Navigation -->
   <header class="sigui-nav">
@@ -103,7 +104,7 @@
 
     <div class="grid-3" style="margin-bottom: 50px;">
       <!-- Threat 1: DRAIN_STAR -->
-      <div class="sigui-card" style="border-color: rgba(244, 63, 94, 0.4);">
+      <div class="sigui-card threat-radar" style="border-color: rgba(244, 63, 94, 0.4);">
         <div class="card-header">
           <span class="card-title" style="color: var(--danger);">🚨 DRAIN_STAR</span>
           <span class="verdict-badge verdict-BLOCK">CRITICAL / BLOCK</span>
@@ -333,5 +334,6 @@ Response:
     </div>
   </footer>
 
+  <script src="js/sigui-ambient.js"></script>
 </body>
 </html>

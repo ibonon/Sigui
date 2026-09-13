@@ -9,9 +9,10 @@
 </head>
 <body>
 
-  <!-- Ambient Visual Atmosphere -->
+  <!-- Ambient Visual Atmosphere & Sentinel Wave Canvas -->
+  <canvas id="wave-canvas"></canvas>
+  <div class="vignette"></div>
   <div class="ambient-grid"></div>
-  <div class="ambient-vignette"></div>
 
   <!-- Master Navigation -->
   <header class="sigui-nav">
@@ -117,7 +118,7 @@
           </thead>
           <tbody>
             <!-- Winner row -->
-            <tr style="border-bottom: 1px solid var(--border-light); background: rgba(245, 166, 35, 0.08);">
+            <tr class="highlight-row" style="border-bottom: 1px solid var(--border-light);">
               <td style="padding: 14px 16px; font-weight: 600; color: var(--ivory);">
                 ⭐ Imina-Na V2 (Qwen2-VL-7B LoRA)
               </td>
@@ -317,5 +318,6 @@
     </div>
   </footer>
 
+  <script src="js/sigui-ambient.js"></script>
 </body>
 </html>
