@@ -4,16 +4,17 @@
  */
 
 :root {
-    --primary-color: #00ffff;
-    --secondary-color: #ff00ff;
-    --background-dark: #0a0a1a;
-    --background-light: #1a1a2a;
-    --text-primary: #ffffff;
-    --text-secondary: #8888aa;
-    --success-color: #00ffaa;
-    --warning-color: #ffaa00;
-    --danger-color: #ff5555;
-    --critical-color: #ff00ff;
+    --primary-color: #F5A623;
+    --secondary-color: #EB8C0A;
+    --background-dark: #0A0A0B;
+    --background-light: #141418;
+    --text-primary: #FDF6E3;
+    --text-secondary: rgba(253, 246, 227, 0.45);
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #F43F5E;
+    --critical-color: #F43F5E;
+    --border-color: rgba(245, 166, 35, 0.2);
 }
 
 * {
@@ -23,7 +24,7 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', 'IBM Plex Mono', sans-serif;
     background: var(--background-dark);
     color: var(--text-primary);
     overflow: hidden;

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Protocol & Standards | Sigui Protocol Move & Cairo Standards</title>
+  <meta name="description" content="On-Chain Autonomous Agent Identity & Tiered Reputation Standards for Aptos (Move Objects AIP-XXX) and Starknet Cairo." />
+  <link rel="stylesheet" href="css/sigui-theme.css" />
+</head>
+<body>
+
+  <div class="ambient-grid"></div>
+  <div class="ambient-vignette"></div>
+
+  <!-- Master Navigation -->
+  <header class="sigui-nav">
+    <a href="index.html" class="nav-brand">
+      SIGUI <span class="brand-badge">PROTOCOL</span>
+    </a>
+
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html" class="nav-link">Overview</a></li>
+      <li><a href="sentinel.html" class="nav-link">Sentinel Oracle</a></li>
+      <li><a href="architecture.html" class="nav-link">Architecture</a></li>
+      <li><a href="protocol.html" class="nav-link active">Protocol & AIP</a></li>
+      <li><a href="security.html" class="nav-link">Threat SOC</a></li>
+      <li><a href="research.html" class="nav-link">Research</a></li>
+      <li><a href="dataset.html" class="nav-link">Dataset 1M</a></li>
+      <li><a href="docs.html" class="nav-link">Docs & API</a></li>
+      <li><a href="sdk.html" class="nav-link">SDK & Plugins</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="status-pill">
+        <div class="pulse-dot"></div>
+        APTOS TESTNET LIVE
+      </div>
+      <button class="nav-mobile-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
+    </div>
+  </header>
+
+  <main class="sigui-container">
+    
+    <!-- Hero Header -->
+    <section class="sigui-hero fade-up">
+      <div class="sigil">On-Chain Smart Contract Standards</div>
+
+      <h1 class="headline">
+        Native Agent Identity & <span>Tiered Reputation</span>
+      </h1>
+
+      <p class="subline">
+        Formalizing on-chain trust for autonomous agents. Integrating Move Objects on Aptos and Cairo contracts on Starknet 
+        to empower DeFi protocols with verifiable agent risk scoring.
+      </p>
+
+      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px;">
+        <a href="https://github.com/ibonon/Sigui/blob/master/contracts/aptos/AIP_PROPOSAL.md" class="btn-primary" target="_blank">📜 View Official Aptos AIP</a>
+        <a href="https://explorer.aptoslabs.com/account/0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828?network=testnet" class="btn-secondary" target="_blank">🔍 Aptos Testnet Explorer</a>
+      </div>
+
+      <!-- Telemetry Strip -->
+      <div class="telemetry-bar" style="width: 100%; max-width: 900px;">
+        <div class="tel-item">
+          <span class="k">Aptos Standard</span>
+          <span class="v gold">AIP-XXX (Move Objects)</span>
+        </div>
+        <div class="tel-item">
+          <span class="k">Formal Verification</span>
+          <span class="v safe">Move Prover Verified ✓</span>
+        </div>
+        <div class="tel-item">
+          <span class="k">Deployer Contract</span>
+          <span class="v" style="font-size: 10px;">0x8332…c828</span>
+        </div>
+        <div class="tel-item">
+          <span class="k">Reputation Engine</span>
+          <span class="v gold">Bronze → Platinum</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Four Tiers Grid -->
+    <section style="margin-bottom: 50px;">
+      <div class="sigil" style="margin-bottom: 16px;">Verifiable Standing</div>
+      <h2 class="headline" style="font-size: 1.8rem; margin-bottom: 24px; text-align: left;">
+        The 4-Tier On-Chain <span>Reputation Model</span>
+      </h2>
+
+      <div class="grid-4">
+        <div class="sigui-card">
+          <div class="card-header">
+            <span class="card-title">Bronze Tier</span>
+            <span class="verdict-badge verdict-BLOCK">TIER 0</span>
+          </div>
+          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: #fca5a5; margin-bottom: 8px;">Score 0 – 249</div>
+          <p class="card-desc">New or unverified agents. Highly restricted transaction limits and mandatory secondary multisig approval for DeFi liquidity interactions.</p>
+        </div>
+
+        <div class="sigui-card">
+          <div class="card-header">
+            <span class="card-title">Silver Tier</span>
+            <span class="verdict-badge verdict-ESCALATE">TIER 1</span>
+          </div>
+          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: #fde68a; margin-bottom: 8px;">Score 250 – 499</div>
+          <p class="card-desc">Standard autonomous agent baseline. Initial registration tier (Score 500 genesis). Normal transaction processing with active oracle auditing.</p>
+        </div>
+
+        <div class="sigui-card">
+          <div class="card-header">
+            <span class="card-title">Gold Tier</span>
+            <span class="verdict-badge verdict-ALLOW">TIER 2</span>
+          </div>
+          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: #a7f3d0; margin-bottom: 8px;">Score 500 – 749</div>
+          <p class="card-desc">High reliability standing. Proven audit history over 500+ benign transactions. Qualified for preferential DEX trading fee tiers.</p>
+        </div>
+
+        <div class="sigui-card">
+          <div class="card-header">
+            <span class="card-title">Platinum Tier</span>
+            <span class="verdict-badge verdict-ALLOW" style="background: rgba(245,166,35,0.2); color: var(--gold); border-color: var(--gold);">TIER 3</span>
+          </div>
+          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--gold); margin-bottom: 8px;">Score 750 – 1000</div>
+          <p class="card-desc">Institutional grade autonomous operator. Enables under-collateralized borrowing and automated high-frequency liquidity provision.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Code Implementation Showcase -->
+    <section class="grid-2" style="margin-bottom: 60px;">
+      <!-- Move Code Window -->
+      <div class="terminal-window">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <div class="terminal-dot red"></div>
+            <div class="terminal-dot yellow"></div>
+            <div class="terminal-dot green"></div>
+          </div>
+          <span class="terminal-title">Aptos Move: agent_reputation.move</span>
+        </div>
+        <div class="terminal-body">
+<pre><span class="keyword">struct</span> AgentProfile <span class="keyword">has key, store</span> {
+    did: String,          <span class="comment">// "did:sigui:aptos:0x128b..."</span>
+    tier: u8,             <span class="comment">// 0=Bronze, 1=Silver, 2=Gold, 3=Plat</span>
+    score: u64,           <span class="comment">// 0 to 1000 saturating</span>
+    tx_count: u64,        <span class="comment">// Total audited actions</span>
+    blocked_count: u64,   <span class="comment">// Blocked attack attempts</span>
+    slashed_stake: u64,   <span class="comment">// Slashed Octas</span>
+    is_active: bool,      <span class="comment">// Slashing status</span>
+}
+
+<span class="comment">// Formally proved with Move Prover:</span>
+<span class="keyword">spec</span> update_reputation {
+    <span class="keyword">ensures</span> is_positive ==&gt; 
+      (old(profile.score) + delta &gt; MAX_SCORE ==&gt; profile.score == MAX_SCORE);
+}</pre>
+        </div>
+      </div>
+
+      <!-- Testnet Proof Verification Card -->
+      <div class="sigui-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div class="card-header">
+            <span class="card-title">Live On-Chain Evidence</span>
+            <span class="verdict-badge verdict-ALLOW">TESTNET VERIFIED</span>
+          </div>
+          <p class="card-desc" style="margin-bottom: 20px;">
+            The Sigui Move modules are compiled, formally verified with the Move Prover, and active on the Aptos Testnet network.
+          </p>
+          <div class="metric-box" style="margin-bottom: 12px;">
+            <span class="metric-label">Contract Package</span>
+            <span class="metric-value" style="font-size: 13px; word-break: break-all;">0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828</span>
+          </div>
+          <div class="metric-box" style="margin-bottom: 12px;">
+            <span class="metric-label">Genesis Agent Registered</span>
+            <span class="metric-value" style="font-size: 13px; word-break: break-all;">Tx 0x128bd568c07131b8576dec24e89214a4733654637e60cbb7959405db75650241</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">First Threat Intercepted</span>
+            <span class="metric-value" style="font-size: 13px; word-break: break-all;">Tx 0x3e3294b1509faae4ecdfbce2e2db699ef796fb35db4ba0be886c5280ee28f415</span>
+          </div>
+        </div>
+        <div style="margin-top: 20px;">
+          <a href="https://explorer.aptoslabs.com/account/0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828?network=testnet" class="btn-primary" style="width: 100%;" target="_blank">
+            Open Aptos Explorer Verification →
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Universal Footer -->
+  <footer class="sigui-footer">
+    <div class="footer-nav">
+      <a href="index.html" class="footer-link">Overview</a>
+      <a href="sentinel.html" class="footer-link">Sentinel Oracle</a>
+      <a href="architecture.html" class="footer-link">Architecture</a>
+      <a href="security.html" class="footer-link">Threat SOC</a>
+      <a href="research.html" class="footer-link">Research</a>
+      <a href="dataset.html" class="footer-link">Dataset 1M</a>
+      <a href="docs.html" class="footer-link">Docs & API</a>
+      <a href="sdk.html" class="footer-link">SDK & Plugins</a>
+    </div>
+    <div class="footer-copy">
+      SIGUI PROTOCOL © 2026 • OPEN-SOURCE DEPIN AI CYBERSECURITY ORACLE • MIT LICENSE
+    </div>
+  </footer>
+
+</body>
+</html>

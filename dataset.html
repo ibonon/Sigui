@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dataset 1M | Sigui Protocol Open DePIN Benchmark</title>
+  <meta name="description" content="Sigui DePIN 1M: 1,000,000 labeled blockchain transaction graphs on Hugging Face for autonomous agent security research." />
+  <link rel="stylesheet" href="css/sigui-theme.css" />
+</head>
+<body>
+
+  <div class="ambient-grid"></div>
+  <div class="ambient-vignette"></div>
+
+  <!-- Master Navigation -->
+  <header class="sigui-nav">
+    <a href="index.html" class="nav-brand">
+      SIGUI <span class="brand-badge">DATASET</span>
+    </a>
+
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html" class="nav-link">Overview</a></li>
+      <li><a href="sentinel.html" class="nav-link">Sentinel Oracle</a></li>
+      <li><a href="architecture.html" class="nav-link">Architecture</a></li>
+      <li><a href="protocol.html" class="nav-link">Protocol & AIP</a></li>
+      <li><a href="security.html" class="nav-link">Threat SOC</a></li>
+      <li><a href="research.html" class="nav-link">Research</a></li>
+      <li><a href="dataset.html" class="nav-link active">Dataset 1M</a></li>
+      <li><a href="docs.html" class="nav-link">Docs & API</a></li>
+      <li><a href="sdk.html" class="nav-link">SDK & Plugins</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="status-pill">
+        <div class="pulse-dot"></div>
+        HUGGING FACE DATASET ACTIVE
+      </div>
+      <button class="nav-mobile-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
+    </div>
+  </header>
+
+  <main class="sigui-container">
+    
+    <!-- Hero Header -->
+    <section class="sigui-hero fade-up">
+      <div class="sigil">Open Science Asset</div>
+
+      <h1 class="headline">
+        Sigui DePIN <span>1,000,000 Graphs</span>
+      </h1>
+
+      <p class="subline">
+        The largest open multimodal blockchain security benchmark. 1 Million labeled transaction topology graphs 
+        curated across EVM and Move chains, open-sourced on Hugging Face.
+      </p>
+
+      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px;">
+        <a href="https://huggingface.co/datasets/Ibonon/sigui-depin-1m" class="btn-primary" target="_blank">🤗 View on Hugging Face</a>
+        <a href="https://doi.org/10.5281/zenodo.20550562" class="btn-secondary" target="_blank">📄 Dataset Documentation (DOI)</a>
+      </div>
+
+      <!-- Telemetry Strip -->
+      <div class="telemetry-bar" style="width: 100%; max-width: 900px;">
+        <div class="tel-item">
+          <span class="k">Dataset Size</span>
+          <span class="v gold">1,000,000 Graphs</span>
+        </div>
+        <div class="tel-item">
+          <span class="k">Storage Format</span>
+          <span class="v safe">Apache Parquet / Arrow</span>
+        </div>
+        <div class="tel-item">
+          <span class="k">License</span>
+          <span class="v">Creative Commons 4.0</span>
+        </div>
+        <div class="tel-item">
+          <span class="k">Target Virtual Machines</span>
+          <span class="v gold">EVM + Move VM</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Class Breakdown Grid -->
+    <section style="margin-bottom: 50px;">
+      <div class="sigil" style="margin-bottom: 16px;">Distribution</div>
+      <h2 class="headline" style="font-size: 1.8rem; margin-bottom: 24px; text-align: left;">
+        Class Topology <span>Distribution</span>
+      </h2>
+
+      <div class="grid-4">
+        <div class="sigui-card">
+          <div class="card-header">
+            <span class="card-title">Benign Transfers</span>
+            <span class="verdict-badge verdict-ALLOW">65%</span>
+          </div>
+          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: #a7f3d0; margin-bottom: 8px;">650,000 Samples</div>
+          <p class="card-desc">Standard P2P transfers, DEX swaps, NFT mints, and staking deposits without anomalous outflow characteristics.</p>
+        </div>
+
+        <div class="sigui-card">
+          <div class="card-header">
+            <span class="card-title">Drain Stars</span>
+            <span class="verdict-badge verdict-BLOCK">18%</span>
+          </div>
+          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: #fca5a5; margin-bottom: 8px;">180,000 Samples</div>
+          <p class="card-desc">Sweeper contracts, phishing drainers, and malicious approve traps displaying rapid multi-source fan-in topology.</p>
+        </div>
+
+        <div class="sigui-card">
+          <div class="card-header">
+            <span class="card-title">Mixing Chains</span>
+            <span class="verdict-badge verdict-ESCALATE">11%</span>
+          </div>
+          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: #fde68a; margin-bottom: 8px;">110,000 Samples</div>
+          <p class="card-desc">Multi-hop obfuscation peeling chains mimicking Tornado Cash, Railgun, and unverified relayer sequences.</p>
+        </div>
+
+        <div class="sigui-card">
+          <div class="card-header">
+            <span class="card-title">Sybil Clusters</span>
+            <span class="verdict-badge verdict-ESCALATE">6%</span>
+          </div>
+          <div style="font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--gold); margin-bottom: 8px;">60,000 Samples</div>
+          <p class="card-desc">Coordinated wash-trading networks and front-running sandwich bots executing tight cyclic topologies.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quickstart Python Code -->
+    <section class="sigui-card" style="margin-bottom: 60px; background: rgba(14, 14, 18, 0.95);">
+      <div class="card-header">
+        <span class="card-title">⚡ Quickstart: Load Dataset in Python</span>
+        <span class="brand-badge">HUGGING FACE DATASETS</span>
+      </div>
+
+      <div class="terminal-window">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <div class="terminal-dot red"></div>
+            <div class="terminal-dot yellow"></div>
+            <div class="terminal-dot green"></div>
+          </div>
+          <span class="terminal-title">load_dataset.py</span>
+        </div>
+        <div class="terminal-body">
+<pre><span class="cmd">$</span> pip install datasets torch
+
+<span class="keyword">from</span> datasets <span class="keyword">import</span> load_dataset
+
+<span class="comment"># Load the 1 Million graph split directly from Hugging Face:</span>
+dataset = load_dataset(<span class="str">"Ibonon/sigui-depin-1m"</span>)
+
+<span class="keyword">print</span>(dataset[<span class="str">"train"</span>][0])
+<span class="comment"># Output:</span>
+<span class="comment"># {</span>
+<span class="comment">#   "graph_id": "0x3806_drain_sample_42",</span>
+<span class="comment">#   "nodes_count": 8,</span>
+<span class="comment">#   "edges_count": 7,</span>
+<span class="comment">#   "topology_label": "DRAIN_STAR",</span>
+<span class="comment">#   "visual_matrix": [... 64x64 float tensor ...],</span>
+<span class="comment">#   "risk_ground_truth": 0.98</span>
+<span class="comment"># }</span></pre>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Universal Footer -->
+  <footer class="sigui-footer">
+    <div class="footer-nav">
+      <a href="index.html" class="footer-link">Overview</a>
+      <a href="sentinel.html" class="footer-link">Sentinel Oracle</a>
+      <a href="architecture.html" class="footer-link">Architecture</a>
+      <a href="protocol.html" class="footer-link">Protocol & AIP</a>
+      <a href="security.html" class="footer-link">Threat SOC</a>
+      <a href="research.html" class="footer-link">Research</a>
+      <a href="docs.html" class="footer-link">Docs & API</a>
+      <a href="sdk.html" class="footer-link">SDK & Plugins</a>
+    </div>
+    <div class="footer-copy">
+      SIGUI PROTOCOL © 2026 • OPEN-SOURCE DEPIN AI CYBERSECURITY ORACLE • MIT LICENSE
+    </div>
+  </footer>
+
+</body>
+</html>

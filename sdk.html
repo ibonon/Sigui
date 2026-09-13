@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SDK & Plugins | Sigui Protocol Agent Ecosystem</title>
+  <meta name="description" content="Official developer SDKs and plugins for Sigui Protocol: ElizaOS v2 plugin, LangChain callback, OpenClaw skill, and Python SDK." />
+  <link rel="stylesheet" href="css/sigui-theme.css" />
+</head>
+<body>
+
+  <div class="ambient-grid"></div>
+  <div class="ambient-vignette"></div>
+
+  <!-- Master Navigation -->
+  <header class="sigui-nav">
+    <a href="index.html" class="nav-brand">
+      SIGUI <span class="brand-badge">SDK & PLUGINS</span>
+    </a>
+
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html" class="nav-link">Overview</a></li>
+      <li><a href="sentinel.html" class="nav-link">Sentinel Oracle</a></li>
+      <li><a href="architecture.html" class="nav-link">Architecture</a></li>
+      <li><a href="protocol.html" class="nav-link">Protocol & AIP</a></li>
+      <li><a href="security.html" class="nav-link">Threat SOC</a></li>
+      <li><a href="research.html" class="nav-link">Research</a></li>
+      <li><a href="dataset.html" class="nav-link">Dataset 1M</a></li>
+      <li><a href="docs.html" class="nav-link">Docs & API</a></li>
+      <li><a href="sdk.html" class="nav-link active">SDK & Plugins</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="status-pill">
+        <div class="pulse-dot"></div>
+        NPM & PYPI PACKAGES ACTIVE
+      </div>
+      <button class="nav-mobile-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
+    </div>
+  </header>
+
+  <main class="sigui-container">
+    
+    <!-- Hero Header -->
+    <section class="sigui-hero fade-up">
+      <div class="sigil">Agent Framework Integrations</div>
+
+      <h1 class="headline">
+        Native Plugins for <span>Autonomous Frameworks</span>
+      </h1>
+
+      <p class="subline">
+        Embed cognitive threat intelligence directly into your agent's LLM reasoning loop. 
+        Native packages for ElizaOS v2, LangChain, OpenClaw, and pure Python agents.
+      </p>
+
+      <div class="telemetry-bar" style="width: 100%; max-width: 900px;">
+        <div class="tel-item">
+          <span class="k">ElizaOS Status</span>
+          <span class="v gold">PR #31187 Ready</span>
+        </div>
+        <div class="tel-item">
+          <span class="k">NPM Registry</span>
+          <span class="v safe">sigui-elizaos-plugin</span>
+        </div>
+        <div class="tel-item">
+          <span class="k">LangChain Integration</span>
+          <span class="v gold">Custom Callback Handler</span>
+        </div>
+        <div class="tel-item">
+          <span class="k">Total Ecosystem Installs</span>
+          <span class="v">~960 Combined</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Packages Grid -->
+    <section class="grid-2" style="margin-bottom: 50px;">
+      
+      <!-- ElizaOS Plugin Card -->
+      <div class="sigui-card">
+        <div class="card-header">
+          <span class="card-title">📦 ElizaOS v2 Plugin</span>
+          <span class="verdict-badge verdict-ALLOW">NPM LIVE</span>
+        </div>
+        <p class="card-desc" style="margin-bottom: 16px;">
+          Adds the <code>SIGUI_THREAT_INTEL</code> provider to inform your character's LLM of malicious addresses and the <code>AUDIT_TRANSACTION</code> action to automatically block transfers before signing.
+        </p>
+        <div class="terminal-window">
+          <div class="terminal-body">
+<pre><span class="cmd">$</span> npm install sigui-elizaos-plugin
+
+<span class="comment">// character.json:</span>
+{
+  <span class="keyword">"name"</span>: <span class="str">"AutonomousAgent"</span>,
+  <span class="keyword">"plugins"</span>: [<span class="str">"sigui-elizaos-plugin"</span>],
+  <span class="keyword">"settings"</span>: {
+    <span class="keyword">"secrets"</span>: {
+      <span class="keyword">"SIGUI_API_URL"</span>: <span class="str">"https://sigui-oracle.ibonon.github.io"</span>
+    }
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- LangChain Callback Card -->
+      <div class="sigui-card">
+        <div class="card-header">
+          <span class="card-title">🦜 LangChain / LangGraph Callback</span>
+          <span class="verdict-badge verdict-ALLOW">PYTHON</span>
+        </div>
+        <p class="card-desc" style="margin-bottom: 16px;">
+          Intercepts tool execution in LangGraph and LangChain agents. If an agent attempts to invoke a Web3 transfer tool with a malicious destination, the callback raises a security exception.
+        </p>
+        <div class="terminal-window">
+          <div class="terminal-body">
+<pre><span class="keyword">from</span> packages.langchain_sigui_callback <span class="keyword">import</span> SiguiSecurityCallback
+
+<span class="comment"># Instantiate callback:</span>
+sigui_guard = SiguiSecurityCallback(fail_closed=<span class="cmd">True</span>)
+
+<span class="comment"># Attach to your LangChain agent:</span>
+agent_executor = create_react_agent(
+    model, tools,
+    callbacks=[sigui_guard]
+)</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- OpenClaw Skill Card -->
+      <div class="sigui-card">
+        <div class="card-header">
+          <span class="card-title">🦅 OpenClaw Autonomous Skill</span>
+          <span class="verdict-badge verdict-ESCALATE">NEMOCLAW ALIGNED</span>
+        </div>
+        <p class="card-desc" style="margin-bottom: 16px;">
+          Pre-built skill for OpenClaw agents providing direct access to the Sigui Security Oracle and automated quarantine logic, compatible with NVIDIA NemoClaw architecture.
+        </p>
+        <div class="terminal-window">
+          <div class="terminal-body">
+<pre><span class="comment"># Enable Sigui Skill in OpenClaw:</span>
+<span class="cmd">$</span> openclaw skill add sigui-protocol
+
+<span class="comment"># The agent autonomously invokes audit tools:</span>
+<span class="keyword">await</span> agent.use_skill(<span class="str">"sigui_audit"</span>, {
+    <span class="str">"target"</span>: <span class="str">"0x3806...drain"</span>,
+    <span class="str">"network"</span>: <span class="str">"aptos"</span>
+})</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Python SDK Card -->
+      <div class="sigui-card">
+        <div class="card-header">
+          <span class="card-title">🐍 Native Python SDK</span>
+          <span class="verdict-badge verdict-ALLOW">PYPI READY</span>
+        </div>
+        <p class="card-desc" style="margin-bottom: 16px;">
+          Lightweight asynchronous client for Python trading bots, algorithmic arbitrage scripts, and autonomous Web3 backends.
+        </p>
+        <div class="terminal-window">
+          <div class="terminal-body">
+<pre><span class="cmd">$</span> pip install sigui-sdk
+
+<span class="keyword">from</span> sigui <span class="keyword">import</span> SiguiClient
+
+client = SiguiClient()
+verdict = <span class="keyword">await</span> client.audit_address(
+    <span class="str">"0xdeadbeef..."</span>,
+    chain=<span class="str">"ethereum"</span>
+)
+<span class="keyword">if</span> verdict.decision == <span class="str">"BLOCK"</span>:
+    <span class="keyword">raise</span> SecurityThreat(verdict.reason)</pre>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Universal Footer -->
+  <footer class="sigui-footer">
+    <div class="footer-nav">
+      <a href="index.html" class="footer-link">Overview</a>
+      <a href="sentinel.html" class="footer-link">Sentinel Oracle</a>
+      <a href="architecture.html" class="footer-link">Architecture</a>
+      <a href="protocol.html" class="footer-link">Protocol & AIP</a>
+      <a href="security.html" class="footer-link">Threat SOC</a>
+      <a href="research.html" class="footer-link">Research</a>
+      <a href="dataset.html" class="footer-link">Dataset 1M</a>
+      <a href="docs.html" class="footer-link">Docs & API</a>
+    </div>
+    <div class="footer-copy">
+      SIGUI PROTOCOL © 2026 • OPEN-SOURCE DEPIN AI CYBERSECURITY ORACLE • MIT LICENSE
+    </div>
+  </footer>
+
+</body>
+</html>

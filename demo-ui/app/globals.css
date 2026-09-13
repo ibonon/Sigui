@@ -5,32 +5,32 @@
 @tailwind utilities;
 
 :root {
-  --bg-deep: #030712;
-  --bg-panel: rgba(17, 24, 39, 0.65);
-  --bg-glass: rgba(17, 24, 39, 0.4);
+  --bg-deep: #0A0A0B;
+  --bg-panel: rgba(14, 14, 18, 0.9);
+  --bg-glass: rgba(10, 10, 11, 0.85);
   
-  --border-subtle: rgba(148, 163, 184, 0.1);
-  --border-neon-cyan: rgba(14, 165, 233, 0.5);
-  --border-neon-violet: rgba(139, 92, 246, 0.5);
+  --border-subtle: rgba(245, 166, 35, 0.15);
+  --border-neon-cyan: rgba(245, 166, 35, 0.5);
+  --border-neon-violet: rgba(235, 140, 10, 0.5);
   
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #475569;
+  --text-main: #FDF6E3;
+  --text-muted: rgba(253, 246, 227, 0.45);
+  --text-dim: rgba(253, 246, 227, 0.28);
   
-  --cyan: #0ea5e9;
-  --violet: #8b5cf6;
+  --cyan: #F5A623;
+  --violet: #EB8C0A;
   --emerald: #10b981;
   --rose: #f43f5e;
   --amber: #f59e0b;
   
-  --glow-cyan: 0 0 20px rgba(14, 165, 233, 0.4);
-  --glow-violet: 0 0 20px rgba(139, 92, 246, 0.4);
+  --glow-cyan: 0 0 20px rgba(245, 166, 35, 0.4);
+  --glow-violet: 0 0 20px rgba(235, 140, 10, 0.4);
   --glow-rose: 0 0 30px rgba(244, 63, 94, 0.3);
   --glow-emerald: 0 0 30px rgba(16, 185, 129, 0.3);
   --glow-amber: 0 0 30px rgba(245, 158, 11, 0.3);
 
   --font-ui: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
 }
 
 *, *::before, *::after {
@@ -44,21 +44,21 @@ body {
   margin: 0;
   min-height: 100vh;
   overflow: hidden;
-  /* Cyber grid background */
+  /* Subtle amber grid background */
   background-image: 
-    linear-gradient(rgba(14, 165, 233, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(245, 166, 35, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245, 166, 35, 0.02) 1px, transparent 1px);
   background-size: 40px 40px;
   background-position: center center;
 }
 
-/* Add a subtle radial gradient for depth */
+/* Subtle radial gradient for depth */
 body::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.15), transparent 50%),
-              radial-gradient(circle at 50% 100%, rgba(14, 165, 233, 0.1), transparent 50%);
+  background: radial-gradient(circle at 50% 0%, rgba(245, 166, 35, 0.08), transparent 50%),
+              radial-gradient(circle at 50% 100%, rgba(235, 140, 10, 0.04), transparent 50%);
   pointer-events: none;
   z-index: -1;
 }

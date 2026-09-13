@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Architecture | Sigui Protocol DePIN AI Oracle</title>
+  <meta name="description" content="Technical architecture of Sigui Protocol: Multimodal Vision AI on AMD MI300X, Groth16 ZK-Proofs on BN128, and Zero-Code Multichain RPC Proxy." />
+  <link rel="stylesheet" href="css/sigui-theme.css" />
+</head>
+<body>
+
+  <div class="ambient-grid"></div>
+  <div class="ambient-vignette"></div>
+
+  <!-- Master Navigation -->
+  <header class="sigui-nav">
+    <a href="index.html" class="nav-brand">
+      SIGUI <span class="brand-badge">ARCHITECTURE</span>
+    </a>
+
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html" class="nav-link">Overview</a></li>
+      <li><a href="sentinel.html" class="nav-link">Sentinel Oracle</a></li>
+      <li><a href="architecture.html" class="nav-link active">Architecture</a></li>
+      <li><a href="protocol.html" class="nav-link">Protocol & AIP</a></li>
+      <li><a href="security.html" class="nav-link">Threat SOC</a></li>
+      <li><a href="research.html" class="nav-link">Research</a></li>
+      <li><a href="dataset.html" class="nav-link">Dataset 1M</a></li>
+      <li><a href="docs.html" class="nav-link">Docs & API</a></li>
+      <li><a href="sdk.html" class="nav-link">SDK & Plugins</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="status-pill">
+        <div class="pulse-dot"></div>
+        AMD MI300X CLUSTER ONLINE
+      </div>
+      <button class="nav-mobile-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
+    </div>
+  </header>
+
+  <main class="sigui-container">
+    
+    <!-- Hero Header -->
+    <section class="sigui-hero fade-up">
+      <div class="sigil">System Architecture Specification</div>
+
+      <h1 class="headline">
+        Three Pillars of <span>Zero-Trust AI Defense</span>
+      </h1>
+
+      <p class="subline">
+        Sigui replaces vulnerable reactive heuristics with a 3-layer pipeline: visual graph topology recognition, 
+        cryptographic zero-knowledge proofs, and a transparent multichain RPC firewall.
+      </p>
+
+      <div class="telemetry-bar" style="width: 100%; max-width: 900px;">
+        <div class="tel-item">
+          <span class="k">Layer 1: Vision Model</span>
+          <span class="v gold">Qwen2-VL-7B (ROCm)</span>
+        </div>
+        <div class="tel-item">
+          <span class="k">Layer 2: ZK Verification</span>
+          <span class="v safe">Groth16 (BN128 Field)</span>
+        </div>
+        <div class="tel-item">
+          <span class="k">Layer 3: Transport Proxy</span>
+          <span class="v gold">Sub-30ms Interception</span>
+        </div>
+        <div class="tel-item">
+          <span class="k">Hardware Acceleration</span>
+          <span class="v safe">AMD MI300X 192GB HBM3</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Architecture Diagram Box -->
+    <section class="sigui-card" style="margin-bottom: 40px; background: rgba(14, 14, 18, 0.95);">
+      <div class="card-header">
+        <span class="card-title">📐 High-Performance End-to-End Pipeline</span>
+        <span class="brand-badge">&lt; 50MS TOTAL LATENCY</span>
+      </div>
+
+      <div class="terminal-window" style="border: none; box-shadow: none;">
+        <div class="terminal-body" style="font-size: 11px; line-height: 1.4;">
+<pre><span class="comment">  [ Autonomous Agent ] (ElizaOS / AutoGPT / CrewAI / Trading Bot)</span>
+            │
+            │  1. eth_sendRawTransaction / Aptos REST POST / Solana sendTx
+            ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  <span class="cmd">LAYER 1: SIGUI GUARD TRANSPARENT RPC PROXY</span>                                 │
+│  • Wire-speed RLP / base58 / Cairo decoding (&lt; 3ms)                         │
+│  • Dynamic Threat Blacklist lookup (&lt; 1ms)                                  │
+│  • Zero agent modifications required                                        │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                        Audits Target  │ Destination Address
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  <span class="cmd">LAYER 2: IMINA-NA V2 MULTIMODAL VISION RECOGNITION</span>                          │
+│  • Converts transaction neighborhood into visual adjacency topology graph   │
+│  • Fine-tuned Qwen2-VL-7B on AMD Instinct MI300X GPUs                       │
+│  • Detects DRAIN_STAR, MIXING_CHAIN, and COORD_CLUSTER in 35.3ms (92.9% F1) │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                 Topology Verified     │ Benign Witness
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  <span class="cmd">LAYER 3: ZK-SIGUI ZERO-KNOWLEDGE VERIFICATION (BN128 FIELD)</span>                │
+│  • Groth16 cryptographic proof that topology != DRAIN_STAR                  │
+│  • 64-byte succint proof passed to on-chain registry                        │
+│  • Zero sensitive transaction details leaked to public mempool              │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                      ALLOW            │            BLOCK
+            ┌──────────────────────────┴──────────────────────────┐
+            ▼                                                     ▼
+┌───────────────────────┐                             ┌───────────────────────┐
+│ <span class="str">FORWARD TO BLOCKCHAIN</span> │                             │ <span class="keyword">ABORT TRANSACTION</span>   │
+│ (Ethereum/Aptos/Stark)│                             │ (JSON-RPC Error -32003│
+│ Consensus execution   │                             │  Treasury Safeguarded)│
+└───────────────────────┘                             └───────────────────────┘</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Deep Dive Cards Grid -->
+    <div class="grid-3" style="margin-bottom: 60px;">
+      <div class="sigui-card">
+        <div class="card-header">
+          <span class="card-title">1. Visual Topology Engine</span>
+          <span class="verdict-badge verdict-ALLOW">35.3 MS</span>
+        </div>
+        <p class="card-desc">
+          Traditional signature scanners fail against polymorphic smart contracts. Sigui translates on-chain transaction graphs into high-dimensional visual matrices, allowing computer vision models to detect malicious flow topologies regardless of code obfuscation.
+        </p>
+      </div>
+
+      <div class="sigui-card">
+        <div class="card-header">
+          <span class="card-title">2. ZK Privacy Invariant</span>
+          <span class="verdict-badge verdict-ESCALATE">64 BYTES</span>
+        </div>
+        <p class="card-desc">
+          Institutional trading agents cannot reveal order routes or counterparty identities. ZK-Sigui computes a Groth16 proof over the BN128 curve, proving mathematically that the target destination is benign without revealing wallet balances or trading strategies.
+        </p>
+      </div>
+
+      <div class="sigui-card">
+        <div class="card-header">
+          <span class="card-title">3. DePIN Decentralized Nodes</span>
+          <span class="verdict-badge verdict-BLOCK">ROBUST</span>
+        </div>
+        <p class="card-desc">
+          Sigui's inference network runs as a decentralized physical infrastructure network (DePIN). Node operators stake tokens to run vision models on ROCm-compatible GPUs, reaching consensus on threat classification and earning cryptographic verification rewards.
+        </p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="sigui-footer">
+    <div class="footer-nav">
+      <a href="index.html" class="footer-link">Overview</a>
+      <a href="sentinel.html" class="footer-link">Sentinel Oracle</a>
+      <a href="protocol.html" class="footer-link">Protocol & AIP</a>
+      <a href="security.html" class="footer-link">Threat SOC</a>
+      <a href="research.html" class="footer-link">Research</a>
+      <a href="dataset.html" class="footer-link">Dataset 1M</a>
+      <a href="docs.html" class="footer-link">Docs & API</a>
+      <a href="sdk.html" class="footer-link">SDK & Plugins</a>
+    </div>
+    <div class="footer-copy">
+      SIGUI PROTOCOL © 2026 • OPEN-SOURCE DEPIN AI CYBERSECURITY ORACLE • MIT LICENSE
+    </div>
+  </footer>
+
+</body>
+</html>

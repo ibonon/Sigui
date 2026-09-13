@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sigui Protocol | Sentinel AI Security Oracle</title>
+  <link rel="stylesheet" href="css/sigui-theme.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -534,15 +535,32 @@
   <canvas id="wave-canvas"></canvas>
   <div class="vignette"></div>
 
-  <!-- Header -->
-  <div class="logo-pill">
-    SIGUI <span class="logo-badge">SENTINEL</span>
-  </div>
+  <!-- Universal Master Navigation -->
+  <header class="sigui-nav">
+    <a href="index.html" class="nav-brand">
+      SIGUI <span class="brand-badge">SENTINEL</span>
+    </a>
 
-  <div class="status-pill">
-    <div class="pulse-dot"></div>
-    IMINA-NA V2 ORACLE LIVE
-  </div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html" class="nav-link">Overview</a></li>
+      <li><a href="sentinel.html" class="nav-link active">Sentinel Oracle</a></li>
+      <li><a href="architecture.html" class="nav-link">Architecture</a></li>
+      <li><a href="protocol.html" class="nav-link">Protocol & AIP</a></li>
+      <li><a href="security.html" class="nav-link">Threat SOC</a></li>
+      <li><a href="research.html" class="nav-link">Research</a></li>
+      <li><a href="dataset.html" class="nav-link">Dataset 1M</a></li>
+      <li><a href="docs.html" class="nav-link">Docs & API</a></li>
+      <li><a href="sdk.html" class="nav-link">SDK & Plugins</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="status-pill">
+        <div class="pulse-dot"></div>
+        ORACLE LIVE • AMD MI300X
+      </div>
+      <button class="nav-mobile-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
+    </div>
+  </header>
 
   <!-- Main Scene -->
   <div class="scene">
@@ -651,13 +669,24 @@
       </div>
     </div>
 
-    <!-- Footer Nav -->
-    <nav class="footer-nav">
-      <a href="https://github.com/ibonon/Sigui" class="footer-link" target="_blank">GitHub ⭐</a>
-      <a href="https://www.npmjs.com/package/sigui-elizaos-plugin" class="footer-link" target="_blank">NPM Package</a>
-      <a href="https://huggingface.co/datasets/Ibonon/sigui-depin-1m" class="footer-link" target="_blank">1M Dataset (HuggingFace)</a>
-      <a href="https://doi.org/10.5281/zenodo.20550562" class="footer-link" target="_blank">Research Paper</a>
-    </nav>
+    <!-- Universal Master Footer -->
+    <footer class="sigui-footer" style="margin-top: 40px; border-top: 1px solid var(--border-light); width: 100%;">
+      <div class="footer-nav">
+        <a href="index.html" class="footer-link">Overview</a>
+        <a href="sentinel.html" class="footer-link">Sentinel Oracle</a>
+        <a href="architecture.html" class="footer-link">Architecture</a>
+        <a href="protocol.html" class="footer-link">Protocol & AIP</a>
+        <a href="security.html" class="footer-link">Threat SOC</a>
+        <a href="research.html" class="footer-link">Research</a>
+        <a href="dataset.html" class="footer-link">Dataset 1M</a>
+        <a href="docs.html" class="footer-link">Docs & API</a>
+        <a href="sdk.html" class="footer-link">SDK & Plugins</a>
+        <a href="https://github.com/ibonon/Sigui" class="footer-link" target="_blank">GitHub ⭐</a>
+      </div>
+      <div class="footer-copy">
+        SIGUI PROTOCOL © 2026 • OPEN-SOURCE DEPIN AI CYBERSECURITY ORACLE • MIT LICENSE
+      </div>
+    </footer>
   </div>
 
   <script>
