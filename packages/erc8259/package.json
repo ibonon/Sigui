@@ -32,7 +32,7 @@
   "license": "CC0-1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ibonon/Sigui.git",
+    "url": "git+https://github.com/ibonon/Sigui.git",
     "directory": "packages/erc8259"
   },
   "homepage": "https://eips.ethereum.org/EIPS/eip-8259",
