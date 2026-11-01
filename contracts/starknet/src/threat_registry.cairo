@@ -29,7 +29,10 @@ pub struct ThreatPattern {
 pub mod ThreatRegistry {
     use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
     use super::{IThreatRegistry, ThreatPattern};
-    use starknet::storage::{Map, StorageMapReadAccess, StorageMapWriteAccess};
+    use starknet::storage::{
+        Map, StorageMapReadAccess, StorageMapWriteAccess,
+        StoragePointerReadAccess, StoragePointerWriteAccess
+    };
 
     #[storage]
     struct Storage {
@@ -149,6 +152,95 @@ pub mod ThreatRegistry {
             let caller = get_caller_address();
             assert!(caller == self.owner.read(), "Only owner can remove oracle");
             self.oracles.write(oracle, false);
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::{ContractState, ThreatRegistryImpl, constructor, contract_state_for_testing};
+        use starknet::ContractAddress;
+        use starknet::contract_address_const;
+        use starknet::testing::set_caller_address;
+
+        fn OWNER() -> ContractAddress {
+            contract_address_const::<0x100>()
+        }
+
+        fn ORACLE() -> ContractAddress {
+            contract_address_const::<0x200>()
+        }
+
+        fn OTHER() -> ContractAddress {
+            contract_address_const::<0x400>()
+        }
+
+        #[test]
+        fn test_threat_registry_initialization() {
+            let mut state: ContractState = contract_state_for_testing();
+            constructor(ref state, OWNER());
+            assert!(ThreatRegistryImpl::get_threat_count(@state) == 0, "Initial threat count should be 0");
+        }
+
+        #[test]
+        fn test_threat_registry_report_and_validate() {
+            let mut state: ContractState = contract_state_for_testing();
+            constructor(ref state, OWNER());
+
+            set_caller_address(OWNER());
+            let pattern_hash: felt252 = 0xabcdef;
+            let threat_id = ThreatRegistryImpl::report_threat(ref state, 3, pattern_hash);
+
+            assert!(threat_id == 1, "First threat ID should be 1");
+            assert!(ThreatRegistryImpl::get_threat_count(@state) == 1, "Threat count should be 1");
+
+            let threat = ThreatRegistryImpl::get_threat(@state, threat_id);
+            assert!(threat.severity == 3, "Severity mismatch");
+            assert!(threat.pattern_hash == pattern_hash, "Pattern hash mismatch");
+            assert!(!threat.validated, "Should not be validated initially");
+
+            // First validation by OWNER
+            ThreatRegistryImpl::validate_threat(ref state, threat_id);
+            let partial = ThreatRegistryImpl::get_threat(@state, threat_id);
+            assert!(!partial.validated, "Threat requires 2 validations");
+            assert!(partial.validator_count == 1, "Validator count should be 1");
+
+            // Add second oracle and validate
+            set_caller_address(OWNER());
+            ThreatRegistryImpl::add_oracle(ref state, ORACLE());
+            set_caller_address(ORACLE());
+            ThreatRegistryImpl::validate_threat(ref state, threat_id);
+
+            let fully_validated = ThreatRegistryImpl::get_threat(@state, threat_id);
+            assert!(fully_validated.validated, "Threat should be marked fully validated");
+            assert!(fully_validated.validator_count == 2, "Validator count should be 2");
+        }
+
+        #[test]
+        fn test_threat_registry_oracle_management() {
+            let mut state: ContractState = contract_state_for_testing();
+            constructor(ref state, OWNER());
+
+            set_caller_address(OWNER());
+            ThreatRegistryImpl::add_oracle(ref state, ORACLE());
+
+            // Now ORACLE can report/validate
+            set_caller_address(ORACLE());
+            let threat_id = ThreatRegistryImpl::report_threat(ref state, 4, 0x112233);
+            assert!(threat_id == 1, "Threat ID should be 1");
+
+            // Remove oracle by owner
+            set_caller_address(OWNER());
+            ThreatRegistryImpl::remove_oracle(ref state, ORACLE());
+        }
+
+        #[test]
+        #[should_panic(expected: ("Only owner can add oracle",))]
+        fn test_threat_registry_unauthorized_add_oracle() {
+            let mut state: ContractState = contract_state_for_testing();
+            constructor(ref state, OWNER());
+
+            set_caller_address(OTHER());
+            ThreatRegistryImpl::add_oracle(ref state, ORACLE());
         }
     }
 }

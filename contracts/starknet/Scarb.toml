@@ -11,7 +11,10 @@ keywords = ["starknet", "ai", "agents", "reputation", "security"]
 
 [dependencies]
 starknet = ">=2.8.0"
-openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.20.0" }
+openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.19.0" }
+
+[dev-dependencies]
+cairo_test = "2.8.4"
 
 [[target.starknet-contract]]
 name = "agent_reputation"

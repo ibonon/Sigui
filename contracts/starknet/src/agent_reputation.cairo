@@ -208,9 +208,9 @@ pub mod AgentReputation {
     #[derive(Drop, starknet::Event)]
     pub enum Event {
         #[flat]
-        OwnableEvent: OwnableComponent::Event<ContractState>,
+        OwnableEvent: OwnableComponent::Event,
         #[flat]
-        PausableEvent: PausableComponent::Event<ContractState>,
+        PausableEvent: PausableComponent::Event,
         AgentRegistered: AgentRegistered,
         ReputationUpdated: ReputationUpdated,
         AgentSlashed: AgentSlashed,
@@ -416,6 +416,116 @@ pub mod AgentReputation {
 
         fn is_oracle(self: @ContractState, account: ContractAddress) -> bool {
             self.oracles.read(account)
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::{ContractState, AgentReputationImpl, constructor, contract_state_for_testing};
+        use starknet::ContractAddress;
+        use starknet::contract_address_const;
+        use starknet::testing::{set_caller_address, set_block_timestamp};
+
+        fn OWNER() -> ContractAddress {
+            contract_address_const::<0x100>()
+        }
+
+        fn ORACLE() -> ContractAddress {
+            contract_address_const::<0x200>()
+        }
+
+        fn AGENT() -> ContractAddress {
+            contract_address_const::<0x300>()
+        }
+
+        fn OTHER() -> ContractAddress {
+            contract_address_const::<0x400>()
+        }
+
+        #[test]
+        fn test_agent_registration() {
+            let mut state: ContractState = contract_state_for_testing();
+            constructor(ref state, OWNER(), ORACLE());
+
+            set_caller_address(AGENT());
+            set_block_timestamp(1700000000);
+            let did: ByteArray = "did:agent:1:0x1234567890abcdef";
+            AgentReputationImpl::register_agent(ref state, did);
+
+            let initial_score = AgentReputationImpl::get_reputation(@state, AGENT());
+            assert!(initial_score == 100, "Genesis score should be 100");
+
+            let profile = AgentReputationImpl::get_profile(@state, AGENT());
+            assert!(profile.is_active, "Agent should be active");
+            assert!(profile.reputation_score == 100, "Profile score should be 100");
+            assert!(profile.tier == 0, "Initial tier should be 0 (Novice)");
+            assert!(profile.threat_count == 0, "Initial threat count should be 0");
+        }
+
+        #[test]
+        fn test_agent_reputation_update_and_tier_upgrade() {
+            let mut state: ContractState = contract_state_for_testing();
+            constructor(ref state, OWNER(), ORACLE());
+
+            set_caller_address(AGENT());
+            let did: ByteArray = "did:agent:1:0x1234567890abcdef";
+            AgentReputationImpl::register_agent(ref state, did);
+
+            // Oracle applies positive delta: +1000 -> score becomes 1100 -> Tier 1 (Reliable)
+            set_caller_address(ORACLE());
+            let reason: ByteArray = "Consistent good behavior attested by oracle";
+            AgentReputationImpl::update_reputation(ref state, AGENT(), 1000_i64, reason);
+
+            let score = AgentReputationImpl::get_reputation(@state, AGENT());
+            assert!(score == 1100, "Score should be 1100");
+
+            let profile = AgentReputationImpl::get_profile(@state, AGENT());
+            assert!(profile.tier == 1, "Tier should be upgraded to 1 (Reliable >= 1000)");
+
+            // Apply +10000 delta -> score 11100 -> Tier 2 (Trusted >= 10000)
+            let reason2: ByteArray = "Large volume audit passed";
+            AgentReputationImpl::update_reputation(ref state, AGENT(), 10000_i64, reason2);
+
+            let profile2 = AgentReputationImpl::get_profile(@state, AGENT());
+            assert!(profile2.tier == 2, "Tier should be upgraded to 2 (Trusted >= 10000)");
+        }
+
+        #[test]
+        fn test_agent_slashing() {
+            let mut state: ContractState = contract_state_for_testing();
+            constructor(ref state, OWNER(), ORACLE());
+
+            set_caller_address(AGENT());
+            let did: ByteArray = "did:agent:1:0x1234567890abcdef";
+            AgentReputationImpl::register_agent(ref state, did);
+
+            // Oracle slashes agent
+            set_caller_address(ORACLE());
+            let slash_reason: ByteArray = "Critical exploit detected by threat oracle";
+            AgentReputationImpl::slash_agent(ref state, AGENT(), slash_reason);
+
+            let score = AgentReputationImpl::get_reputation(@state, AGENT());
+            assert!(score == 0, "Score after slash should be 0");
+
+            let profile = AgentReputationImpl::get_profile(@state, AGENT());
+            assert!(!profile.is_active, "Agent should be inactive after slash");
+            assert!(profile.threat_count == 1, "Threat count should be incremented to 1");
+        }
+
+        #[test]
+        #[should_panic(expected: ('SIGUI: caller not oracle',))]
+        fn test_unauthorized_reputation_update_panics() {
+            let mut state: ContractState = contract_state_for_testing();
+            constructor(ref state, OWNER(), ORACLE());
+
+            set_caller_address(AGENT());
+            let did: ByteArray = "did:agent:1:0x1234567890abcdef";
+            AgentReputationImpl::register_agent(ref state, did);
+
+            // Unauthorized caller attempts to update reputation
+            set_caller_address(OTHER());
+            let reason: ByteArray = "Unauthorized self-promotion";
+            AgentReputationImpl::update_reputation(ref state, AGENT(), 500_i64, reason);
         }
     }
 }

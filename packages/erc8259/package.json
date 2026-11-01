@@ -1,0 +1,42 @@
+{
+  "name": "@sigui/erc8259",
+  "version": "1.0.0",
+  "description": "Standard interfaces and ERC8259Guard for AI agent identity, reputation, and decentralized threat registry (ERC-8259).",
+  "main": "index.js",
+  "files": [
+    "contracts/**/*.sol",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    "./ERC8259Guard.sol": "./contracts/ERC8259Guard.sol",
+    "./IAgentIdentityRegistry.sol": "./contracts/IAgentIdentityRegistry.sol",
+    "./IThreatRegistry.sol": "./contracts/IThreatRegistry.sol",
+    "./IRiskAssessment.sol": "./contracts/IRiskAssessment.sol",
+    "./contracts/*": "./contracts/*"
+  },
+  "keywords": [
+    "ethereum",
+    "erc-8259",
+    "ai-agents",
+    "reputation",
+    "identity",
+    "threat-registry",
+    "guard",
+    "security",
+    "defi",
+    "smart-contracts",
+    "solidity"
+  ],
+  "author": "Eric Warma <ericwarma2006@gmail.com>",
+  "license": "CC0-1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ibonon/Sigui.git",
+    "directory": "packages/erc8259"
+  },
+  "homepage": "https://eips.ethereum.org/EIPS/eip-8259",
+  "publishConfig": {
+    "access": "public"
+  }
+}
