@@ -1,4 +1,4 @@
-# @sigui/erc8259
+# erc-8259
 
 [![Ethereum ERC-8259](https://img.shields.io/badge/ERC--8259-Draft-blueviolet)](https://eips.ethereum.org/EIPS/eip-8259)
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](LICENSE)
@@ -12,13 +12,13 @@ Protect your DeFi protocols and smart contracts from rogue autonomous AI agents 
 ## 📦 Installation
 
 ```bash
-npm install @sigui/erc8259
+npm install erc-8259
 ```
 
 Or with yarn / pnpm:
 ```bash
-yarn add @sigui/erc8259
-pnpm add @sigui/erc8259
+yarn add erc-8259
+pnpm add erc-8259
 ```
 
 With Foundry:
@@ -37,7 +37,7 @@ Inherit `ERC8259Guard` and append `onlySafeAgent` to any function you want to pr
 pragma solidity ^0.8.20;
 
 // 1. Import
-import {ERC8259Guard} from "@sigui/erc8259/ERC8259Guard.sol";
+import {ERC8259Guard} from "erc-8259/ERC8259Guard.sol";
 
 // 2. Protect sensitive logic
 contract Vault is ERC8259Guard {

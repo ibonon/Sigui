@@ -7,7 +7,7 @@
 [![ERC-8259 Live](https://img.shields.io/badge/ERC--8259-Live%20on%20Sepolia-blueviolet.svg)](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29)
 [![Contract Verified](https://img.shields.io/badge/Contract-0x3806...3b29-success.svg)](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29)
 [![Vision](https://img.shields.io/badge/🔮%20Vision-5%20Pillars-ff6b35.svg)](VISION.md)
-[![NPM Package](https://img.shields.io/badge/NPM-%40sigui%2Ferc8259-red.svg)](https://www.npmjs.com/package/@sigui/erc8259)
+[![NPM Package](https://img.shields.io/badge/NPM-erc--8259-red.svg)](https://www.npmjs.com/package/erc-8259)
 [![Cairo 2.8.4](https://img.shields.io/badge/Starknet%20Cairo%202.8.4-8%2F8%20Passing-brightgreen.svg)](contracts/starknet)
 
 > **"NexusMind is the network. Sigui is the law."**
@@ -64,18 +64,18 @@ Sigui includes a revolutionary Agent DID (Decentralized Identity) system that so
 
 > **Deployed on 2026-06-05** — Verify on [Sepolia Etherscan](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29). The `ERC8259_REGISTRY_ADDRESS_SEPOLIA` variable in your `.env` points to this live contract.
 
-### 🛡️ Smart Contract Guard: `@sigui/erc8259` (2-Line Integration)
+### 🛡️ Smart Contract Guard: `erc-8259` (2-Line Integration)
 Protect any DeFi vault, liquidity pool, or smart contract from rogue autonomous agents with **2 lines of Solidity**:
 
 ```bash
-npm install @sigui/erc8259
+npm install erc-8259
 ```
 
 ```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {ERC8259Guard} from "@sigui/erc8259/ERC8259Guard.sol";
+import {ERC8259Guard} from "erc-8259/ERC8259Guard.sol";
 
 contract ProtectedVault is ERC8259Guard {
     constructor(address threatRegistry) ERC8259Guard(threatRegistry, address(0)) {}
