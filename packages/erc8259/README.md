@@ -2,10 +2,21 @@
 
 [![Ethereum ERC-8259](https://img.shields.io/badge/ERC--8259-Draft-blueviolet)](https://eips.ethereum.org/EIPS/eip-8259)
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](LICENSE)
+[![NPM Version](https://img.shields.io/npm/v/erc-8259)](https://www.npmjs.com/package/erc-8259)
 
 Standard Solidity interfaces and `ERC8259Guard` for **ERC-8259: AI Agent Identity & Threat Registry**.
 
 Protect your DeFi protocols and smart contracts from rogue autonomous AI agents in **2 lines of code**.
+
+---
+
+> ⚠️ **IMPORTANT UPGRADE NOTICE FOR USERS OF v1.0.x / v1.1.0**:
+> Versions prior to 1.2.0 contained a desynchronized version of `IAgentIdentityRegistry.sol`:
+> - Missing `uint256 verificationExpiry` in `AgentIdentity`.
+> - Missing `getEffectiveTier(address)`.
+> - Incorrectly accepted `verificationTier` in `registerAgent()`, which allowed self-assigned verification tiers.
+>
+> **Upgrade to v1.2.1 immediately.** In v1.2.0+, newly registered agents strictly initialize at Tier 0 (unverified), and verification status expires dynamically via `getEffectiveTier()`. See [CHANGELOG.md](./CHANGELOG.md) for details.
 
 ---
 
@@ -37,7 +48,7 @@ Inherit `ERC8259Guard` and append `onlySafeAgent` to any function you want to pr
 pragma solidity ^0.8.20;
 
 // 1. Import
-import {ERC8259Guard} from "erc-8259/ERC8259Guard.sol";
+import {ERC8259Guard} from "erc-8259/contracts/ERC8259Guard.sol";
 
 // 2. Protect sensitive logic
 contract Vault is ERC8259Guard {
@@ -75,13 +86,5 @@ contract Vault is ERC8259Guard {
 
 * **Specification**: [ERC-8259 Spec](https://eips.ethereum.org/EIPS/eip-8259)
 * **Discussion Forum**: [Fellowship of Ethereum Magicians](https://ethereum-magicians.org/t/erc-8259-ai-agent-identity-reputation-threat-registry-draft-v2-request-for-feedback/28521)
+* **Changelog**: Full history in [CHANGELOG.md](./CHANGELOG.md)
 * **License**: CC0-1.0
-
----
-
-## ?? Changelog
-
-### v1.2.0
-* **Security & Conformance Fix**: Fixes critical desync where `IAgentIdentityRegistry.sol` was missing `verificationExpiry` and `getEffectiveTier`, and still exposed the deprecated self-assigned `verificationTier` parameter in `registerAgent()`. Fully reconciles package interfaces with the ERC-8259 specification merged in PR #2137 and PR #2139.
-* **NatSpec Fix**: Corrects documentation annotations in `ERC8259Guard.sol` resolving `solc` strict docstring parsing errors.
-* **Incident Lifecycle Alignment**: Confirms full parity with `IThreatRegistry.sol` incident lifecycle (`IncidentStatus`, `retractAttack`, `resolveAttack`, `getIncidentSummary`) merged in PR #2138.
