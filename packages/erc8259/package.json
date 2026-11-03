@@ -1,6 +1,6 @@
 {
   "name": "erc-8259",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Standard interfaces and ERC8259Guard for AI agent identity, reputation, and decentralized threat registry (ERC-8259).",
   "main": "index.js",
   "files": [

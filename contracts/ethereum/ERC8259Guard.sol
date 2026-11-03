@@ -26,7 +26,7 @@ interface IAgentIdentityRegistry {
  * 
  * Example usage:
  * 
- *   import "@sigui/erc8259/ERC8259Guard.sol";
+ *   import "erc-8259/contracts/ERC8259Guard.sol";
  * 
  *   contract MyDeFiVault is ERC8259Guard {
  *       function executeTrade(uint256 amount) external onlySafeAgent {

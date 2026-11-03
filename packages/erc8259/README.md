@@ -76,3 +76,12 @@ contract Vault is ERC8259Guard {
 * **Specification**: [ERC-8259 Spec](https://eips.ethereum.org/EIPS/eip-8259)
 * **Discussion Forum**: [Fellowship of Ethereum Magicians](https://ethereum-magicians.org/t/erc-8259-ai-agent-identity-reputation-threat-registry-draft-v2-request-for-feedback/28521)
 * **License**: CC0-1.0
+
+---
+
+## ?? Changelog
+
+### v1.2.0
+* **Security & Conformance Fix**: Fixes critical desync where `IAgentIdentityRegistry.sol` was missing `verificationExpiry` and `getEffectiveTier`, and still exposed the deprecated self-assigned `verificationTier` parameter in `registerAgent()`. Fully reconciles package interfaces with the ERC-8259 specification merged in PR #2137 and PR #2139.
+* **NatSpec Fix**: Corrects documentation annotations in `ERC8259Guard.sol` resolving `solc` strict docstring parsing errors.
+* **Incident Lifecycle Alignment**: Confirms full parity with `IThreatRegistry.sol` incident lifecycle (`IncidentStatus`, `retractAttack`, `resolveAttack`, `getIncidentSummary`) merged in PR #2138.
