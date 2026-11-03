@@ -1,8 +1,19 @@
 # @version 0.4.3
 """
-@title Agent Identity Registry
-@notice Decentralized Identity (DID) system for AI agents
-@dev Implements cryptographic identity and reputation for autonomous agents
+@title Agent Identity Registry (LEGACY / DEPRECATED)
+@notice [DEPRECATED] DEPRECATION NOTICE:
+        This Vyper contract is DEPRECATED and is preserved for historical reference only.
+        The deployment at Sepolia 0x3806aeb76eDD2E22D3cF66A163113c4b24243b29 predates
+        ERC-8259 community PR #2137. It lacks verification_expiry, get_effective_tier,
+        and allows direct verification_tier setting at registration (privilege escalation).
+        
+        The canonical, normative reference implementation for ERC-8259 is written in
+        Solidity and maintained under:
+          - assets/erc-8259/ (EIP/ERC repository)
+          - packages/erc8259/contracts/ (NPM package erc-8259 >= 1.2.0)
+        
+        DO NOT deploy or interact with this contract in production.
+        Redeployment tracking: https://github.com/ibonon/Sigui/issues/2
 """
 
 # Agent identity structure

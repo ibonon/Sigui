@@ -1,17 +1,16 @@
 # @version 0.4.3
-# @title ThreatRegistry
-# @notice Onchain threat intelligence registry for Sigui v3.0.
-#         Every BLOCK decision is permanently recorded here.
-#         Only the Sigui oracle (owner) can write. Anyone can read.
-# @dev    Security patterns applied:
-#         - Owner-only write access (Checks-Effects-Interactions)
-#         - @nonreentrant guard on state-changing functions
-#         - Full input validation before any state modification
-#         - Anti-replay: same pattern_hash rate-limited (2s minimum gap)
-#         - Emergency circuit breaker (pause/unpause)
-#         - Ownership transfer with zero-address guard
-#         - Immutable by design: no proxy, no selfdestruct
-#         - All state changes emit events (full audit trail)
+# @title ThreatRegistry (LEGACY / DEPRECATED)
+# @notice [DEPRECATED] DEPRECATION NOTICE:
+#         This Vyper implementation is DEPRECATED and non-compliant with ERC-8259.
+#         It lacks incident lifecycle support (retractAttack, resolveAttack,
+#         getIncidentSummary, activeIncidentCount, IncidentStatus enum) and uses
+#         non-standard method signatures.
+#
+#         The canonical reference implementation for ERC-8259 is Solidity:
+#           - packages/erc8259/contracts/IThreatRegistry.sol
+#           - assets/erc-8259/
+#
+#         Redeployment tracking: https://github.com/ibonon/Sigui/issues/2
 # @license MIT
 
 # ── Constants ──────────────────────────────────────────────────────────────────
