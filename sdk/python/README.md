@@ -133,10 +133,10 @@ asyncio.run(run_node())
 
 ## ⛓️ Multi-Chain Smart Contracts [NEW]
 
-Sigui enforces reputation using the ERC-8259 standard. In version 0.3.1, we have expanded our smart contract footprint beyond Ethereum:
+Sigui enforces reputation across execution environments:
 
-- **Ethereum (Vyper)**: Native EVM support (`contracts/ethereum`).
-- **Starknet (Cairo 2.x)**: Full ZK-Rollup support (`contracts/starknet`). High-throughput oracle validation.
+- **Ethereum (Solidity)**: Canonical ERC-8259 normative standard (`packages/erc8259`, `assets/erc-8259`). *Note: Legacy Vyper prototype in `contracts/ethereum` is deprecated.*
+- **Starknet (Cairo 2.x)**: Native ZK-Rollup multi-oracle oracle validation (`contracts/starknet`). High-throughput proprietary architecture.
 - **Aptos (Move)**: Highly parallelized Block-STM execution with Move Prover formal verification (`contracts/aptos`).
 
 ---

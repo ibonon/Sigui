@@ -1,12 +1,18 @@
 // ============================================================
-//  Sigui Protocol — AgentReputation Contract
+//  Sigui Protocol — AgentReputation Contract (Cairo / Starknet)
 //  SPDX-License-Identifier: MIT
 //
-//  Implements ERC-8259 compatible decentralised AI agent
-//  identity scoring. Agents accumulate a u64 reputation score
-//  through oracle-attested interactions. Tiers are derived
-//  on-chain from score thresholds; slashing is irreversible
-//  within the same tier window.
+//  [NON-NORMATIVE IMPLEMENTATION NOTICE]
+//  This Cairo contract implements Sigui's proprietary on-chain
+//  agent reputation logic for Starknet. It does NOT implement
+//  the normative ERC-8259 Ethereum standard interfaces:
+//    - Reputation scale is unbounded u64 (vs ERC-8259 0-1000 bp)
+//    - Tiers are score-derived (vs verificationAuthority-granted)
+//    - Does not contain verificationExpiry or getEffectiveTier
+//
+//  The normative reference implementation for ERC-8259 is Solidity:
+//    - assets/erc-8259/ (EIP/ERC repository)
+//    - packages/erc8259/contracts/ (NPM: erc-8259 >= 1.2.0)
 //
 //  Access roles
 //  ─────────────

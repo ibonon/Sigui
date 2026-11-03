@@ -1,3 +1,18 @@
+// ============================================================
+//  Sigui Protocol — ThreatRegistry Contract (Cairo / Starknet)
+//  SPDX-License-Identifier: MIT
+//
+//  [NON-NORMATIVE IMPLEMENTATION NOTICE]
+//  This Cairo contract implements multi-oracle threat pattern
+//  validation for the Sigui network on Starknet. It does NOT
+//  implement the ERC-8259 IThreatRegistry interface (it does not
+//  track per-agent incidents, retractAttack, resolveAttack, or
+//  IncidentStatus lifecycle).
+//
+//  The normative reference implementation for ERC-8259 is Solidity:
+//    - packages/erc8259/contracts/IThreatRegistry.sol
+// ============================================================
+
 use starknet::ContractAddress;
 
 #[starknet::interface]

@@ -5,7 +5,7 @@ This directory contains the Cairo 2.x smart contracts for the Sigui Protocol, ta
 ## Architecture
 
 Sigui Protocol on Starknet utilizes two core contracts:
-1. **AgentReputation (`agent_reputation.cairo`)**: Implements the ERC-8259 identity and reputation standard for AI agents on-chain.
+1. **AgentReputation (`agent_reputation.cairo`)**: Implements Sigui's native Starknet agent identity and reputation scoring.
 2. **ThreatRegistry (`threat_registry.cairo`)**: A decentralized ledger of visual/semantic AI threat patterns, validated by multi-oracles.
 
 ## Prerequisites
@@ -39,5 +39,11 @@ Argent X accounts natively support the multi-call functionality. The Sigui Pytho
 ### Braavos
 Braavos wallets can interact with the reputation contracts using the hardware signer (Signer inside Secure Enclave) for maximum security when updating the `AgentProfile` or reporting critical threats.
 
-## ERC-8259 Standard
-These contracts conform to the proposed ERC-8259 (AI Agent Identity & Threat Registry) standard, storing reputation on a 0-1000 basis points scale.
+## ERC-8259 Relationship & Non-Normative Status
+
+> [!NOTE]
+> **Proprietary Cairo Architecture**: These Cairo contracts implement Sigui's native multi-oracle reputation and threat pattern architecture on Starknet. They do **not** implement the normative EVM ERC-8259 standard interfaces (they use an unbounded `u64` reputation score, score-derived tiers, multi-oracle threshold validation, and omit `verificationExpiry` / incident lifecycle).
+>
+> The canonical, normative reference implementation for ERC-8259 is in Solidity:
+> - `assets/erc-8259/` (ethereum/ERCs upstream repository)
+> - `packages/erc8259/contracts/` (NPM package `erc-8259 >= 1.2.0`)
