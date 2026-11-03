@@ -75,10 +75,13 @@ contract Vault is ERC8259Guard {
 
 ## 📍 Live Deployments
 
-| Network | Contract | Address |
-|---|---|---|
-| **Ethereum Sepolia** | `AgentIdentityRegistry` | [`0x3806aeb76eDD2E22D3cF66A163113c4b24243b29`](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29) |
-| **Aptos Testnet** | `agent_reputation` | [`0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828`](https://explorer.aptoslabs.com/account/0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828?network=testnet) |
+> [!WARNING]
+> ⚠️ **DEPRECATED CONTRACT NOTICE (Sepolia)**: The Vyper contract deployed at `0x3806aeb76eDD2E22D3cF66A163113c4b24243b29` predates ERC-8259 PR #2137 and does NOT include `verification_expiry`, `get_effective_tier`, or incident lifecycle (`retract_attack`/`resolve_attack`). It accepts `verification_tier` directly at registration (privilege escalation risk). **DO NOT use this address in production or as a reference implementation.** A corrected deployment is tracked at [Redeployment Issue #2](https://github.com/ibonon/Sigui/issues/2).
+
+| Network | Contract | Status | Address |
+|---|---|---|---|
+| **Ethereum Sepolia** | `AgentIdentityRegistry` | ⚠️ **DEPRECATED (Pre-PR #2137)** | [`0x3806aeb76eDD2E22D3cF66A163113c4b24243b29`](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29) |
+| **Aptos Testnet** | `agent_reputation` | Active Testnet | [`0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828`](https://explorer.aptoslabs.com/account/0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828?network=testnet) |
 
 ---
 

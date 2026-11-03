@@ -4,17 +4,19 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](CONTRIBUTING.md)
 [![PyPI Downloads](https://img.shields.io/badge/PyPI-721%20downloads-blue.svg)](https://pypi.org/project/sigui-sdk/)
 [![HuggingFace Model](https://img.shields.io/badge/🤗%20HuggingFace-Imina--Na--V2-orange.svg)](https://huggingface.co/Ibonon/Imina-Na-V2)
-[![ERC-8259 Live](https://img.shields.io/badge/ERC--8259-Live%20on%20Sepolia-blueviolet.svg)](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29)
-[![Contract Verified](https://img.shields.io/badge/Contract-0x3806...3b29-success.svg)](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29)
+[![ERC-8259 Sepolia](https://img.shields.io/badge/ERC--8259-Sepolia%20(Deprecated)-red.svg)](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29)
 [![Vision](https://img.shields.io/badge/🔮%20Vision-5%20Pillars-ff6b35.svg)](VISION.md)
 [![NPM Package](https://img.shields.io/badge/NPM-erc--8259-red.svg)](https://www.npmjs.com/package/erc-8259)
 [![Cairo 2.8.4](https://img.shields.io/badge/Starknet%20Cairo%202.8.4-8%2F8%20Passing-brightgreen.svg)](contracts/starknet)
+
+> [!WARNING]
+> **⚠️ DEPRECATED CONTRACT** — The Vyper contract deployed at `0x3806aeb76eDD2E22D3cF66A163113c4b24243b29` predates ERC-8259 PR #2137 and does NOT include `verification_expiry`, `get_effective_tier`, or incident lifecycle (`retract_attack`/`resolve_attack`). It accepts `verification_tier` directly at registration (privilege escalation risk). **DO NOT use this address in production or as a reference implementation.** A corrected deployment is tracked at [Redeployment Issue #2](https://github.com/ibonon/Sigui/issues/2).
 
 > **"NexusMind is the network. Sigui is the law."**
 
 Sigui is a decentralized security infrastructure (DePIN) for AI agents, now fully integrated with **NexusMind**, a Real P2P distributed intelligence mesh network. Utilizing the massive parallel power of AMD MI300X GPUs, Sigui detects on-chain threats via visual graph analysis, while NexusMind orchestrates real-time decentralized compute nodes.
 
-In < 50ms, the 5-layer Risk Engine, **Imina Na V2** vision model (trained on 1,000,000 samples), and MemoClaw memory return a verdict: `ALLOW / BLOCK / ESCALATE`. Blocked attacks are permanently recorded in `ThreatRegistry.vy` on Arc L1. The loop is fully closed. Zero human intervention.
+In < 50ms, the 5-layer Risk Engine, **Imina Na V2** vision model (trained on 1,000,000 samples), and MemoClaw memory return a verdict: `ALLOW / BLOCK / ESCALATE`. Blocked attacks are permanently recorded in `ThreatRegistry` on Arc L1 (*legacy `ThreatRegistry.vy` pending ERC-8259 lifecycle redeployment*). The loop is fully closed. Zero human intervention.
 
 ---
 
@@ -58,11 +60,14 @@ Sigui includes a revolutionary Agent DID (Decentralized Identity) system that so
 - **6-Factor Scoring**: Identity (25%) + Transactions (30%) + Verification (20%) + Cross-chain (10%) + Threat Intel (10%) + Insurance (5%).
 
 ### 📍 Live Contract Deployment
-| Network | Contract | Address |
-|---|---|---|
-| Ethereum Sepolia | ERC-8259 AgentRegistry | [`0x3806aeb76eDD2E22D3cF66A163113c4b24243b29`](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29) |
 
-> **Deployed on 2026-06-05** — Verify on [Sepolia Etherscan](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29). The `ERC8259_REGISTRY_ADDRESS_SEPOLIA` variable in your `.env` points to this live contract.
+> [!CAUTION]
+> ⚠️ **DEPRECATED CONTRACT — DO NOT USE IN PRODUCTION**  
+> The Vyper contract deployed at `0x3806aeb76eDD2E22D3cF66A163113c4b24243b29` predates ERC-8259 PR #2137 and does NOT include `verification_expiry`, `get_effective_tier`, or incident lifecycle (`retract_attack`/`resolve_attack`). It accepts `verification_tier` directly at registration (privilege escalation risk). DO NOT use this address in production or as a reference implementation. A corrected deployment is tracked at [Redeployment Issue #2](https://github.com/ibonon/Sigui/issues/2).
+
+| Network | Contract | Status | Address |
+|---|---|---|---|
+| Ethereum Sepolia | ERC-8259 AgentRegistry | ⚠️ **DEPRECATED (Pre-PR #2137)** | [`0x3806aeb76eDD2E22D3cF66A163113c4b24243b29`](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29) |
 
 ### 🛡️ Smart Contract Guard: `erc-8259` (2-Line Integration)
 Protect any DeFi vault, liquidity pool, or smart contract from rogue autonomous agents with **2 lines of Solidity**:
@@ -133,7 +138,7 @@ AI Agent ──── POST /evaluate ($0.001) ───────────�
          └───────────────────────────────────────────────────────────┘    │
                                                                           │
          ALLOW  ──────────────────────────────────────────────────────────┘
-         BLOCK  ──── ThreatRegistry.vy (Arc L1, permanent, immutable)
+         BLOCK  ──── ThreatRegistry (Arc L1, legacy Vyper pending upgrade)
          ESCALATE ── Qwen2.5 (AMD MI300X) → Claude 3.5 fallback
 ```
 
@@ -209,7 +214,7 @@ Sigui/
 │   ├── imina_na_vision.py     # Imina Na vLLM client (AMD MI300X)
 │   └── identity/              # ERC-8259 Agent DID system
 ├── contracts/
-│   ├── ThreatRegistry.vy      # Arc L1 Attack Log
+│   ├── ThreatRegistry.vy      # Arc L1 Attack Log (Legacy Vyper - Deprecated)
 │   ├── Hogonat.vy             # Governance DAO
 │   └── NexusMindSiguiBridge.vy # 🆕 P2P Reputation Bridge
 ├── sdk/python/sigui/          # Python SDK (pip install sigui)
@@ -222,7 +227,7 @@ Sigui/
 - **Phase 1 ✅ Agent Identity System** - Cryptographic identity for AI agents
 - **Phase 2 ✅ NexusMind Integration** - Real P2P compute and topological metrics
 - **Phase 3 🔄 Threat Intelligence Network** - Decentralized marketplace for attack patterns
-- **Phase 4 ✅ Open Protocol Standard** - ERC-8259 AgentRegistry [deployed live on Ethereum Sepolia](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29) · `0x3806aeb76eDD2E22D3cF66A163113c4b24243b29`
+- **Phase 4 🔄 Open Protocol Standard** - ERC-8259 AgentRegistry: Initial Sepolia deployment (`0x3806aeb76eDD2E22D3cF66A163113c4b24243b29`) **DEPRECATED** (predates PR #2137). Corrected spec-compliant redeployment in progress (tracked at [Issue #2](https://github.com/ibonon/Sigui/issues/2)).
 - **Phase 5 🔮 Edge Security & TinyML** - Pushing security to the absolute edge of the network.
   - **On-Chip Protection**: Ultra-quantized "Sigui Lite" models running directly inside Hardware Wallets (Ledger, Trezor) to proactively block malicious signatures (e.g., hidden `setApprovalForAll` drains) in an air-gapped environment.
   - **Autonomous DePIN & IoT**: Empowering constrained physical infrastructure and sensors to locally validate the security of their own on-chain micro-transactions without cloud latency.

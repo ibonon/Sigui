@@ -221,6 +221,6 @@ to build yourself — or your portfolio companies will.
 
 **Contact & Proof:**
 - 🔗 GitHub: [github.com/ibonon/Sigui](https://github.com/ibonon/Sigui)
-- 📄 Contract: [Sepolia Etherscan](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29)
+- 📄 Contract: [Sepolia Etherscan (Legacy Vyper - ⚠️ Deprecated pre-PR #2137)](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29) — *Redeployment tracked at [Issue #2](https://github.com/ibonon/Sigui/issues/2)*
 - 🤗 Dataset: [Ibonon/sigui-depin-1m](https://huggingface.co/datasets/Ibonon/sigui-depin-1m)
 - 🤗 Model: [Ibonon/Imina-Na-V2](https://huggingface.co/Ibonon/Imina-Na-V2)

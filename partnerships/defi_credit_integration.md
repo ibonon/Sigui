@@ -22,8 +22,7 @@ These agents want credit. They generate yield. They have track records.
 
 ## What Sigui Offers: The Agent Credit Score
 
-Sigui's **ERC-8259 AgentRegistry** (live on Ethereum Sepolia:
-`0x3806aeb76eDD2E22D3cF66A163113c4b24243b29`) generates a
+Sigui's **ERC-8259 AgentRegistry** (initial testnet deployment: `0x3806aeb76eDD2E22D3cF66A163113c4b24243b29` — ⚠️ **DEPRECATED**, pre-PR #2137) generates a
 **cryptographic credit score** for every registered AI agent.
 
 ### Score Components (0–1000)
@@ -72,6 +71,7 @@ interface ISiguiOracle {
 }
 
 // Usage:
+// NOTE: 0x3806...3b29 is legacy Vyper; use compliant redeployment address (tracked at Issue #2)
 ISiguiOracle sigui = ISiguiOracle(0x3806aeb76eDD2E22D3cF66A163113c4b24243b29);
 
 function borrow(uint256 amount, address agent) external {
@@ -148,7 +148,7 @@ We propose a **3-month pilot integration** on your testnet:
 
 **Contact:**
 - GitHub: [github.com/ibonon/Sigui](https://github.com/ibonon/Sigui)
-- ERC-8259 Contract: `0x3806aeb76eDD2E22D3cF66A163113c4b24243b29`
-- Etherscan: https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29
+- ERC-8259 Contract (Legacy Vyper - Deprecated): `0x3806aeb76eDD2E22D3cF66A163113c4b24243b29`
+- Etherscan (Legacy): https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29
 
 *Sigui Protocol — The Trust Infrastructure for the Autonomous Economy*

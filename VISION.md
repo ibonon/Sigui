@@ -13,8 +13,7 @@ Sigui is not a security tool. Sigui is **the native regulatory layer of the post
 
 What started as a DePIN security oracle ($0.001/evaluation) is evolving into a five-pillar
 protocol that will become as fundamental to the agentic economy as TCP/IP is to the internet.
-The ERC-8259 standard, deployed live on Ethereum Sepolia (`0x3806aeb76eDD2E22D3cF66A163113c4b24243b29`),
-is the foundation of a global agent reputation and credit infrastructure.
+The ERC-8259 standard is the foundation of a global agent reputation and credit infrastructure (note: initial Vyper deployment at `0x3806aeb76eDD2E22D3cF66A163113c4b24243b29` is ⚠️ **DEPRECATED** as it predates PR #2137 and lacks expiry/lifecycle invariants; compliant redeployment tracked at [Issue #2](https://github.com/ibonon/Sigui/issues/2)).
 
 ---
 
