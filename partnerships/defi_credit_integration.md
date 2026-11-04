@@ -71,8 +71,8 @@ interface ISiguiOracle {
 }
 
 // Usage:
-// NOTE: 0x3806...3b29 is legacy Vyper; use compliant redeployment address (tracked at Issue #2)
-ISiguiOracle sigui = ISiguiOracle(0x3806aeb76eDD2E22D3cF66A163113c4b24243b29);
+// NOTE: Use compliant ERC-8259 registry address (redeployment tracked at Issue #2)
+ISiguiOracle sigui = ISiguiOracle(SIGUI_REGISTRY_ADDRESS);
 
 function borrow(uint256 amount, address agent) external {
     (bool allowed, uint8 tier) = sigui.evaluateTransaction(agent, address(this), amount);

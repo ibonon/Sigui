@@ -48,7 +48,7 @@ pip install "sigui-sdk[smolagents]"      # HuggingFace smolagents
 - **ElizaOS Plugin**: Natively integrate Sigui into the Eliza ecosystem.
 - **Local Mock Server**: Test your integration without spinning up Docker or needing a GPU.
 - **Pretrained Weights**: Run the [`Ibonon/Imina-Na-V2`](https://huggingface.co/Ibonon/Imina-Na-V2) LoRA model (Qwen2-VL-7B-Instruct, r=16, α=32) locally via `huggingface_hub`.
-- **Multichain Reputation**: Support for ERC-8259 across Ethereum (Vyper), Starknet (Cairo), and Aptos (Move).
+- **Multichain Reputation**: Support for ERC-8259 across Ethereum (Solidity), Starknet (Cairo), and Aptos (Move).
 
 ---
 

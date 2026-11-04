@@ -68,7 +68,7 @@ without human review. Without a security oracle:
 | Metric | Status |
 |---|---|
 | 🟢 PyPI Downloads | **721 organic** (no marketing budget) |
-| 🟢 Live Contract | **ERC-8259 on Ethereum Sepolia** — `0x3806...3b29` |
+| ⚠️ Prototype Contract | **ERC-8259 on Sepolia (Legacy Vyper — Deprecated)** — `0x3806...3b29` (Compliant redeployment tracked) |
 | 🟢 Live AI Model | **Imina Na V2** running on A10G GPU (Modal) |
 | 🟢 Dataset | **1,000,000** transaction graph topologies — unique in the world |
 | 🟢 P2P Network | **NexusMind** — real WebSockets mesh, not a simulation |
@@ -171,7 +171,7 @@ Total Addressable Market (2026):
 - Built Sigui from 0 to live contract with zero funding
 - AI/ML expertise: fine-tuned Qwen2-VL-7B on custom 1M dataset
 - Web3 depth: ERC standard authorship, multi-chain contracts
-- Proof: 721 PyPI downloads, live Sepolia contract, published dataset
+- Proof: 721 PyPI downloads, Sepolia prototype contract, published dataset
 
 ### Key Hire (Pre-Seed)
 **ZK / Rust Engineer** — to implement ZK-Sigui proof circuits and $SIGUI staking contracts

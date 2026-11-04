@@ -227,7 +227,7 @@ Sigui/
 - **Phase 1 ✅ Agent Identity System** - Cryptographic identity for AI agents
 - **Phase 2 ✅ NexusMind Integration** - Real P2P compute and topological metrics
 - **Phase 3 🔄 Threat Intelligence Network** - Decentralized marketplace for attack patterns
-- **Phase 4 🔄 Open Protocol Standard** - ERC-8259 AgentRegistry: Initial Sepolia deployment (`0x3806aeb76eDD2E22D3cF66A163113c4b24243b29`) **DEPRECATED** (predates PR #2137). Corrected spec-compliant redeployment in progress (tracked at [Issue #2](https://github.com/ibonon/Sigui/issues/2)).
+- **Phase 4 🔄 Open Protocol Standard** - ERC-8259 AgentRegistry: Initial Sepolia deployment (`0x3806aeb76eDD2E22D3cF66A163113c4b24243b29` — ⚠️ Deprecated pre-PR #2137) **DEPRECATED** (predates PR #2137). Corrected spec-compliant redeployment in progress (tracked at [Issue #2](https://github.com/ibonon/Sigui/issues/2)).
 - **Phase 5 🔮 Edge Security & TinyML** - Pushing security to the absolute edge of the network.
   - **On-Chip Protection**: Ultra-quantized "Sigui Lite" models running directly inside Hardware Wallets (Ledger, Trezor) to proactively block malicious signatures (e.g., hidden `setApprovalForAll` drains) in an air-gapped environment.
   - **Autonomous DePIN & IoT**: Empowering constrained physical infrastructure and sensors to locally validate the security of their own on-chain micro-transactions without cloud latency.

@@ -213,7 +213,7 @@ security evaluations. Proof-of-Work hashing is not enough.
 ## 🗺️ Personal Action Plan: Solo Dev → Protocol Founder
 
 ### Phase 0 — Now (June 2026)
-- [x] ERC-8259 deployed live on Ethereum Sepolia
+- [x] ERC-8259 prototype on Sepolia (legacy Vyper pre-PR #2137; compliant Solidity redeployment tracked at Issue #2)
 - [x] Imina Na V2 live on A10G GPU (Modal)
 - [x] 721 PyPI downloads, 1M dataset published
 - [x] NexusMind P2P mesh operational
@@ -236,7 +236,7 @@ security evaluations. Proof-of-Work hashing is not enough.
 | DefiLlama angels | DeFi infrastructure | Direct Twitter outreach |
 
 **Proof Points to Lead With:**
-1. Live ERC-8259 contract on Sepolia (verifiable, not vaporware)
+1. Sepolia prototype contract (legacy Vyper pre-PR #2137; reference standard in packages/erc8259)
 2. 721 organic PyPI downloads (organic developer adoption)
 3. 1M transaction graph dataset (unique, defensible moat)
 4. Imina Na V2 live inference (working product, not demo)
