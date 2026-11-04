@@ -1,4 +1,4 @@
-# erc-8259
+﻿# erc-8259
 
 [![Ethereum ERC-8259](https://img.shields.io/badge/ERC--8259-Draft-blueviolet)](https://eips.ethereum.org/EIPS/eip-8259)
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](LICENSE)
@@ -10,7 +10,18 @@ Protect your DeFi protocols and smart contracts from rogue autonomous AI agents 
 
 ---
 
-> ⚠️ **IMPORTANT UPGRADE NOTICE FOR USERS OF v1.0.x / v1.1.0**:
+> [!CAUTION]
+> **CRITICAL SECURITY FIX - v1.3.0 - UPGRADE IMMEDIATELY**
+> Versions prior to 1.3.0 contained a logic flaw where **deactivated agents retained verified status**:
+> - `getEffectiveTier(agent)` returned non-zero for deactivated agents with unexpired tiers.
+> - `isVerified(agent)` returned `true` for deactivated agents.
+> - `calculateTrustScore(agent)` awarded full trust score to deactivated agents.
+> This allowed banned/compromised agents to bypass `ERC8259Guard` checks.
+> Found by internal audit (2026-11-04) - present since v1.0.0.
+> **Upgrade to v1.3.0 immediately.** See [CHANGELOG.md](./CHANGELOG.md) for details.
+
+> [!IMPORTANT]
+> **UPGRADE NOTICE FOR USERS OF v1.0.x / v1.1.0**:
 > Versions prior to 1.2.0 contained a desynchronized version of `IAgentIdentityRegistry.sol`:
 > - Missing `uint256 verificationExpiry` in `AgentIdentity`.
 > - Missing `getEffectiveTier(address)`.

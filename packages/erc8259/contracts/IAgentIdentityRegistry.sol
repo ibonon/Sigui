@@ -30,42 +30,51 @@ interface IAgentIdentityRegistry {
     }
 
     event AgentRegistered(
+        uint256 indexed agentId,
         string indexed did,
         address indexed agentAddress,
         uint8 verificationTier,
-        uint16 reputationScore,
-        uint256 registrationTime
+        bytes32 publicKey
     );
 
     event AgentUpdated(
+        uint256 indexed agentId,
         string indexed did,
+        address indexed agentAddress,
         uint16 reputationScore,
-        uint8 verificationTier,
-        uint256 lastUpdate
+        uint8 verificationTier
     );
 
     event ReputationScoreUpdated(
-        string indexed did,
+        address indexed agentAddress,
         uint16 oldScore,
         uint16 newScore,
-        string updateReason
+        string reason
     );
 
     event VerificationTierUpdated(
-        string indexed did,
         address indexed agentAddress,
         uint8 oldTier,
         uint8 newTier,
         uint256 verificationExpiry
     );
 
+    event AgentDeactivated(
+        address indexed agentAddress,
+        string reason
+    );
+
+    event AgentReactivated(
+        address indexed agentAddress
+    );
+
     /**
-     * @notice Registers a new AI agent identity at tier 0 (unverified).
-     * @dev Newly registered agents MUST initialize at verificationTier 0. The caller MUST be authorized
-     * to register the corresponding agent address.
-     * @param did Decentralized identifier following did:agent:<chainId>:<address>.
-     * @param publicKey Public key associated with the agent.
-     * @param metadataURI Off-chain metadata URI (e.g. IPFS).
+     * @notice Registers a new agent identity starting strictly at Tier 0 (unverified default).
+     * @dev MUST initialize verificationTier = 0 and verificationExpiry = 0.
+     *      Promotion to verified tiers (1-4) MUST occur via updateVerificationTier by authorized verifiers.
+     * @param did Decentralized identifier string.
+     * @param publicKey Cryptographic public key (e.g. Ed25519/secp256k1) for agent verification.
+     * @param metadataURI Off-chain metadata URI (e.g. IPFS hash) containing agent profile.
      * @return agentId Assigned unique identifier for the registered agent.
      */
     function registerAgent(
@@ -75,16 +84,16 @@ interface IAgentIdentityRegistry {
     ) external payable returns (uint256 agentId);
 
     /**
-     * @notice Updates the reputation score for an agent.
+     * @notice Updates the reputation score of an agent.
      * @dev MUST revert if called by an unauthorized address.
-     * @param agentAddress Address of the agent whose score is being updated.
-     * @param newScore New reputation score (0-1000).
-     * @param updateReason Justification string for the score update.
+     * @param agentAddress Address of the agent.
+     * @param newScore New score value (0-1000).
+     * @param reason Human-readable justification or audit reference.
      */
     function updateReputationScore(
         address agentAddress,
         uint16 newScore,
-        string calldata updateReason
+        string calldata reason
     ) external;
 
     /**
@@ -101,8 +110,8 @@ interface IAgentIdentityRegistry {
     ) external payable;
 
     /**
-     * @notice Returns the effective verification tier of an agent, accounting for expiry.
-     * @dev MUST return 0 if block.timestamp > verificationExpiry.
+     * @notice Returns the effective verification tier of an agent, accounting for active status and expiry.
+     * @dev MUST return 0 if the agent is inactive (!isActive) OR if block.timestamp > verificationExpiry.
      * @param agentAddress Address of the agent.
      * @return Effective verification tier level (0-4).
      */
@@ -132,9 +141,10 @@ interface IAgentIdentityRegistry {
         returns (address);
 
     /**
-     * @notice Queries whether an agent has active, unexpired verification (getEffectiveTier > 0).
+     * @notice Queries whether an agent has active, unexpired verification.
+     * @dev MUST return false if the agent is inactive (!isActive) or if getEffectiveTier <= 0.
      * @param agentAddress Address of the agent.
-     * @return True if the agent holds an unexpired verification tier above 0.
+     * @return True if the agent is active and holds an unexpired verification tier above 0.
      */
     function isVerified(address agentAddress)
         external
@@ -143,11 +153,12 @@ interface IAgentIdentityRegistry {
 
     /**
      * @notice Computes an effective trust score for an agent combining reputation and tier.
-     * @dev MUST use getEffectiveTier(agentAddress) — not the stored verificationTier field — for
+     * @dev MUST return 0 if the agent is inactive (!isActive).
+     *      MUST use getEffectiveTier(agentAddress) — not the stored verificationTier field — for
      *      any tier-based weighting or multiplier. An expired verification MUST contribute zero
      *      tier boost to the returned score even if the stored verificationTier field is non-zero.
      * @param agentAddress Address of the agent.
-     * @return Effective score between 0 and 1000.
+     * @return Effective score between 0 and 1000 (0 for inactive agents).
      */
     function calculateTrustScore(address agentAddress)
         external
