@@ -6,6 +6,7 @@ FastAPI + x402 middleware — all public endpoints
 import asyncio
 import json
 import os
+import random
 import time
 from collections import defaultdict as _defaultdict
 from datetime import datetime, timezone

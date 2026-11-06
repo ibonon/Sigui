@@ -250,10 +250,10 @@
     <section class="sigui-card" style="margin-bottom: 50px;">
       <div class="card-header">
         <span class="card-title">🔬 Cryptographic Witness &amp; Verification Interface (Groth16 BN128)</span>
-        <span class="verdict-badge verdict-ALLOW">PYTHON / CIRCOM SPEC</span>
+        <span class="verdict-badge verdict-ALLOW">PYTHON SIMULATION POC</span>
       </div>
       <p class="card-desc" style="margin-bottom: 16px;">
-        Excerpt from <code>modules/zk_sigui.py</code> illustrating the deterministic BN128 scalar commitment and witness validation logic executed during the pre-execution phase:
+        Excerpt from <code>modules/zk_sigui.py</code> illustrating the simulated PoC logic (deterministic hash modulation). A real Circom Groth16 circuit for trust score verification is under construction:
       </p>
 
       <div class="terminal-window" style="margin-bottom: 0;">
@@ -264,7 +264,7 @@
             <div class="terminal-dot red"></div>
           </div>
           <div class="terminal-title">modules/zk_sigui.py (PoC Architecture)</div>
-          <div style="font-size: 10px; color: var(--muted);">CIRCOM 2.1 COMPATIBLE</div>
+          <div style="font-size: 10px; color: var(--muted);">SIMULATED POC (CIRCOM CIRCUIT IN DEVELOPMENT)</div>
         </div>
         <div class="terminal-body">
 <pre><span class="keyword">class</span> <span class="cmd">ZKSigui</span>:

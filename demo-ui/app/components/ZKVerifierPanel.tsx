@@ -91,6 +91,22 @@ export const ZKVerifierPanel: React.FC<ZKVerifierPanelProps> = () => {
         </span>
       </div>
 
+      {/* Simulation Warning Banner */}
+      <div
+        style={{
+          background: 'rgba(245, 158, 11, 0.12)',
+          border: '1px solid rgba(245, 158, 11, 0.35)',
+          borderRadius: '8px',
+          padding: '10px 14px',
+          marginBottom: '20px',
+          fontSize: '12px',
+          color: '#fcd34d',
+          lineHeight: '1.4',
+        }}
+      >
+        ⚠️ <strong>SIMULATION MODE (Client-Side Math.random mock)</strong> — This demonstration UI simulates witness creation and verification latency. A real Circom Groth16 circuit for ERC-8259 trust score verification is currently under construction.
+      </div>
+
       {/* Controls Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
         {/* Pattern Selection */}

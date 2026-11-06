@@ -78,16 +78,23 @@ class ZKSigui:
         verify_time_ms = (time.perf_counter() - t0) * 1000
         return {
             "proof": proof.__dict__,
-            "verified": verified,
+            "proof_type": "simulated_poc",
+            "real_circuit": False,
+            "verified": False,
+            "simulation_verified": verified,
             "proof_size_bytes": 64,
-            "verify_time_ms": verify_time_ms
+            "verify_time_ms": verify_time_ms,
+            "warning": "Simulated PoC only. Real Circom Groth16 circuit under construction."
         }
 
     def get_status(self) -> dict:
         return {
             "version": "zk-sigui-poc-v1",
-            "circuit_info": "Groth16 BN128 simulation over python ints",
-            "note": "Real ZK circuits will be implemented in Circom/Noir in Q4 2026."
+            "proof_type": "simulated_poc",
+            "real_circuit": False,
+            "circuit_info": "Groth16 BN128 simulation over python ints (not a real ZK circuit)",
+            "warning": "Simulated PoC only. Real Circom Groth16 circuit under construction.",
+            "note": "Production ZK circuits in Circom/snarkjs currently in progress."
         }
 
 zk_sigui = ZKSigui()
