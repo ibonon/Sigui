@@ -7,6 +7,7 @@
 [![ERC-8259 Sepolia](https://img.shields.io/badge/ERC--8259-Sepolia%20(Deprecated)-red.svg)](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29)
 [![Vision](https://img.shields.io/badge/🔮%20Vision-5%20Pillars-ff6b35.svg)](VISION.md)
 [![npm version](https://img.shields.io/npm/v/erc-8259?label=erc-8259&color=red)](https://www.npmjs.com/package/erc-8259)
+[![npm downloads](https://img.shields.io/npm/dw/erc-8259?label=npm%20downloads&color=blue)](https://www.npmjs.com/package/erc-8259)
 [![Cairo 2.8.4](https://img.shields.io/badge/Starknet%20Cairo%202.8.4-8%2F8%20Passing-brightgreen.svg)](contracts/starknet)
 
 > [!WARNING]
@@ -110,7 +111,7 @@ contract ProtectedVault is ERC8259Guard {
 Traditional security engines use simple thresholds. Imina Na sees the attack topology.
 - **Architecture**: Fine-tuned **Qwen2-VL-7B-Instruct** (LoRA r=16, α=32)
 - **Model Hub**: [Ibonon/Imina-Na-V2](https://huggingface.co/Ibonon/Imina-Na-V2) on HuggingFace
-- **Dataset**: [Sigui DePIN-1M](https://huggingface.co/datasets/Ibonon/sigui-depin-1m) — 1,000,000 transaction graph topologies
+- **Dataset**: [Sigui DePIN-1M](https://huggingface.co/datasets/Ibonon/sigui-depin-1m) — 1,000,000 labeled transaction graph topologies · [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20550562.svg)](https://doi.org/10.5281/zenodo.20550562)
 - **Hardware**: AMD MI300X (ROCm stack) for training and inference
 - **Patterns detected**: `DRAIN_STAR`, `MIXING_CHAIN`, `COORDINATED_CLUSTER`
 
