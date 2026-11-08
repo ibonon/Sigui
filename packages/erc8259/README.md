@@ -1,6 +1,7 @@
 ﻿# erc-8259
 
 [![Ethereum ERC-8259](https://img.shields.io/badge/ERC--8259-Draft-blueviolet)](https://eips.ethereum.org/EIPS/eip-8259)
+[![PR #2142 Merged](https://img.shields.io/badge/ethereum%2FERCs-PR%20%232142%20merged-brightgreen)](https://github.com/ethereum/ERCs/pull/2142)
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](LICENSE)
 [![NPM Version](https://img.shields.io/npm/v/erc-8259)](https://www.npmjs.com/package/erc-8259)
 

@@ -6,7 +6,7 @@
 [![HuggingFace Model](https://img.shields.io/badge/🤗%20HuggingFace-Imina--Na--V2-orange.svg)](https://huggingface.co/Ibonon/Imina-Na-V2)
 [![ERC-8259 Sepolia](https://img.shields.io/badge/ERC--8259-Sepolia%20(Deprecated)-red.svg)](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29)
 [![Vision](https://img.shields.io/badge/🔮%20Vision-5%20Pillars-ff6b35.svg)](VISION.md)
-[![NPM Package](https://img.shields.io/badge/NPM-erc--8259-red.svg)](https://www.npmjs.com/package/erc-8259)
+[![npm version](https://img.shields.io/npm/v/erc-8259?label=erc-8259&color=red)](https://www.npmjs.com/package/erc-8259)
 [![Cairo 2.8.4](https://img.shields.io/badge/Starknet%20Cairo%202.8.4-8%2F8%20Passing-brightgreen.svg)](contracts/starknet)
 
 > [!WARNING]
@@ -58,6 +58,7 @@ Sigui includes a revolutionary Agent DID (Decentralized Identity) system that so
 - **Portable Reputation**: Reputation follows identity across wallets/chains.
 - **Multi-Tier Verification**: Bronze → Silver → Gold → Platinum verification levels.
 - **6-Factor Scoring**: Identity (25%) + Transactions (30%) + Verification (20%) + Cross-chain (10%) + Threat Intel (10%) + Insurance (5%).
+- **Normative Standard**: [`isActive` gate fix (PR #2142)](https://github.com/ethereum/ERCs/pull/2142) merged on `ethereum/ERCs:master` — `getEffectiveTier`, `isVerified`, `calculateTrustScore` all return 0 / false for inactive agents. npm package `erc-8259@1.3.0` implements this fix.
 
 ### 📍 Live Contract Deployment
 
