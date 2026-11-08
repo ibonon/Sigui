@@ -1,0 +1,19 @@
+# Root Foundry config — scopes `forge test` (run from the repository root) to the
+# ERC-8259 adversarial audit suite in tests/audit_erc8259/.
+#
+# Why this exists:
+# - tests/audit_erc8259/ imports IAgentIdentityRegistry.sol locally (now present).
+# - contracts/ethereum/*.vy are legacy Vyper contracts; without a Vyper toolchain,
+#   forge auto-detection would abort the whole build on their pragmas. This config
+#   keeps them out of the Solidity build graph entirely.
+# - The ERC-8259 spec test-suite lives in ERCs_fork/assets/erc-8259/ (separate git
+#   repo with its own foundry.toml) and is unaffected by this file.
+[profile.default]
+src = "tests/audit_erc8259"
+test = "tests/audit_erc8259"
+out = "out/forge"
+libs = []
+solc_version = "0.8.24"
+evm_version = "cancun"
+optimizer = true
+skip = ["contracts/ethereum/*", "contracts/starknet/*", "contracts/aptos/*"]
