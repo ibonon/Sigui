@@ -1439,19 +1439,31 @@ def register_routes(app: FastAPI):
             except Exception:
                 pass
 
-        # ZK proof (optional)
+        # ZK proof (optional) — real Groth16 Circom circuit (Z3)
         zk_proof = None
+        zk_error = None
         if zk_requested:
-            try:
-                from modules.zk_sigui import zk_sigui
-                zk_result = zk_sigui.prove_and_verify({
-                    "pattern": vision_eval.pattern,
-                    "peer_count": graph_payload.get("summary", {}).get("focus_unique_peer_senders", 0),
-                    "chain_count": graph_payload.get("summary", {}).get("chain_count", 1),
-                })
-                zk_proof = zk_result
-            except Exception as _zk_err:
-                zk_proof = {"error": str(_zk_err)}
+            from modules.zk_sigui import zk_sigui as _zk
+            # Build ERC-8259 agent state from live memory profile
+            _ap = agent_profile or {}
+            import time as _time
+            _zk_data = {
+                "isActive":           1 if _ap.get("is_active", True) else 0,
+                "storedTier":         int(_ap.get("tier", 0)),
+                "verificationExpiry": int(_ap.get("verification_expiry", 0)),
+                "reputationScore":    int(_ap.get("reputation_score", 500)),
+                "agentAddress":       int(action.agent_id.replace("0x", "")[:16], 16)
+                                      if action.agent_id.startswith("0x")
+                                      else abs(hash(action.agent_id)) % (10**15),
+                "currentTimestamp":   int(_time.time()),
+                # Recompute trustScore from ERC-8259 formula for public input
+                "trustScore":         min(1000, int(_ap.get("reputation_score", 500))
+                                      + (int(_ap.get("tier", 0)) * 100))
+                                      if _ap.get("is_active", True) else 0,
+            }
+            _zk_result = await _zk.prove_trust_score(_zk_data)
+            zk_proof = _zk_result.get("zk_proof")
+            zk_error = _zk_result.get("zk_error")
 
         total_ms = int((time.perf_counter() - t_start) * 1000)
 
@@ -1469,6 +1481,7 @@ def register_routes(app: FastAPI):
             "vision_evidence": vision_eval.visual_evidence,
             "threat_intel_matched": threat_intel_matched,
             "zk_proof": zk_proof,
+            "zk_error": zk_error,
             "layers_triggered": {
                 "financial": round(kanaga_out.components.get("action", 0.0), 4),
                 "behavioral": round(kanaga_out.components.get("context", 0.0), 4),
@@ -1504,28 +1517,25 @@ def register_routes(app: FastAPI):
 
     @app.get("/api/zk-sigui/status", tags=["Security v2"])
     async def zk_sigui_status():
-        """ZK-Sigui proof-of-concept status and circuit info."""
-        try:
-            from modules.zk_sigui import zk_sigui
-            return zk_sigui.get_status()
-        except ImportError:
-            return {"status": "not_loaded", "note": "ZK-Sigui module not available."}
+        """ZK-Sigui circuit status and artifact availability (real Groth16 circuit — Z3)."""
+        from modules.zk_sigui import zk_sigui
+        return zk_sigui.get_status()
 
     @app.post("/api/zk-sigui/prove", tags=["Security v2"])
     async def zk_prove(request: Request):
         """
-        Generate a ZK-Sigui proof for a given pattern witness.
-        Body: {"pattern": "NORMAL", "peer_count": 1, "chain_count": 1}
+        Generate a real Groth16 proof for the ERC-8259 trust score circuit.
+        Body: {
+          "isActive": 1, "storedTier": 2, "verificationExpiry": 9999999999,
+          "reputationScore": 450, "agentAddress": 123456789,
+          "currentTimestamp": 1700000000, "trustScore": 650
+        }
+        Returns: { "zk_proof": {..., "real_circuit": true, "verified": bool},
+                   "zk_error": null | "<typed_error>" }
         """
-        try:
-            from modules.zk_sigui import zk_sigui
-            body = await request.json()
-            result = zk_sigui.prove_and_verify(body)
-            return result
-        except ImportError:
-            raise HTTPException(status_code=503, detail="ZK-Sigui module not available")
-        except Exception as e:
-            raise HTTPException(status_code=422, detail=str(e))
+        from modules.zk_sigui import zk_sigui
+        body = await request.json()
+        return await zk_sigui.prove_trust_score(body)
 
     # ── API v2 — Attack Simulation ──────────────────────────────────────────
 
@@ -1543,13 +1553,20 @@ def register_routes(app: FastAPI):
 
         fake_dest = "0x" + "".join(random.choices("0123456789abcdef", k=40))
 
-        # Evaluate through internal pipeline
-        from modules.zk_sigui import zk_sigui
-        zk_proof = zk_sigui.prove_and_verify({
-            "pattern": attack_type,
-            "peer_count": victim_count,
-            "chain_count": 2 if attack_type == "MIXING_CHAIN" else 1
+        # ZK proof for simulated attack — attacker agent is inactive (trustScore=0)
+        from modules.zk_sigui import zk_sigui as _zk_sa
+        import time as _time_sa
+        _zk_sa_result = await _zk_sa.prove_trust_score({
+            "isActive":           0,     # attacker is not a registered active agent
+            "storedTier":         0,
+            "verificationExpiry": 0,
+            "reputationScore":    0,
+            "agentAddress":       abs(hash(fake_dest)) % (10**15),
+            "currentTimestamp":   int(_time_sa.time()),
+            "trustScore":         0,     # ERC-8259: inactive → score=0
         })
+        zk_proof = _zk_sa_result.get("zk_proof")
+        zk_error_sa = _zk_sa_result.get("zk_error")
 
         decision = "BLOCK" if attack_type in ("DRAIN_STAR", "COORDINATED_CLUSTER") else "ESCALATE"
         risk_score = 0.96 if attack_type == "DRAIN_STAR" else 0.82
@@ -1565,6 +1582,7 @@ def register_routes(app: FastAPI):
             "risk_score": risk_score,
             "reason": f"Simulated {attack_type} attack vector identified by Sigui Red Team Engine",
             "zk_proof": zk_proof,
+            "zk_error": zk_error_sa,
             "inference_source": "gpu_imina_na",
             "inference_time_ms": 35.3
         }

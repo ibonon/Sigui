@@ -104,7 +104,7 @@ export const ZKVerifierPanel: React.FC<ZKVerifierPanelProps> = () => {
           lineHeight: '1.4',
         }}
       >
-        ⚠️ <strong>SIMULATION MODE (Client-Side Math.random mock)</strong> — This demonstration UI simulates witness creation and verification latency. A real Circom Groth16 circuit for ERC-8259 trust score verification is currently under construction.
+        ⚠️ <strong>SIMULATION MODE (Client-Side Math.random mock)</strong> — This demonstration UI simulates witness creation and verification latency. A production Circom Groth16 circuit (TrustScoreProof.circom) is deployed on the backend API (/api/zk-sigui/prove).
       </div>
 
       {/* Controls Grid */}

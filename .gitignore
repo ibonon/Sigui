@@ -37,3 +37,6 @@ circuits/node_modules/
 circuits/pot10_0000.ptau
 circuits/pot10_0001.ptau
 circuits/TrustScoreProof_0000.zkey
+out/
+cache/
+.agents/
