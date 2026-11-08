@@ -59,7 +59,7 @@
 
       <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
         <a href="https://github.com/ibonon/Sigui/blob/master/contracts/aptos/AIP_PROPOSAL.md" class="btn-primary" target="_blank">📜 View Official Aptos AIP</a>
-        <a href="https://explorer.aptoslabs.com/account/0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828?network=testnet" class="btn-secondary" target="_blank">🔍 Aptos Testnet Explorer ↗</a>
+        <a href="https://github.com/ibonon/Sigui/tree/master/contracts/aptos" class="btn-secondary" target="_blank">📂 Move Contracts (source) ↗</a>
       </div>
     </section>
 
@@ -245,39 +245,33 @@
         </div>
       </div>
 
-      <!-- Testnet Proof Verification Card -->
+      <!-- Testnet Deployment Status Card -->
       <div class="sigui-card" style="display: flex; flex-direction: column; justify-content: space-between;">
         <div>
           <div class="card-header">
-            <span class="card-title">Live On-Chain Evidence</span>
-            <span class="verdict-badge verdict-ALLOW">APTOS TESTNET</span>
+            <span class="card-title">Aptos Deployment Status</span>
+            <span class="verdict-badge" style="border: 1px solid var(--gold); color: var(--gold);">PLANNED</span>
           </div>
           <p class="card-desc" style="margin-bottom: 20px;">
-            The Sigui Move modules are compiled, formally verified with the Move Prover, and active on Aptos Testnet:
+            The Sigui Move modules are compiled and formally specified. <strong>Testnet deployment is planned — no verified on-chain transactions exist at this time.</strong>
           </p>
           <div style="background: rgba(10,10,12,0.8); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px;">
-            <div style="font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase;">Deployed Package Address</div>
+            <div style="font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase;">Reference Implementation (source, not deployed)</div>
             <div style="font-family: var(--mono); font-size: 11px; color: var(--gold); word-break: break-all; margin-top: 4px;">
-              0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828
-            </div>
-          </div>
-          <div style="background: rgba(10,10,12,0.8); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px;">
-            <div style="font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase;">Genesis Agent Registered</div>
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--ivory); word-break: break-all; margin-top: 4px;">
-              Tx 0x128bd568c07131b8576dec24e89214a4733654637e60cbb7959405db75650241
+              sigui::agent_reputation &middot; sigui::threat_registry
             </div>
           </div>
           <div style="background: rgba(10,10,12,0.8); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px;">
-            <div style="font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase;">Threat Slashing Intercept Event</div>
-            <div style="font-family: var(--mono); font-size: 11px; color: var(--danger); word-break: break-all; margin-top: 4px;">
-              Tx 0x3e3294b1509faae4ecdfbce2e2db699ef796fb35db4ba0be886c5280ee28f415
+            <div style="font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase;">On-Chain Verification</div>
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--ivory); word-break: break-all; margin-top: 4px;">
+              Upon deployment, full 64-character transaction hashes will be published here for independent verification on the Aptos Explorer.
             </div>
           </div>
         </div>
 
         <div style="margin-top: 20px;">
-          <a href="https://explorer.aptoslabs.com/account/0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828?network=testnet" class="btn-primary" style="width: 100%;" target="_blank">
-            Open Aptos Explorer Verification ↗
+          <a href="https://github.com/ibonon/Sigui/tree/master/contracts/aptos" class="btn-primary" style="width: 100%;" target="_blank">
+            View Move Source Contracts ↗
           </a>
         </div>
       </div>

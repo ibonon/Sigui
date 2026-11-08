@@ -197,17 +197,13 @@ spec slash_agent {
 
 ## Reference Implementation
 
-A fully functional, verified reference implementation is open-source and deployed on **Aptos Testnet**:
+An open-source reference implementation is available in this repository (`contracts/aptos/`). The Move modules are compiled and formally specified, but **testnet deployment is planned / in progress — no verified on-chain transactions exist at this time**.
 
 * **Repository:** [`https://github.com/ibonon/Sigui/tree/master/contracts/aptos`](https://github.com/ibonon/Sigui/tree/master/contracts/aptos)
-* **Deployer Address:** `0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828`
-* **Modules:**
-  * `sigui::agent_reputation` (Transaction: `0x845ca4cd5db7...`)
-  * `sigui::threat_registry` (Transaction: `0xba73ff96...`)
-* **Live Genesis Verification:**
-  * Genesis Agent Registered: `0x128bd568c07131b8576dec24e89214a4733654637e60cbb7959405db75650241`
-  * First DRAIN_STAR Threat Logged: `0x3e3294b1509faae4ecdfbce2e2db699ef796fb35db4ba0be886c5280ee28f415`
-  * Aptos Explorer: [View Account 0x8332...c828](https://explorer.aptoslabs.com/account/0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828?network=testnet)
+* **Modules (source only, not yet deployed):**
+  * `sigui::agent_reputation`
+  * `sigui::threat_registry`
+* **On-chain status:** none. When a testnet deployment occurs, this section will record the full 64-character transaction hash(es) for independent verification on the Aptos Explorer. Until then, no on-chain claims are made in this proposal.
 
 ---
 
@@ -236,6 +232,6 @@ A fully functional, verified reference implementation is open-source and deploye
 
 ## Suggested Timeline
 
-* **Milestone 1 (Complete)**: Reference Move modules deployed and verified on Aptos Testnet (`0x8332...c828`).
+* **Milestone 1 (In progress)**: Reference Move modules compiled and formally specified (`contracts/aptos/`). Testnet deployment planned — full 64-character transaction hashes will be published here for verification once deployed.
 * **Milestone 2 (Q4 2026)**: Formal AIP submission to `aptos-foundation/AIPs`, community review, and SDK TypeScript/Python bindings.
 * **Milestone 3 (Q1 2027)**: Mainnet audit and deployment alongside leading Aptos DeFi protocols.

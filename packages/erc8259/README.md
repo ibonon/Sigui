@@ -93,7 +93,7 @@ contract Vault is ERC8259Guard {
 | Network | Contract | Status | Address |
 |---|---|---|---|
 | **Ethereum Sepolia** | `AgentIdentityRegistry` | ⚠️ **DEPRECATED (Pre-PR #2137)** | [`0x3806aeb76eDD2E22D3cF66A163113c4b24243b29`](https://sepolia.etherscan.io/address/0x3806aeb76eDD2E22D3cF66A163113c4b24243b29) |
-| **Aptos Testnet** | `agent_reputation` | Active Testnet | [`0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828`](https://explorer.aptoslabs.com/account/0x833279d99a693392a7245f489967c4714c7bc76589a4f1e0b1c5590c4548c828?network=testnet) |
+| **Aptos Testnet** | `agent_reputation` | ⏳ **Not deployed — source only** | — (deployment planned; full tx hash will be published upon deployment) |
 
 ---
 
