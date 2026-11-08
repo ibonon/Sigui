@@ -4,6 +4,22 @@ All notable changes to the `erc-8259` NPM package are documented here.
 
 ---
 
+## [1.3.1] - 2026-11-08
+
+### Corrected - Documentation Integrity
+
+- **Corrected Aptos deployment status in README**: the "Live Deployments" table listed
+  `agent_reputation` as "Active Testnet" at `0x833279d9…c828`. On-chain verification
+  against the Aptos testnet REST API showed that no transaction was ever sent from
+  that account (`sequence_number = 0`, no published modules) and the claimed
+  transaction hashes do not exist on-chain.
+- **Honest status**: testnet deployment was planned but not yet executed — no verified
+  on-chain transactions exist. The README now marks Aptos as "Not deployed — source
+  only"; the full 64-character transaction hash will be published upon actual deployment.
+- No contract code changes in this release: `contracts/` content is identical to 1.3.0.
+
+---
+
 ## [1.3.0] - 2026-11-04
 
 ### Security - CRITICAL
