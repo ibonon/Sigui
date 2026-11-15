@@ -1,0 +1,52 @@
+name: Engine parity (local_engine vs security_engine)
+
+# Garde-fou : le port hors-ligne du SDK (sigui_guard/local_engine.py) doit rendre
+# EXACTEMENT le même verdict + risk_score que le moteur de référence
+# (modules/security_engine.py). Ce test s'exécute à CHAQUE modification de l'un
+# ou l'autre fichier (et du test lui-même), jamais seulement manuellement.
+on:
+  push:
+    paths:
+      - "sigui_guard/local_engine.py"
+      - "modules/security_engine.py"
+      - "tests/test_engine_parity.py"
+      - ".github/workflows/engine-parity.yml"
+  pull_request:
+    paths:
+      - "sigui_guard/local_engine.py"
+      - "modules/security_engine.py"
+      - "tests/test_engine_parity.py"
+      - ".github/workflows/engine-parity.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parity:
+    name: Parity test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      # Dépendances minimales réellement requises pour importer le moteur de
+      # référence et le port SDK (les extras lourds — web3, crewai, langgraph,
+      # anthropic, fastapi — sont importés sous try/except et non nécessaires ici).
+      - name: Install minimal deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest numpy loguru pydantic pydantic-settings aiosqlite httpx
+
+      - name: Run engine parity test (échec si 1 seul cas diverge)
+        run: pytest tests/test_engine_parity.py -v -s

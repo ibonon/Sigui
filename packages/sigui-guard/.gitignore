@@ -1,0 +1,6 @@
+# Artefacts de build Python (créés par `pip install ./packages/sigui-guard`)
+__pycache__/
+*.pyc
+build/
+dist/
+*.egg-info/

@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sigui-guard"
+version = "0.1.0"
+description = "One function, one verdict — offline safety verdicts for AI agent actions. No wallet, no key, no blockchain."
+readme = "README.md"
+authors = [{ name = "Sigui Protocol", email = "contact@sigui.xyz" }]
+license = { text = "MIT" }
+keywords = ["ai", "agents", "security", "safety", "guardrails", "sigui"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.11"
+# Aucune dépendance runtime : le moteur local n'utilise que la bibliothèque standard.
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/ibonon/Sigui"
+Repository = "https://github.com/ibonon/Sigui"
+
+[tool.setuptools]
+packages = ["sigui_guard"]
