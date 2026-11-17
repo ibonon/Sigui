@@ -21,6 +21,59 @@ In < 50ms, the 5-layer Risk Engine, **Imina Na V2** vision model (trained on 1,0
 
 ---
 
+## 🚀 Start here: `sigui-guard` — a verdict in 5 minutes
+
+**One function. One verdict. No blockchain.**
+
+`sigui-guard` answers a single question: *is this agent action safe?* It returns
+`ALLOW`, `BLOCK` or `ESCALATE` **offline** — no wallet, no private key, no DID, no
+registration, no network call. The local engine is pure Python standard library:
+**zero runtime dependencies**.
+
+```bash
+pip install ./packages/sigui-guard
+```
+
+```python
+from sigui_guard import check_action
+
+verdict = check_action(
+    action_type="transfer",   # "transfer", "swap", "contract_interaction", ...
+    amount_usd=500,           # amount in USD
+    destination="0xabc...",   # target address / identifier
+)
+
+if verdict.blocked:           # the only field you must enforce
+    raise RuntimeError(verdict.reason)
+```
+
+That is the entire integration — no key, no wallet, no `await`, no network. The
+first call returns a real verdict. Executable proof (one `ALLOW`, one `BLOCK`,
+with measured latency):
+
+```bash
+python packages/sigui-guard/examples/quickstart.py
+```
+
+- Package source → [`packages/sigui-guard/`](packages/sigui-guard)
+- Full SDK docs → [`packages/sigui-guard/README.md`](packages/sigui-guard/README.md)
+- Framework examples → [CrewAI](packages/sigui-guard/examples/crewai_integration.py) · [LangGraph](packages/sigui-guard/examples/langgraph_integration.py)
+
+**Parity, not a forked rewrite:** the local engine reproduces the platform's
+decision algorithm case-for-case — [`tests/test_engine_parity.py`](tests/test_engine_parity.py)
+fails on any divergence. It does **not** detect advanced on-chain topologies
+(`DRAIN_STAR`, `MIXING_CHAIN`, `COORDINATED_CLUSTER`); those require the
+advanced layer below.
+
+---
+
+## 🔮 Advanced layer: portable on-chain reputation (ERC-8259 · ZK · multichain)
+
+Everything below is **optional**. `sigui-guard` works fully offline. This layer
+adds cryptographic agent identity, ZK verification, on-chain threat registries
+and portable reputation across chains, consumed through
+`check_action(engine="hosted")` — never as a prerequisite.
+
 ## 🌐 NEW: NexusMind Real P2P Mesh Network
 Sigui's network layer has been completely overhauled with **NexusMind**. Instead of a mock simulation, the system now runs a **real WebSockets P2P topology**.
 
